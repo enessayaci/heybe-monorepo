@@ -1,0 +1,27 @@
+{
+  "functions": {
+    "api/add-product.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/get-products.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/delete-product.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/add-product",
+      "dest": "/api/add-product.js"
+    },
+    {
+      "src": "/api/get-products",
+      "dest": "/api/get-products.js"
+    },
+    {
+      "src": "/api/delete-product",
+      "dest": "/api/delete-product.js"
+    }
+  ]
+}
