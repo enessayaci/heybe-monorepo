@@ -1,20 +1,12 @@
 {
   "name": "my-list-sepet-extension",
   "version": "1.0.0",
-  "description": "Browser extension with API for shopping list",
-  "main": "index.html",
+  "description": "Browser extension for shopping list management",
   "scripts": {
-    "build": "echo 'No build needed'",
-    "dev": "echo 'Development server not needed'"
+    "build": "cd public && npm run build",
+    "dev": "cd public && npm run dev"
   },
-  "dependencies": {},
-  "devDependencies": {},
-  "keywords": [
-    "extension",
-    "api",
-    "postgresql",
-    "vercel"
-  ],
-  "author": "Your Name",
-  "license": "MIT"
+  "devDependencies": {
+    "vite": "^5.0.8"
+  }
 }
