@@ -13,7 +13,7 @@ function App() {
   const [error, setError] = useState(null);
 
   // API endpoint'leri - Vercel + Neon DB
-  const API_BASE = "https://my-list-sepet-api.vercel.app/api";
+  const API_BASE = "https://my-list-pi.vercel.app/api";
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
 
