@@ -4,6 +4,7 @@ import ProductCard from "./components/ProductCard";
 import StatsCard from "./components/StatsCard";
 import ActionButtons from "./components/ActionButtons";
 import StatusBar from "./components/StatusBar";
+import ExtensionInstall from "./components/ExtensionInstall";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -210,6 +211,9 @@ function App() {
             icon={DollarSign}
           />
         </div>
+
+        {/* Extension Install */}
+        <ExtensionInstall />
 
         {/* Action Buttons */}
         <div className="mb-8">

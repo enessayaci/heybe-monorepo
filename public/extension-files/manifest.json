@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "My List Sepet Extension",
+  "description": "Farklı sitelerdeki ürünleri tek sepette topla.",
+  "icons": {
+    "48": "images/extension_48.png"
+  },
+  "permissions": ["scripting", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "My List Sepet Extension",
+    "default_icon": "images/extension_48.png"
+  }
+}
