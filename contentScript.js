@@ -4,8 +4,23 @@
   const BUTTON_ID = "my-list-sepet-btn";
   let buttonAdded = false;
 
+  // Anahtar kelimeler
+  const KEYWORDS = ["sepete ekle", "add to basket", "add", "ekle"];
+
   // API endpoint (Vercel + Neon DB)
   const API_ENDPOINT = "https://my-list-pi.vercel.app/api/add-product";
+
+  function hasRelevantButton() {
+    const buttons = Array.from(
+      document.querySelectorAll(
+        "button, a, input[type='button'], input[type='submit']"
+      )
+    );
+    return buttons.some((btn) => {
+      const text = (btn.innerText || btn.value || "").toLowerCase();
+      return KEYWORDS.some((keyword) => text.includes(keyword));
+    });
+  }
 
   function getLargestImage() {
     const images = Array.from(document.images).filter(
@@ -183,28 +198,46 @@
   function addButton() {
     if (buttonAdded || document.getElementById(BUTTON_ID)) return;
 
-    // Sayfa yeterince yüklendi mi kontrol et
+    // Anahtar kelime içeren buton yoksa ekleme
+    if (!hasRelevantButton()) return;
+
     if (document.body && document.body.children.length > 0) {
       const btn = document.createElement("button");
       btn.id = BUTTON_ID;
-      btn.textContent = "My List Sepetime Ekle";
+      btn.innerHTML = `
+        <span class="my-list-btn-content" style="display:flex;align-items:center;gap:8px;">
+          <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13' /></svg>
+          <span class="my-list-btn-text">My List Sepetime Ekle</span>
+        </span>
+      `;
       btn.setAttribute("tabindex", "0");
       btn.setAttribute("aria-label", "My List Sepetime Ekle");
       btn.setAttribute("type", "button");
       btn.setAttribute(
         "style",
-        "position:fixed;top:32px;right:32px;background:#2563eb;color:white;padding:12px 24px;border:none;border-radius:8px;font-size:18px;cursor:pointer;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.15);"
+        `position:fixed;top:50%;right:0;transform:translateY(-50%);background:#2563eb;color:white;padding:0 8px 0 0;border:none;border-radius:24px 0 0 24px;font-size:18px;cursor:pointer;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.15);height:48px;min-width:32px;max-width:200px;transition:all 0.3s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;align-items:center;justify-content:flex-start;`
       );
+      btn.querySelector(".my-list-btn-text").style.display = "none";
+
+      // Hover ile aç/kapa
+      btn.addEventListener("mouseenter", () => {
+        btn.style.maxWidth = "200px";
+        btn.style.padding = "0 24px 0 12px";
+        btn.querySelector(".my-list-btn-text").style.display = "inline";
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.maxWidth = "32px";
+        btn.style.padding = "0 8px 0 0";
+        btn.querySelector(".my-list-btn-text").style.display = "none";
+      });
 
       btn.addEventListener("click", async function handleClick() {
-        // Butonu devre dışı bırak
         btn.disabled = true;
-        btn.textContent = "Ekleniyor...";
+        btn.querySelector(".my-list-btn-text").textContent = "Ekleniyor...";
 
         const product = getProductInfo();
         console.log("🔍 Tespit edilen ürün bilgileri:", product);
 
-        // Koşulları gevşet - sadece URL olsa bile ekle
         if (product.url) {
           const result = await saveProductToAPI(product);
 
@@ -217,14 +250,14 @@
           showConfirmation(false, "Ürün bilgileri yetersiz!");
         }
 
-        // Butonu tekrar aktif et
         btn.disabled = false;
-        btn.textContent = "My List Sepetime Ekle";
+        btn.querySelector(".my-list-btn-text").textContent =
+          "My List Sepetime Ekle";
       });
 
       document.body.appendChild(btn);
       buttonAdded = true;
-      console.log("✅ My List Sepetime Ekle butonu eklendi");
+      console.log("✅ My List Sepetime Ekle butonu eklendi (hover gizli)");
     }
   }
 
