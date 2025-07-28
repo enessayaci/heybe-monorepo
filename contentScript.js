@@ -4,8 +4,8 @@
   const BUTTON_ID = "my-list-sepet-btn";
   let buttonAdded = false;
 
-  // API endpoint (Vercel serverless function)
-  const API_ENDPOINT = "https://your-vercel-app.vercel.app/api/add-product";
+  // API endpoint (Vercel + Neon DB)
+  const API_ENDPOINT = "https://my-list-sepet-api.vercel.app/api/add-product";
 
   function getLargestImage() {
     const images = Array.from(document.images).filter(

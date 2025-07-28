@@ -10,90 +10,58 @@ const pool = new Pool({
   },
 });
 
-exports.handler = async (event, context) => {
+module.exports = async (req, res) => {
   // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Content-Type": "application/json",
-  };
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // OPTIONS request için CORS
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: "CORS preflight successful" }),
-    };
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
   }
 
-  // Sadece POST isteklerini kabul et
-  if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed. Use POST." }),
-    };
+  // Only allow POST method
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Request body'yi parse et
-    const body = JSON.parse(event.body);
+    const { name, price, image_url, product_url, site } = req.body;
 
-    // Gerekli alanları kontrol et
-    if (!body.name || !body.product_url || !body.site) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: "Missing required fields: name, product_url, site",
-        }),
-      };
+    if (!name || !product_url || !site) {
+      return res.status(400).json({
+        error: "Missing required fields: name, product_url, site",
+      });
     }
 
-    // Ürünü veritabanına ekle
     const query = `
       INSERT INTO products (name, price, image_url, product_url, site)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, name, price, image_url, product_url, site, created_at
     `;
 
-    const values = [
-      body.name,
-      body.price || null,
-      body.image_url || null,
-      body.product_url,
-      body.site,
-    ];
+    const values = [name, price || null, image_url || null, product_url, site];
 
     const result = await pool.query(query, values);
     const newProduct = result.rows[0];
 
     console.log("✅ Ürün başarıyla eklendi:", newProduct);
 
-    return {
-      statusCode: 201,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Ürün başarıyla eklendi",
-        product: newProduct,
-      }),
-    };
+    res.status(201).json({
+      success: true,
+      message: "Ürün başarıyla eklendi",
+      product: newProduct,
+    });
   } catch (error) {
     console.error("❌ Veritabanı hatası:", error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: "Internal server error",
-        details: error.message,
-      }),
-    };
-  } finally {
-    // Bağlantıyı kapat
-    await pool.end();
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message,
+    });
   }
 };

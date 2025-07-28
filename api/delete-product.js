@@ -10,92 +10,62 @@ const pool = new Pool({
   },
 });
 
-exports.handler = async (event, context) => {
+module.exports = async (req, res) => {
   // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "DELETE, OPTIONS",
-    "Content-Type": "application/json",
-  };
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // OPTIONS request için CORS
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: "CORS preflight successful" }),
-    };
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
   }
 
-  // Sadece DELETE isteklerini kabul et
-  if (event.httpMethod !== "DELETE") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed. Use DELETE." }),
-    };
+  // Only allow DELETE method
+  if (req.method !== "DELETE") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Request body'yi parse et
-    const body = JSON.parse(event.body);
+    const { id } = req.body;
 
-    // ID kontrolü
-    if (!body.id) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: "Missing required field: id",
-        }),
-      };
+    if (!id) {
+      return res.status(400).json({
+        error: "Missing required field: id",
+      });
     }
 
-    // Ürünü sil
     const query = `
       DELETE FROM products 
       WHERE id = $1 
       RETURNING id, name
     `;
 
-    const result = await pool.query(query, [body.id]);
+    const result = await pool.query(query, [id]);
 
     if (result.rowCount === 0) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({
-          error: "Product not found",
-        }),
-      };
+      return res.status(404).json({
+        error: "Product not found",
+      });
     }
 
     const deletedProduct = result.rows[0];
     console.log("✅ Ürün başarıyla silindi:", deletedProduct);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Ürün başarıyla silindi",
-        deletedProduct: deletedProduct,
-      }),
-    };
+    res.json({
+      success: true,
+      message: "Ürün başarıyla silindi",
+      deletedProduct: deletedProduct,
+    });
   } catch (error) {
     console.error("❌ Veritabanı hatası:", error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: "Internal server error",
-        details: error.message,
-      }),
-    };
-  } finally {
-    // Bağlantıyı kapat
-    await pool.end();
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message,
+    });
   }
 };

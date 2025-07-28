@@ -10,35 +10,27 @@ const pool = new Pool({
   },
 });
 
-exports.handler = async (event, context) => {
+module.exports = async (req, res) => {
   // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Content-Type": "application/json",
-  };
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // OPTIONS request için CORS
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: "CORS preflight successful" }),
-    };
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
   }
 
-  // Sadece GET isteklerini kabul et
-  if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed. Use GET." }),
-    };
+  // Only allow GET method
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Tüm ürünleri getir
     const query = `
       SELECT id, name, price, image_url, product_url, site, created_at, updated_at
       FROM products
@@ -50,29 +42,17 @@ exports.handler = async (event, context) => {
 
     console.log("✅ Ürünler başarıyla getirildi:", products.length);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Ürünler başarıyla getirildi",
-        products: products,
-        count: products.length,
-      }),
-    };
+    res.json({
+      success: true,
+      message: "Ürünler başarıyla getirildi",
+      products: products,
+      count: products.length,
+    });
   } catch (error) {
     console.error("❌ Veritabanı hatası:", error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: "Internal server error",
-        details: error.message,
-      }),
-    };
-  } finally {
-    // Bağlantıyı kapat
-    await pool.end();
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message,
+    });
   }
 };
