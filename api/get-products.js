@@ -2,11 +2,12 @@ const { Pool } = require("pg");
 
 // PostgreSQL bağlantı konfigürasyonu
 const pool = new Pool({
-  user: "postgres", // PostgreSQL kullanıcı adınız
-  host: "localhost",
-  database: "MyListDB", // Veritabanı adınız
-  password: "123456", // PostgreSQL şifreniz
-  port: 5432,
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://neondb_owner:npg_bLEYoHIWzK12@ep-small-wildflower-a2k0k4l4-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 exports.handler = async (event, context) => {
