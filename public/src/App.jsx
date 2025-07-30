@@ -193,8 +193,8 @@ function App() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Stats - Status bar ile arasında boşluk */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-8">
           <StatsCard
             title="Toplam Ürün"
             value={stats.totalProducts}
@@ -209,19 +209,6 @@ function App() {
             title="Ortalama Fiyat"
             value={`₺${stats.avgPrice.toFixed(2)}`}
             icon={DollarSign}
-          />
-        </div>
-
-        {/* Extension Install */}
-        <ExtensionInstall />
-
-        {/* Action Buttons */}
-        <div className="mb-8">
-          <ActionButtons
-            onDebug={handleDebug}
-            onRefresh={handleRefresh}
-            onTest={handleTest}
-            onClearAll={handleClearAll}
           />
         </div>
 
@@ -247,9 +234,9 @@ function App() {
           </div>
         )}
 
-        {/* Products Grid */}
+        {/* Products Grid - En üstte göster */}
         {status === "success" && products.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -260,6 +247,19 @@ function App() {
             ))}
           </div>
         )}
+
+        {/* Extension Install - En alta */}
+        <ExtensionInstall />
+
+        {/* Action Buttons - En alta */}
+        <div className="mb-8">
+          <ActionButtons
+            onDebug={handleDebug}
+            onRefresh={handleRefresh}
+            onTest={handleTest}
+            onClearAll={handleClearAll}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Trash2 } from "lucide-react";
+import {
+  Download,
+  Monitor,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 function ExtensionInstall() {
   const [showInstructions, setShowInstructions] = useState(false);
@@ -8,13 +14,13 @@ function ExtensionInstall() {
 
   // Manuel kurulum için
   const handleManualInstall = () => {
-    setShowInstructions(true);
+    setShowInstructions(!showInstructions);
     setShowUninstall(false);
   };
 
   // Kaldırma talimatları için
   const handleUninstall = () => {
-    setShowUninstall(true);
+    setShowUninstall(!showUninstall);
     setShowInstructions(false);
   };
 
@@ -39,15 +45,20 @@ function ExtensionInstall() {
         </p>
       </div>
 
-      {/* Ana Butonlar - Yan Yana */}
+      {/* Tüm Butonlar Yan Yana */}
       <div className="flex gap-3 mb-6">
         <Button
           variant="outline"
           onClick={handleManualInstall}
-          className="flex-1"
+          className="flex-1 flex items-center justify-center"
         >
           <Monitor className="w-4 h-4 mr-2" />
           Kurulum Talimatları
+          {showInstructions ? (
+            <ChevronUp className="w-4 h-4 ml-2" />
+          ) : (
+            <ChevronDown className="w-4 h-4 ml-2" />
+          )}
         </Button>
 
         <Button
@@ -58,15 +69,20 @@ function ExtensionInstall() {
           <Download className="w-4 h-4 mr-2" />
           Dosyaları İndir
         </Button>
-      </div>
 
-      {/* İkinci Buton Satırı */}
-      <div className="flex gap-3 mb-6">
-        <Button variant="outline" onClick={handleUninstall} className="flex-1">
+        <Button
+          variant="outline"
+          onClick={handleUninstall}
+          className="flex-1 flex items-center justify-center"
+        >
           <Trash2 className="w-4 h-4 mr-2" />
           Kaldırma Talimatları
+          {showUninstall ? (
+            <ChevronUp className="w-4 h-4 ml-2" />
+          ) : (
+            <ChevronDown className="w-4 h-4 ml-2" />
+          )}
         </Button>
-        <div className="flex-1"></div> {/* Boş alan */}
       </div>
 
       {/* Kurulum Talimatları */}
@@ -122,14 +138,6 @@ function ExtensionInstall() {
               </ol>
             </div>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setShowInstructions(false)}
-            className="mt-4 w-full"
-          >
-            Talimatları Kapat
-          </Button>
         </div>
       )}
 
@@ -191,14 +199,6 @@ function ExtensionInstall() {
               </p>
             </div>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setShowUninstall(false)}
-            className="mt-4 w-full"
-          >
-            Talimatları Kapat
-          </Button>
         </div>
       )}
 
