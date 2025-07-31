@@ -264,30 +264,61 @@ function App() {
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur - Extension UUID öncelikli
-  function getUserId() {
-    // Extension'dan gelen UUID'yi kullan (öncelik extension'da)
-    let userId = localStorage.getItem("EXTENSION_UUID");
-
-    // Extension UUID yoksa fallback olarak eski key'i kontrol et
-    if (!userId) {
-      userId = localStorage.getItem("tum_listem_user_id");
-    }
-
-    if (!userId) {
-      userId = generateUUID();
-      localStorage.setItem("EXTENSION_UUID", userId);
-      localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
-      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
-    } else {
-      console.log("👤 [Tüm Listem] Mevcut kullanıcı ID:", userId);
-      
-      // Extension UUID'si varsa, eski key'i de güncelle
-      if (localStorage.getItem("EXTENSION_UUID")) {
-        localStorage.setItem("tum_listem_user_id", userId); // Sync
+  // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
+  async function getUserId() {
+    console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
+    
+    // IndexedDB'den UUID'yi al (tüm domain'ler paylaşır)
+    let userId = null;
+    
+    try {
+      if (window.ExtensionSharedDB) {
+        userId = await window.ExtensionSharedDB.getUUID();
+        if (userId) {
+          console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
+          return userId;
+        }
+      } else {
+        console.log("⚠️ [Web Site] IndexedDB helper yüklenmemiş");
       }
+    } catch (e) {
+      console.log("❌ IndexedDB okunamadı:", e);
+    }
+    
+    // Fallback: localStorage (sadece bu domain için)
+    userId = localStorage.getItem("EXTENSION_UUID");
+    if (userId) {
+      console.log("⚠️ [Web Site] UUID localStorage'dan alındı (fallback):", userId);
+      // IndexedDB'ye de yaz (shared olsun)
+      try {
+        if (window.ExtensionSharedDB) {
+          await window.ExtensionSharedDB.setUUID(userId);
+          console.log("✅ [Web Site] UUID IndexedDB'ye kopyalandı");
+        }
+      } catch (e) {
+        console.log("❌ IndexedDB yazılamadı:", e);
+      }
+      return userId;
     }
 
+    // Hiç UUID yok, yeni oluştur
+    userId = generateUUID();
+    
+    // IndexedDB'ye yaz (shared storage)
+    try {
+      if (window.ExtensionSharedDB) {
+        await window.ExtensionSharedDB.setUUID(userId);
+        console.log("✅ [Web Site] Yeni UUID IndexedDB'ye yazıldı:", userId);
+      }
+    } catch (e) {
+      console.log("❌ IndexedDB yazılamadı:", e);
+    }
+    
+    // Fallback: localStorage'a da yaz
+    localStorage.setItem("EXTENSION_UUID", userId);
+    localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
+    
+    console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
     return userId;
   }
 
