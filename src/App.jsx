@@ -1,48 +1,60 @@
 import React, { useEffect, useState } from "react";
 
-function fetchMyListFromExtension() {
-  return new Promise((resolve) => {
-    console.log("🔍 Chrome API kontrol ediliyor...");
-    console.log("window.chrome:", window.chrome);
-    console.log("chrome.storage:", window.chrome?.storage);
-
+async function fetchMyListFromDatabase() {
+  try {
+    console.log("🔍 Database'den ürünler getiriliyor...");
+    
+    // 1. Extension'dan UUID'yi al
+    let userId = null;
+    
     if (window.chrome && chrome.storage && chrome.storage.local) {
-      console.log("✅ Chrome Storage API mevcut, doğrudan okuyorum...");
-      chrome.storage.local.get(["myList"], (result) => {
-        console.log("📦 Doğrudan storage'dan okunan veri:", result);
-        if (chrome.runtime.lastError) {
-          console.error("❌ Storage okuma hatası:", chrome.runtime.lastError);
-          resolve([]);
-        } else {
-          const myList = result.myList || [];
-          console.log("📋 Okunan liste:", myList);
-          console.log("📋 Liste uzunluğu:", myList.length);
-          console.log("📋 Liste tipi:", typeof myList);
-          console.log("📋 Array mi?", Array.isArray(myList));
-          resolve(myList);
-        }
-      });
-    } else {
-      console.log(
-        "❌ Chrome Storage API mevcut değil, background script deniyorum..."
-      );
-      // Fallback: Background script üzerinden
-      if (window.chrome && chrome.runtime && chrome.runtime.id) {
-        chrome.runtime.sendMessage({ type: "getMyList" }, (response) => {
-          console.log("📨 Background'dan gelen yanıt:", response);
-          if (chrome.runtime.lastError) {
-            console.error("❌ Background hatası:", chrome.runtime.lastError);
-            resolve([]);
-          } else {
-            resolve(response?.myList || []);
-          }
+      userId = await new Promise((resolve) => {
+        chrome.storage.local.get(["tum_listem_user_id"], (result) => {
+          resolve(result.tum_listem_user_id);
         });
-      } else {
-        console.log("❌ Hiçbir Chrome API mevcut değil");
-        resolve([]);
-      }
+      });
     }
-  });
+    
+    if (!userId) {
+      console.log("❌ UUID bulunamadı, boş liste döndürülüyor");
+      return [];
+    }
+    
+    console.log("👤 UUID bulundu:", userId);
+    
+    // 2. Database'den ürünleri çek
+    const response = await fetch(`https://my-list-pi.vercel.app/api/get-products?user_id=${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`API hatası: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("📦 Database'den gelen veri:", data);
+    
+    if (data.success && data.products) {
+      // API formatını frontend formatına çevir
+      const formattedProducts = data.products.map(product => ({
+        name: product.name,
+        price: product.price,
+        image: product.image_url,
+        product_url: product.product_url,
+        url: product.product_url, // Backward compatibility
+        site: product.site,
+        id: product.id
+      }));
+      
+      console.log(`✅ ${formattedProducts.length} ürün başarıyla alındı`);
+      return formattedProducts;
+    } else {
+      console.log("⚠️ API başarılı ama ürün yok");
+      return [];
+    }
+    
+  } catch (error) {
+    console.error("❌ Database'den veri alınırken hata:", error);
+    return [];
+  }
 }
 
 // Ürün linkini aç
@@ -63,7 +75,7 @@ export default function App() {
         setError(null);
         console.log("🚀 Popup açıldı, veri alınıyor...");
 
-        const result = await fetchMyListFromExtension();
+        const result = await fetchMyListFromDatabase();
         console.log("📋 fetchMyListFromExtension'dan dönen sonuç:", result);
         console.log("📋 Sonuç uzunluğu:", result.length);
         console.log("📋 Sonuç tipi:", typeof result);
@@ -92,21 +104,27 @@ export default function App() {
     console.log("🔄 Products uzunluğu:", products.length);
   }, [products]);
 
-  // Debug fonksiyonu - Chrome storage'ı konsola yazdır
+  // Debug fonksiyonu - Extension Storage ve Database bilgilerini göster
   const handleDebugStorage = () => {
     console.log("🔧 Debug butonu tıklandı");
+    
     if (window.chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(null, (result) => {
-        console.log("📦 Tüm Chrome Storage (doğrudan):", result);
-        console.log("📦 myList:", result.myList);
-        console.log("📦 myList uzunluğu:", result.myList?.length);
-        alert("Storage içeriği console'da görünüyor!");
-      });
-    } else if (window.chrome && chrome.runtime && chrome.runtime.id) {
-      chrome.runtime.sendMessage({ type: "logStorage" }, (response) => {
-        console.log("🔧 Debug: Storage yazdırma isteği gönderildi");
-        if (chrome.runtime.lastError) {
-          console.error("❌ Debug hatası:", chrome.runtime.lastError);
+      chrome.storage.local.get(["tum_listem_user_id"], async (result) => {
+        console.log("📦 Extension Storage:", result);
+        console.log("👤 User ID:", result.tum_listem_user_id);
+        
+        if (result.tum_listem_user_id) {
+          try {
+            const response = await fetch(`https://my-list-pi.vercel.app/api/get-products?user_id=${result.tum_listem_user_id}`);
+            const data = await response.json();
+            console.log("📦 Database'den gelen ürünler:", data);
+            alert(`UUID: ${result.tum_listem_user_id}\nÜrün sayısı: ${data.products?.length || 0}`);
+          } catch (error) {
+            console.error("❌ Database debug hatası:", error);
+            alert("Database bağlantı hatası! Console'a bakın.");
+          }
+        } else {
+          alert("UUID bulunamadı! Extension yüklü mü?");
         }
       });
     } else {
@@ -132,7 +150,7 @@ export default function App() {
   const handleForceRefresh = () => {
     console.log("🔄 Force refresh tıklandı");
     setLoading(true);
-    fetchMyListFromExtension().then((result) => {
+    fetchMyListFromDatabase().then((result) => {
       console.log("🔄 Force refresh sonucu:", result);
       setProducts(result);
       setLoading(false);
