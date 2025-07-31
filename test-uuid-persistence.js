@@ -3,17 +3,26 @@
 
 console.log("🧪 [UUID Persistence Test] Başlıyor...");
 
-// 1. Extension Storage'dan UUID kontrol
+// 1. Extension'dan UUID kontrol (Message Passing ile)
 function checkExtensionUUID() {
   return new Promise((resolve) => {
-    if (window.chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(["tum_listem_user_id"], (result) => {
-        const uuid = result.tum_listem_user_id;
-        console.log("📦 Extension Storage UUID:", uuid);
-        resolve(uuid);
-      });
+    if (window.chrome && chrome.runtime) {
+      chrome.runtime.sendMessage(
+        { action: "getUserId" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.log("❌ Extension mesaj hatası:", chrome.runtime.lastError);
+            resolve(null);
+            return;
+          }
+          
+          const uuid = response?.userId;
+          console.log("📦 Extension'dan UUID:", uuid);
+          resolve(uuid);
+        }
+      );
     } else {
-      console.log("❌ Chrome Storage API bulunamadı");
+      console.log("❌ Chrome Runtime API bulunamadı");
       resolve(null);
     }
   });
@@ -51,9 +60,16 @@ async function checkDatabaseProducts(uuid) {
 // 3. Test UUID oluştur (sadece test için)
 function createTestUUID() {
   const testUUID = "test-persistence-" + Date.now();
-  chrome.storage.local.set({ tum_listem_user_id: testUUID }, () => {
-    console.log("🆕 Test UUID oluşturuldu:", testUUID);
-  });
+  chrome.runtime.sendMessage(
+    { action: "setUserId", userId: testUUID },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.log("❌ Test UUID oluşturma hatası:", chrome.runtime.lastError);
+      } else {
+        console.log("🆕 Test UUID oluşturuldu:", testUUID);
+      }
+    }
+  );
   return testUUID;
 }
 
