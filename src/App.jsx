@@ -4,26 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 async function getUUIDFromSharedStorage() {
   console.log("🔍 [Shared Storage] UUID aranıyor...");
   
-  // 1. IndexedDB'den kontrol et (ana yöntem)
-  try {
-    if (window.ExtensionSharedDB) {
-      const uuid = await window.ExtensionSharedDB.getUUID();
-      if (uuid) {
-        console.log("✅ [Shared Storage] UUID IndexedDB'den alındı:", uuid);
-        // Backup'lara da yaz
-        window.EXTENSION_UUID = uuid;
-        localStorage.setItem('EXTENSION_UUID', uuid);
-        localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
-        return uuid;
-      }
-    } else {
-      console.log("⚠️ [Shared Storage] IndexedDB helper yüklenmemiş");
-    }
-  } catch (e) {
-    console.log("❌ IndexedDB okunamadı:", e);
-  }
-  
-  // 2. localStorage'dan kontrol et (backup)
+  // 1. localStorage'dan kontrol et (güvenilir yöntem)
   try {
     const uuid = localStorage.getItem('EXTENSION_UUID');
     const timestamp = localStorage.getItem('EXTENSION_UUID_TIMESTAMP');
@@ -50,6 +31,25 @@ async function getUUIDFromSharedStorage() {
     }
   } catch (e) {
     console.log("⚠️ localStorage okunamadı:", e);
+  }
+  
+  // 2. IndexedDB'den kontrol et (eğer varsa)
+  try {
+    if (window.ExtensionSharedDB) {
+      const uuid = await window.ExtensionSharedDB.getUUID();
+      if (uuid) {
+        console.log("✅ [Shared Storage] UUID IndexedDB'den alındı:", uuid);
+        // Backup'lara da yaz
+        window.EXTENSION_UUID = uuid;
+        localStorage.setItem('EXTENSION_UUID', uuid);
+        localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
+        return uuid;
+      }
+    } else {
+      console.log("⚠️ [Shared Storage] IndexedDB helper yüklenmemiş");
+    }
+  } catch (e) {
+    console.log("❌ IndexedDB okunamadı:", e);
   }
   
   // 3. window.EXTENSION_UUID'yi kontrol et (backup)
@@ -289,14 +289,14 @@ export default function App() {
       }
     }, []);
 
-    // Sayfa yüklendiğinde biraz bekleyip kontrol et (IndexedDB'nin açılması için)
+    // Sayfa yüklendiğinde hemen kontrol et (localStorage güvenilir)
     setTimeout(async () => {
-      console.log("🚀 [Polling] İlk UUID kontrolü başlıyor... (IndexedDB için beklendi)");
+      console.log("🚀 [Polling] İlk UUID kontrolü başlıyor...");
       const found = await checkForUUID();
       if (!found) {
         console.log("⚠️ [Polling] İlk kontrolde UUID bulunamadı");
       }
-    }, 3000); // 3 saniye bekle
+    }, 500); // 0.5 saniye bekle
 
     // IndexedDB UUID yazıldığında hemen kontrol et
     const handleIndexedDBWrite = async (event) => {
