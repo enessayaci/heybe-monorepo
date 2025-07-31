@@ -616,7 +616,191 @@
       }
     }
 
+    // Meta tag'lerde resim yoksa DOM'dan akıllıca bul
+    return findProductImageFromDOM();
+  }
+
+  // DOM'dan ürün resmi bulma
+  function findProductImageFromDOM() {
+    console.log("🔍 [Tüm Listem] DOM'dan ürün resmi aranıyor...");
+
+    // 1. Başlık yakınındaki resimler
+    const titleImages = findImagesNearTitle();
+    if (titleImages.length > 0) {
+      console.log(
+        "✅ [Tüm Listem] Başlık yakınında resim bulundu:",
+        titleImages[0]
+      );
+      return titleImages[0];
+    }
+
+    // 2. Ürün galerisi/resim listesi
+    const galleryImages = findGalleryImages();
+    if (galleryImages.length > 0) {
+      console.log("✅ [Tüm Listem] Galeri resmi bulundu:", galleryImages[0]);
+      return galleryImages[0];
+    }
+
+    // 3. Ana ürün resmi
+    const mainImages = findMainProductImages();
+    if (mainImages.length > 0) {
+      console.log("✅ [Tüm Listem] Ana ürün resmi bulundu:", mainImages[0]);
+      return mainImages[0];
+    }
+
+    console.log("❌ [Tüm Listem] DOM'da uygun resim bulunamadı");
     return "";
+  }
+
+  // Başlık yakınındaki resimleri bul
+  function findImagesNearTitle() {
+    const images = [];
+
+    // Başlık elementlerini bul
+    const titleSelectors = [
+      "h1",
+      "h2",
+      "h3",
+      '[class*="title"]',
+      '[class*="product-name"]',
+      '[class*="product-title"]',
+      '[id*="title"]',
+      '[id*="product-name"]',
+      '[id*="product-title"]',
+    ];
+
+    for (const selector of titleSelectors) {
+      const titles = document.querySelectorAll(selector);
+
+      for (const title of titles) {
+        // Başlık metnini kontrol et (ürün başlığı olabilir mi?)
+        const titleText = title.textContent?.toLowerCase() || "";
+        if (titleText.length > 10 && titleText.length < 200) {
+          // Başlığın yakınındaki resimleri bul (parent, sibling, child)
+          const nearbyImages = findImagesNearElement(title);
+          images.push(...nearbyImages);
+        }
+      }
+    }
+
+    return filterValidImages(images);
+  }
+
+  // Galeri/resim listesi bul
+  function findGalleryImages() {
+    const images = [];
+
+    // Galeri container'ları
+    const gallerySelectors = [
+      '[class*="gallery"]',
+      '[class*="slider"]',
+      '[class*="carousel"]',
+      '[class*="images"]',
+      '[class*="photos"]',
+      '[class*="pictures"]',
+      '[id*="gallery"]',
+      '[id*="slider"]',
+      '[id*="carousel"]',
+      '[id*="images"]',
+      '[id*="photos"]',
+      '[id*="pictures"]',
+    ];
+
+    for (const selector of gallerySelectors) {
+      const galleries = document.querySelectorAll(selector);
+
+      for (const gallery of galleries) {
+        const galleryImages = gallery.querySelectorAll("img");
+        images.push(...Array.from(galleryImages));
+      }
+    }
+
+    return filterValidImages(images);
+  }
+
+  // Ana ürün resimleri bul
+  function findMainProductImages() {
+    const images = [];
+
+    // Ürün container'ları
+    const productSelectors = [
+      '[class*="product"]',
+      '[class*="item"]',
+      '[class*="goods"]',
+      '[id*="product"]',
+      '[id*="item"]',
+      '[id*="goods"]',
+    ];
+
+    for (const selector of productSelectors) {
+      const products = document.querySelectorAll(selector);
+
+      for (const product of products) {
+        const productImages = product.querySelectorAll("img");
+        images.push(...Array.from(productImages));
+      }
+    }
+
+    return filterValidImages(images);
+  }
+
+  // Element yakınındaki resimleri bul
+  function findImagesNearElement(element) {
+    const images = [];
+
+    // Parent'ta resim var mı?
+    const parentImages = element.parentElement?.querySelectorAll("img") || [];
+    images.push(...Array.from(parentImages));
+
+    // Sibling'larda resim var mı?
+    const siblings = element.parentElement?.children || [];
+    for (const sibling of siblings) {
+      if (sibling !== element) {
+        const siblingImages = sibling.querySelectorAll("img");
+        images.push(...Array.from(siblingImages));
+      }
+    }
+
+    // Child'larda resim var mı?
+    const childImages = element.querySelectorAll("img");
+    images.push(...Array.from(childImages));
+
+    return images;
+  }
+
+  // Geçerli resimleri filtrele
+  function filterValidImages(images) {
+    const validImages = [];
+
+    for (const img of images) {
+      const src =
+        img.src ||
+        img.getAttribute("data-src") ||
+        img.getAttribute("data-lazy-src");
+
+      if (src && isValidImageUrl(src)) {
+        // Resim boyutunu kontrol et (çok küçük olmasın)
+        const width = img.naturalWidth || img.offsetWidth || img.width;
+        const height = img.naturalHeight || img.offsetHeight || img.height;
+
+        if (width >= 100 && height >= 100) {
+          // Logo, icon gibi küçük resimleri filtrele
+          const alt = img.alt?.toLowerCase() || "";
+          const className = img.className?.toLowerCase() || "";
+
+          if (
+            !alt.includes("logo") &&
+            !alt.includes("icon") &&
+            !className.includes("logo") &&
+            !className.includes("icon")
+          ) {
+            validImages.push(src);
+          }
+        }
+      }
+    }
+
+    return validImages;
   }
 
   // Resim URL'sinin geçerli olup olmadığını kontrol et
