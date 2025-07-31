@@ -15,6 +15,7 @@ function App() {
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [showWarning, setShowWarning] = useState(true);
   const [deletingProductId, setDeletingProductId] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -345,6 +346,7 @@ function App() {
         if (userId) {
           console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
           console.log("👤 Extension'dan gelen UUID:", userId);
+          setCurrentUserId(userId);
           return userId;
         } else {
           console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
@@ -364,6 +366,7 @@ function App() {
         userId
       );
       console.log("👤 Extension'dan gelen UUID:", userId);
+      setCurrentUserId(userId);
       // IndexedDB'ye de yaz (shared olsun)
       try {
         if (window.ExtensionSharedDB) {
@@ -394,13 +397,14 @@ function App() {
     localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
 
     console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
+    setCurrentUserId(userId);
     return userId;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Sidebar */}
-      <Sidebar onToggle={handleSidebarToggle} />
+      <Sidebar onToggle={handleSidebarToggle} currentUserId={currentUserId} />
 
       {/* Main Content - Sidebar için dinamik margin */}
       <div
