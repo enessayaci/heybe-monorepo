@@ -106,6 +106,7 @@ function App() {
       console.log("🔍 [Polling] UUID kontrol ediliyor...");
       try {
         const userId = await getUserId();
+        console.log("🔍 [Polling] getUserId() sonucu:", userId);
         if (userId) {
           console.log(
             "✅ [Polling] UUID bulundu, polling durduruluyor:",
@@ -113,6 +114,8 @@ function App() {
           );
           clearInterval(pollInterval);
           await fetchProducts(); // Ürünleri çek
+        } else {
+          console.log("❌ [Polling] UUID bulunamadı, devam ediyor...");
         }
       } catch (e) {
         console.log("⚠️ [Polling] UUID kontrol hatası:", e);
