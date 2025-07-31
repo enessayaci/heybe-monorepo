@@ -12,11 +12,25 @@
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur (Extension Storage kullanarak)
+  // Kullanıcı ID'sini al veya oluştur (Backup sistemi ile)
   async function getUserId() {
     try {
+      // Ana UUID'yi kontrol et
       let userId = await extensionStorage.get("tum_listem_user_id");
+      
+      // Ana UUID yoksa backup'tan dene
+      if (!userId) {
+        const backupUUID = await extensionStorage.get("tum_listem_backup_uuid");
+        if (backupUUID) {
+          console.log("🔄 [Tüm Listem] Ana UUID yok, backup UUID kullanılıyor:", backupUUID);
+          userId = backupUUID;
+          // Backup'ı ana UUID'ye restore et
+          await extensionStorage.set("tum_listem_user_id", userId);
+          console.log("✅ [Tüm Listem] Backup UUID restore edildi");
+        }
+      }
 
+      // Hala UUID yoksa yeni oluştur
       if (!userId) {
         userId = generateUUID();
         await extensionStorage.set("tum_listem_user_id", userId);
@@ -31,6 +45,13 @@
           userId,
           `(${extensionStorage.getBrowserName()})`
         );
+      }
+
+      // Backup'ı güncelle/oluştur
+      const currentBackup = await extensionStorage.get("tum_listem_backup_uuid");
+      if (!currentBackup || currentBackup !== userId) {
+        await extensionStorage.set("tum_listem_backup_uuid", userId);
+        console.log("💾 [Tüm Listem] UUID backup güncellendi");
       }
 
       return userId;

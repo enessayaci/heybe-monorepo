@@ -4,13 +4,32 @@ async function fetchMyListFromDatabase(setExtensionStatus = null) {
   try {
     console.log("🔍 Database'den ürünler getiriliyor...");
 
-    // 1. Extension'dan UUID'yi al
+    // 1. Extension'dan UUID'yi al (backup sistemi ile)
     let userId = null;
 
     if (window.chrome && chrome.storage && chrome.storage.local) {
       userId = await new Promise((resolve) => {
-        chrome.storage.local.get(["tum_listem_user_id"], (result) => {
-          resolve(result.tum_listem_user_id);
+        chrome.storage.local.get(["tum_listem_user_id", "tum_listem_backup_uuid"], (result) => {
+          let foundUUID = result.tum_listem_user_id;
+          
+          // Ana UUID yoksa backup'tan dene
+          if (!foundUUID && result.tum_listem_backup_uuid) {
+            console.log("🔄 Ana UUID yok, backup UUID kullanılıyor:", result.tum_listem_backup_uuid);
+            foundUUID = result.tum_listem_backup_uuid;
+            
+            // Backup'ı ana UUID'ye kopyala
+            chrome.storage.local.set({ "tum_listem_user_id": foundUUID }, () => {
+              console.log("✅ Backup UUID ana UUID olarak restore edildi");
+            });
+          }
+          
+          // Backup yoksa ve ana UUID varsa backup oluştur
+          if (foundUUID && !result.tum_listem_backup_uuid) {
+            console.log("💾 Backup UUID oluşturuluyor:", foundUUID);
+            chrome.storage.local.set({ "tum_listem_backup_uuid": foundUUID });
+          }
+          
+          resolve(foundUUID);
         });
       });
       
@@ -109,14 +128,14 @@ export default function App() {
     // Extension kontrol timer'ı (extension sonradan yüklenirse)
     const extensionCheckTimer = setInterval(async () => {
       console.log("🔄 Extension kontrol ediliyor...");
-      
+
       if (window.chrome && chrome.storage && chrome.storage.local) {
         const userId = await new Promise((resolve) => {
           chrome.storage.local.get(["tum_listem_user_id"], (result) => {
             resolve(result.tum_listem_user_id);
           });
         });
-        
+
         if (userId && products.length === 0) {
           console.log("🎉 Extension UUID bulundu, veriler yeniden yükleniyor!");
           setExtensionStatus("found");
@@ -141,29 +160,33 @@ export default function App() {
   const handleDebugStorage = () => {
     console.log("🔧 Debug butonu tıklandı");
 
-    if (window.chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(["tum_listem_user_id"], async (result) => {
+        if (window.chrome && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(["tum_listem_user_id", "tum_listem_backup_uuid"], async (result) => {
         console.log("📦 Extension Storage:", result);
-        console.log("👤 User ID:", result.tum_listem_user_id);
-
-        if (result.tum_listem_user_id) {
+        console.log("👤 Ana UUID:", result.tum_listem_user_id);
+        console.log("💾 Backup UUID:", result.tum_listem_backup_uuid);
+        
+        const activeUUID = result.tum_listem_user_id || result.tum_listem_backup_uuid;
+        
+        if (activeUUID) {
           try {
             const response = await fetch(
-              `https://my-list-pi.vercel.app/api/get-products?user_id=${result.tum_listem_user_id}`
+              `https://my-list-pi.vercel.app/api/get-products?user_id=${activeUUID}`
             );
             const data = await response.json();
             console.log("📦 Database'den gelen ürünler:", data);
             alert(
-              `UUID: ${result.tum_listem_user_id}\nÜrün sayısı: ${
-                data.products?.length || 0
-              }`
+              `Ana UUID: ${result.tum_listem_user_id || "YOK"}\n` +
+              `Backup UUID: ${result.tum_listem_backup_uuid || "YOK"}\n` +
+              `Aktif UUID: ${activeUUID}\n` +
+              `Ürün sayısı: ${data.products?.length || 0}`
             );
           } catch (error) {
             console.error("❌ Database debug hatası:", error);
             alert("Database bağlantı hatası! Console'a bakın.");
           }
         } else {
-          alert("UUID bulunamadı! Extension yüklü mü?");
+          alert("Hiç UUID bulunamadı! Extension yüklü mü?");
         }
       });
     } else {
@@ -235,11 +258,14 @@ export default function App() {
 
       <div className="text-sm text-gray-600 mb-4 p-2 bg-gray-100 rounded">
         <div>Ürün sayısı: {products.length}</div>
-        <div>Extension Durumu: {
-          extensionStatus === "checking" ? "🔄 Kontrol ediliyor..." :
-          extensionStatus === "found" ? "✅ Extension bulundu" :
-          "❌ Extension bulunamadı"
-        }</div>
+        <div>
+          Extension Durumu:{" "}
+          {extensionStatus === "checking"
+            ? "🔄 Kontrol ediliyor..."
+            : extensionStatus === "found"
+            ? "✅ Extension bulundu"
+            : "❌ Extension bulunamadı"}
+        </div>
         <div>Chrome API: {window.chrome ? "✅ Mevcut" : "❌ Yok"}</div>
         <div>
           Storage API: {window.chrome?.storage ? "✅ Mevcut" : "❌ Yok"}
@@ -253,12 +279,16 @@ export default function App() {
           <div className="flex items-center">
             <div className="text-yellow-600 mr-2">⚠️</div>
             <div>
-              <div className="font-medium text-yellow-800">Tüm Listem Extension Gerekli</div>
+              <div className="font-medium text-yellow-800">
+                Tüm Listem Extension Gerekli
+              </div>
               <div className="text-sm text-yellow-700 mt-1">
-                Ürünlerinizi görmek için önce browser extension'ını kurmanız gerekiyor.
+                Ürünlerinizi görmek için önce browser extension'ını kurmanız
+                gerekiyor.
               </div>
               <div className="text-xs text-yellow-600 mt-2">
-                Extension kurulduktan sonra bu sayfa otomatik olarak güncellenecek.
+                Extension kurulduktan sonra bu sayfa otomatik olarak
+                güncellenecek.
               </div>
             </div>
           </div>
