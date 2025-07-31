@@ -117,14 +117,20 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId }) {
       </nav>
 
       {/* Aktif Kullanıcı - En alt */}
-      <div className={`p-4 border-t border-gray-200 bg-gray-50 ${
-        isCollapsed ? "px-2" : "px-4"
-      }`}>
-        <div className={`flex items-center ${isCollapsed ? "justify-center" : ""}`}>
+      <div
+        className={`p-4 border-t border-gray-200 bg-gray-50 ${
+          isCollapsed ? "px-2" : "px-4"
+        }`}
+      >
+        <div
+          className={`flex items-center ${isCollapsed ? "justify-center" : ""}`}
+        >
           <span className="text-sm text-gray-600">👤</span>
           {!isCollapsed && (
             <div className="ml-2 flex-1 min-w-0">
-              <p className="text-xs text-gray-500 font-medium">Aktif Kullanıcı</p>
+              <p className="text-xs text-gray-500 font-medium">
+                Aktif Kullanıcı
+              </p>
               <p className="text-xs text-gray-700 truncate font-mono">
                 {currentUserId ? `${currentUserId.substring(0, 8)}...` : "N/A"}
               </p>
