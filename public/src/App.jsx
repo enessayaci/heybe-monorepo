@@ -79,6 +79,31 @@ function App() {
         console.error("Initial fetch error", e);
       }
     })();
+    
+    // Polling: Extension'dan UUID gelene kadar bekle
+    const pollInterval = setInterval(async () => {
+      console.log("🔍 [Polling] UUID kontrol ediliyor...");
+      try {
+        const userId = await getUserId();
+        if (userId) {
+          console.log("✅ [Polling] UUID bulundu, polling durduruluyor:", userId);
+          clearInterval(pollInterval);
+          await fetchProducts(); // Ürünleri çek
+        }
+      } catch (e) {
+        console.log("⚠️ [Polling] UUID kontrol hatası:", e);
+      }
+    }, 1000); // Her 1 saniyede kontrol et
+    
+    // 30 saniye sonra polling'i durdur
+    setTimeout(() => {
+      console.log("⏰ [Polling] 30 saniye geçti, polling durduruluyor");
+      clearInterval(pollInterval);
+    }, 30000);
+    
+    return () => {
+      clearInterval(pollInterval);
+    };
   }, []);
 
   // Test fonksiyonu
