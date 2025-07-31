@@ -339,11 +339,15 @@ function App() {
 
     try {
       if (window.ExtensionSharedDB) {
+        console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
         userId = await window.ExtensionSharedDB.getUUID();
+        console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
         if (userId) {
           console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
           console.log("👤 Extension'dan gelen UUID:", userId);
           return userId;
+        } else {
+          console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
         }
       } else {
         console.log("⚠️ [Web Site] IndexedDB helper yüklenmemiş");
