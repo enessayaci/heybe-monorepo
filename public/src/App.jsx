@@ -292,6 +292,7 @@ function App() {
         userId = await window.ExtensionSharedDB.getUUID();
         if (userId) {
           console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
+          console.log("👤 Extension'dan gelen UUID:", userId);
           return userId;
         }
       } else {
@@ -305,6 +306,7 @@ function App() {
     userId = localStorage.getItem("EXTENSION_UUID");
     if (userId) {
       console.log("⚠️ [Web Site] UUID localStorage'dan alındı (fallback):", userId);
+      console.log("👤 Extension'dan gelen UUID:", userId);
       // IndexedDB'ye de yaz (shared olsun)
       try {
         if (window.ExtensionSharedDB) {
