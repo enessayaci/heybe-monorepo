@@ -27,23 +27,29 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { id } = req.body;
+    const { id, user_id } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ error: "Product ID is required" });
+    if (!id || !user_id) {
+      return res
+        .status(400)
+        .json({ error: "Product ID and User ID are required" });
     }
 
     const query = `
       DELETE FROM products 
-      WHERE id = $1
+      WHERE id = $1 AND user_id = $2
       RETURNING *
     `;
 
-    const result = await pool.query(query, [id]);
+    const result = await pool.query(query, [id, user_id]);
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Product not found" });
+      return res
+        .status(404)
+        .json({ error: "Product not found or not authorized" });
     }
+
+    console.log("👤 [Tüm Listem] Kullanıcı ürünü silindi:", user_id, "->", id);
 
     res.status(200).json({
       success: true,

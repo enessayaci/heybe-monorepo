@@ -150,7 +150,10 @@ function App() {
   const fetchProducts = async () => {
     try {
       setStatus("loading");
-      const response = await fetch(GET_PRODUCTS_ENDPOINT);
+      const userId = getUserId();
+      const response = await fetch(
+        `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -176,7 +179,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: productId }),
+        body: JSON.stringify({ id: productId, user_id: getUserId() }),
       });
 
       if (response.ok) {
@@ -188,7 +191,7 @@ function App() {
         setFilteredProducts((prevProducts) =>
           prevProducts.filter((product) => product.id !== productId)
         );
-        
+
         // Başarı mesajı göster
         alert("✅ Ürün başarıyla silindi!");
       } else {
@@ -248,6 +251,33 @@ function App() {
     console.log("🚀 Ana sayfa yüklendi");
     fetchProducts();
   }, []);
+
+  // UUID oluşturma fonksiyonu
+  function generateUUID() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c == "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      }
+    );
+  }
+
+  // Kullanıcı ID'sini al veya oluştur
+  function getUserId() {
+    let userId = localStorage.getItem("tum_listem_user_id");
+
+    if (!userId) {
+      userId = generateUUID();
+      localStorage.setItem("tum_listem_user_id", userId);
+      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
+    } else {
+      console.log("👤 [Tüm Listem] Mevcut kullanıcı ID:", userId);
+    }
+
+    return userId;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

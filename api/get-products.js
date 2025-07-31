@@ -27,12 +27,27 @@ module.exports = async (req, res) => {
   }
 
   try {
+    const { user_id } = req.query;
+
+    if (!user_id) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
     const query = `
       SELECT * FROM products 
+      WHERE user_id = $1
       ORDER BY created_at DESC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [user_id]);
+
+    console.log(
+      "👤 [Tüm Listem] Kullanıcı ürünleri getirildi:",
+      user_id,
+      "(",
+      result.rows.length,
+      "ürün)"
+    );
 
     res.status(200).json({
       success: true,

@@ -27,9 +27,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { name, price, image_url, product_url, site } = req.body;
+    const { name, price, image_url, product_url, site, user_id } = req.body;
 
-    if (!name || !product_url || !site) {
+    if (!name || !product_url || !site || !user_id) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -43,11 +43,12 @@ module.exports = async (req, res) => {
 
     console.log("📝 [Tüm Listem] Ürün adı kısaltıldı:", truncatedName);
     console.log("📝 [Tüm Listem] Site adı kısaltıldı:", truncatedSite);
+    console.log("👤 [Tüm Listem] Kullanıcı ID:", user_id);
 
     // Veritabanına kaydet
     const query = `
-      INSERT INTO products (name, price, image_url, product_url, site, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO products (name, price, image_url, product_url, site, user_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING *
     `;
 
@@ -57,6 +58,7 @@ module.exports = async (req, res) => {
       image_url || "",
       product_url,
       truncatedSite,
+      user_id,
     ];
 
     const result = await pool.query(query, values);

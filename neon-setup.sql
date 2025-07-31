@@ -1,22 +1,26 @@
--- Neon PostgreSQL için tablo oluşturma
--- Bu SQL'i Neon SQL Editor'da çalıştır
+-- Tüm Listem Database Schema
+-- Neon PostgreSQL için
 
--- Ürünler tablosu
-CREATE TABLE products (
+-- Products tablosu
+CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(500) NOT NULL,
-    price VARCHAR(100),
+    name VARCHAR(100) NOT NULL,
+    price VARCHAR(50),
     image_url TEXT,
     product_url TEXT NOT NULL,
-    site VARCHAR(255) NOT NULL,
+    site VARCHAR(50) NOT NULL,
+    user_id VARCHAR(36) NOT NULL, -- UUID için
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- İndeksler (performans için)
-CREATE INDEX idx_products_site ON products(site);
-CREATE INDEX idx_products_created_at ON products(created_at);
-CREATE INDEX idx_products_url ON products(product_url);
+-- Index'ler
+CREATE INDEX IF NOT EXISTS idx_products_user_id ON products(user_id);
+CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
+
+-- Örnek veri (isteğe bağlı)
+-- INSERT INTO products (name, price, image_url, product_url, site, user_id) VALUES 
+-- ('Test Ürün', '100 TL', 'https://example.com/image.jpg', 'https://example.com/product', 'example.com', 'test-user-id');
 
 -- Updated_at otomatik güncelleme için trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -30,9 +34,4 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_products_updated_at
     BEFORE UPDATE ON products
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Test verisi ekle (opsiyonel)
-INSERT INTO products (name, price, image_url, product_url, site) VALUES
-('Test Ürün 1', '₺99.99', 'https://example.com/image1.jpg', 'https://example.com/product1', 'example.com'),
-('Test Ürün 2', '$29.99', 'https://example.com/image2.jpg', 'https://example.com/product2', 'example.com'); 
+    EXECUTE FUNCTION update_updated_at_column(); 

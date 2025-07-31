@@ -1,5 +1,32 @@
 // Tüm sitelerde çalışan content script
 (function () {
+  // UUID oluşturma fonksiyonu
+  function generateUUID() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c == "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      }
+    );
+  }
+
+  // Kullanıcı ID'sini al veya oluştur
+  function getUserId() {
+    let userId = localStorage.getItem("tum_listem_user_id");
+
+    if (!userId) {
+      userId = generateUUID();
+      localStorage.setItem("tum_listem_user_id", userId);
+      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
+    } else {
+      console.log("👤 [Tüm Listem] Mevcut kullanıcı ID:", userId);
+    }
+
+    return userId;
+  }
+
   // Butonun id'si
   const BUTTON_ID = "my-list-sepet-btn";
   let buttonAdded = false;
@@ -815,6 +842,8 @@
 
   async function saveProductToAPI(productInfo) {
     try {
+      const userId = getUserId();
+
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: {
@@ -826,6 +855,7 @@
           image_url: productInfo.image_url,
           product_url: productInfo.product_url,
           site: productInfo.site,
+          user_id: userId,
         }),
       });
 
