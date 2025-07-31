@@ -69,6 +69,18 @@ function App() {
     fetchProducts();
   };
 
+  // Sayfa ilk yüklendiğinde ürünleri çek
+  useEffect(() => {
+    (async () => {
+      try {
+        await getUserId(); // UUID hazırla / IndexedDB hazır
+        await fetchProducts();
+      } catch (e) {
+        console.error("Initial fetch error", e);
+      }
+    })();
+  }, []);
+
   // Test fonksiyonu
   const handleTest = () => {
     console.log("🧪 Test butonu tıklandı");
