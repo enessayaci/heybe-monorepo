@@ -157,7 +157,8 @@ class ExtensionSharedDB {
   }
 }
 
-// Global instance oluştur
+// Global instance oluştur ve READY event'i fırlat
 window.ExtensionSharedDB = new ExtensionSharedDB();
+window.dispatchEvent(new Event('ExtensionSharedDBReady'));
 
-console.log("🗄️ [IndexedDB Helper] Yüklendi");
+console.log("🗄️ [IndexedDB Helper] Yüklendi - READY event gönderildi");

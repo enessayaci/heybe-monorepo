@@ -264,8 +264,15 @@ function App() {
     );
   }
 
+  // Helper hazır olana kadar bekle
+  function waitForSharedDB() {
+    if (window.ExtensionSharedDB) return Promise.resolve();
+    return new Promise((res) => window.addEventListener('ExtensionSharedDBReady', res, { once: true }));
+  }
+
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
+    await waitForSharedDB();
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
     
     // IndexedDB'den UUID'yi al (tüm domain'ler paylaşır)
