@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
     }
 
     const deletedProduct = result.rows[0];
-    console.log("✅ Ürün başarıyla silindi:", deletedProduct);
+    console.log("✅ [Tüm Listem] Ürün silindi:", deletedProduct.name);
 
     res.json({
       success: true,

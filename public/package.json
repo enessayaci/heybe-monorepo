@@ -1,7 +1,7 @@
 {
   "name": "my-list-sepet-frontend",
   "version": "1.0.0",
-  "description": "Frontend for My List Sepet Extension",
+  "description": "Frontend for Tüm Listem Extension",
   "type": "module",
   "scripts": {
     "dev": "vite",

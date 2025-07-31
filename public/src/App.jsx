@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Package, Globe } from "lucide-react";
+import { Search } from "lucide-react";
 import ProductCard from "./components/ProductCard";
 import StatsCard from "./components/StatsCard";
 import Sidebar from "./components/Sidebar";
@@ -9,49 +9,160 @@ function App() {
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [showWarning, setShowWarning] = useState(true);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
+  const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
 
   // Sidebar toggle handler
   const handleSidebarToggle = (collapsed) => {
     setSidebarCollapsed(collapsed);
   };
 
+  // Arama fonksiyonu - debounce ile
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+
+    // Önceki timeout'u temizle
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Yeni timeout ayarla
+    const newTimeout = setTimeout(() => {
+      if (value.trim() === "") {
+        setFilteredProducts(products);
+      } else {
+        const filtered = products.filter((product) => {
+          const searchLower = value.toLowerCase();
+          return (
+            product.name.toLowerCase().includes(searchLower) ||
+            product.site.toLowerCase().includes(searchLower) ||
+            (product.price && product.price.includes(searchLower))
+          );
+        });
+        setFilteredProducts(filtered);
+      }
+    }, 500);
+
+    setSearchTimeout(newTimeout);
+  };
+
+  // Debug fonksiyonu
+  const handleDebug = () => {
+    console.log("🔧 Debug butonu tıklandı");
+    console.log("📦 Mevcut ürünler:", products);
+    alert("Debug bilgileri console'da görünüyor!");
+  };
+
+  // Refresh fonksiyonu
+  const handleRefresh = () => {
+    console.log("🔄 Refresh butonu tıklandı");
+    fetchProducts();
+  };
+
+  // Test fonksiyonu
+  const handleTest = () => {
+    console.log("🧪 Test butonu tıklandı");
+    fetch(GET_PRODUCTS_ENDPOINT)
+      .then((response) => response.json())
+      .then((data) => {
+        alert("API Test: " + JSON.stringify(data, null, 2));
+      })
+      .catch((error) => {
+        alert("API Test Hatası: " + error.message);
+      });
+  };
+
+  // URL'den ürün ID'sini al
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get("product");
+
+    if (productId && products.length > 0) {
+      const product = products.find((p) => p.id == productId);
+      if (product) {
+        setSelectedProduct(product);
+        updateMetaTags(product);
+      }
+    }
+  }, [products]);
+
+  // Meta tag'leri güncelle
+  const updateMetaTags = (product) => {
+    // Open Graph meta tag'leri
+    const metaTags = {
+      "og:title": `${product.name} - Tüm Listem`,
+      "og:description": `${product.name} ürünü ${product.site} sitesinde ${
+        product.price || "fiyat belirtilmemiş"
+      } fiyatla satılıyor.`,
+      "og:image": product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+      "og:url": window.location.href,
+      "og:type": "product",
+      "og:site_name": "Tüm Listem",
+      "twitter:title": `${product.name} - Tüm Listem`,
+      "twitter:description": `${product.name} ürünü ${product.site} sitesinde satılıyor.`,
+      "twitter:image":
+        product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+      "twitter:card": "summary_large_image",
+    };
+
+    // Meta tag'leri güncelle
+    Object.entries(metaTags).forEach(([property, content]) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute("property", property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute("content", content);
+    });
+
+    // Sayfa başlığını güncelle
+    document.title = `${product.name} - Tüm Listem`;
+
+    // Description meta tag'ini de güncelle
+    let descMeta = document.querySelector('meta[name="description"]');
+    if (!descMeta) {
+      descMeta = document.createElement("meta");
+      descMeta.setAttribute("name", "description");
+      document.head.appendChild(descMeta);
+    }
+    descMeta.setAttribute(
+      "content",
+      `${product.name} ürünü ${product.site} sitesinde ${
+        product.price || "fiyat belirtilmemiş"
+      } fiyatla satılıyor.`
+    );
+
+    console.log("✅ Meta tag'ler güncellendi:", metaTags);
+  };
+
   // API'den ürünleri çek
   const fetchProducts = async () => {
     try {
-      console.log("🚀 API'den ürünler çekiliyor...");
       setStatus("loading");
-      setError(null);
-
-      const response = await fetch(GET_PRODUCTS_ENDPOINT, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(GET_PRODUCTS_ENDPOINT);
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("📦 API'den gelen veri:", result);
-
-        if (result.success) {
-          setProducts(result.products || []);
-          setStatus("success");
-        } else {
-          setError("API hatası: " + result.error);
-          setStatus("error");
-        }
+        const data = await response.json();
+        setProducts(data.products || []);
+        setFilteredProducts(data.products || []); // Başlangıçta tüm ürünler
+        setStatus("success");
       } else {
-        setError("HTTP hatası: " + response.status);
+        setError("Ürünler yüklenirken hata oluştu");
         setStatus("error");
       }
     } catch (error) {
-      console.error("❌ API çekme hatası:", error);
-      setError("Network hatası: " + error.message);
+      console.error("Fetch error:", error);
+      setError("Network hatası");
       setStatus("error");
     }
   };
@@ -113,32 +224,6 @@ function App() {
     window.open(url, "_blank");
   };
 
-  // Debug fonksiyonu
-  const handleDebug = () => {
-    console.log("🔧 Debug butonu tıklandı");
-    console.log("📦 Mevcut ürünler:", products);
-    alert("Debug bilgileri console'da görünüyor!");
-  };
-
-  // Refresh fonksiyonu
-  const handleRefresh = () => {
-    console.log("🔄 Refresh butonu tıklandı");
-    fetchProducts();
-  };
-
-  // Test fonksiyonu
-  const handleTest = () => {
-    console.log("🧪 Test butonu tıklandı");
-    fetch(GET_PRODUCTS_ENDPOINT)
-      .then((response) => response.json())
-      .then((data) => {
-        alert("API Test: " + JSON.stringify(data, null, 2));
-      })
-      .catch((error) => {
-        alert("API Test Hatası: " + error.message);
-      });
-  };
-
   // Minimal istatistikler
   const calculateStats = () => {
     const totalProducts = products.length;
@@ -177,46 +262,86 @@ function App() {
             <StatsCard
               title="Toplam Ürün"
               value={status === "error" ? "N/A" : stats.totalProducts}
-              icon={Package}
+              icon="📦"
             />
             <StatsCard
               title="Farklı Site"
               value={status === "error" ? "N/A" : stats.uniqueSites}
-              icon={Globe}
+              icon="🌐"
             />
           </div>
 
-          {/* Loading State */}
-          {status === "loading" && (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Ürünler yükleniyor...</p>
-            </div>
-          )}
-
-          {/* Empty State - Ürün yoksa */}
-          {status === "success" && products.length === 0 && (
-            <div id="products" className="text-center py-12">
-              <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8">
-                <h3 className="text-2xl font-semibold text-gray-700 mb-2">
-                  📦 Henüz ürün yok
-                </h3>
-                <p className="text-gray-600">
-                  Browser extension'ınızı kullanarak ürün ekleyin ve burada
-                  görün!
-                </p>
+          {/* Uyarı Mesajı */}
+          {showWarning && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 relative">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-yellow-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">
+                      Dikkat! Bazı bilgiler kaynak siteyi tarama sırasında
+                      yanlış alınabilir.
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowWarning(false)}
+                  className="absolute top-2 right-2 text-yellow-600 hover:text-yellow-800 transition-colors p-1 rounded-full hover:bg-yellow-50"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
           )}
 
-          {/* Products List - Tek satır formatında */}
-          {status === "success" && products.length > 0 && (
-            <>
-              {/* Tümünü Sil Butonu - Ürün listesinin üstünde */}
-              <div className="mb-4">
+          {/* Arama Kutusu ve Tümünü Sil */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between gap-4">
+              {/* Arama Kutusu - Sol */}
+              <div className="w-80">
+                <input
+                  type="text"
+                  placeholder="Ürün adı, site adı veya fiyat ile ara..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                />
+                {searchTerm && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    {filteredProducts.length} ürün bulundu
+                  </p>
+                )}
+              </div>
+
+              {/* Tümünü Sil Butonu - Sağ */}
+              <div className="flex-shrink-0">
                 <button
                   onClick={handleClearAll}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+                  className="bg-red-500/80 hover:bg-red-600/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 backdrop-blur-sm"
                 >
                   <svg
                     className="w-4 h-4"
@@ -234,19 +359,46 @@ function App() {
                   Tümünü Sil
                 </button>
               </div>
+            </div>
+          </div>
 
-              <div id="products" className="space-y-3 mb-8">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onDelete={handleDeleteProduct}
-                    onOpenProduct={handleOpenProduct}
-                  />
-                ))}
-              </div>
-            </>
+          {/* Loading State */}
+          {status === "loading" ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="text-gray-500 mt-2">Ürünler yükleniyor...</p>
+            </div>
+          ) : status === "error" ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">❌ {error}</p>
+              <button
+                onClick={fetchProducts}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Tekrar Dene
+              </button>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                {searchTerm ? "Arama sonucu bulunamadı" : "Henüz ürün yok"}
+              </p>
+            </div>
+          ) : (
+            <div id="products" className="space-y-3 mb-8">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onDelete={handleDeleteProduct}
+                  onOpenProduct={handleOpenProduct}
+                />
+              ))}
+            </div>
           )}
+
+          {/* Ürün Detay Sayfası */}
+          {selectedProduct && renderProductDetail()}
 
           {/* Kurulum Talimatları Section */}
           <div id="install" className="mb-8">
@@ -418,7 +570,7 @@ function App() {
                       </code>{" "}
                       adresine gidin
                     </li>
-                    <li>"My List Sepet Extension"ı bulun</li>
+                    <li>"Tüm Listem Extension"ı bulun</li>
                     <li>"Remove" butonuna tıklayın</li>
                     <li>Onay penceresinde "Remove" seçin</li>
                   </ol>
@@ -435,7 +587,7 @@ function App() {
                       adresine gidin
                     </li>
                     <li>"This Firefox" sekmesine tıklayın</li>
-                    <li>"My List Sepet Extension"ı bulun</li>
+                    <li>"Tüm Listem Extension"ı bulun</li>
                     <li>"Remove" butonuna tıklayın</li>
                   </ol>
                 </div>
@@ -445,7 +597,7 @@ function App() {
                   <ol className="list-decimal list-inside ml-2 space-y-1">
                     <li>Safari'de "Develop" menüsünü açın</li>
                     <li>"Show Extension Builder" seçin</li>
-                    <li>"My List Sepet Extension"ı seçin</li>
+                    <li>"Tüm Listem Extension"ı seçin</li>
                     <li>"Remove" butonuna tıklayın</li>
                   </ol>
                 </div>

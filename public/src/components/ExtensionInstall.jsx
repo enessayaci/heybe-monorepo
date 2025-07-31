@@ -52,11 +52,11 @@ function ExtensionInstall() {
 
         <Button
           variant="outline"
-          onClick={handleDownloadExtension}
+          onClick={() => window.open("/tum-listem-extension.zip", "_blank")}
           className="flex-1"
         >
           <Download className="w-4 h-4 mr-2" />
-          Dosyaları İndir
+          Extension İndir
         </Button>
 
         <Button

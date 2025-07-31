@@ -1,7 +1,7 @@
 {
   "name": "my-list-sepet-api",
   "version": "1.0.0",
-  "description": "Serverless API for My List Sepet Extension",
+  "description": "Serverless API for Tüm Listem Extension",
   "main": "add-product.js",
   "dependencies": {
     "pg": "^8.11.3",

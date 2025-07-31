@@ -5,33 +5,254 @@
   let buttonAdded = false;
 
   // Anahtar kelimeler
-  const KEYWORDS = ["sepete ekle", "add to basket", "add", "ekle"];
+  const KEYWORDS = [
+    "sepete ekle",
+    "add to basket",
+    "add",
+    "ekle",
+    "sepete ekle",
+    "sepete ekle",
+    "satın al",
+    "hemen al",
+    "buy now",
+    "add to cart",
+    "sepet",
+    "basket",
+    "cart",
+  ];
 
   // API endpoint (Vercel + Neon DB)
   const API_ENDPOINT = "https://my-list-pi.vercel.app/api/add-product";
 
   function hasRelevantButton() {
+    console.log("🔍 [Tüm Listem] Buton tespiti başladı");
+
+    // Ana sayfa kontrolü - eğer ana sayfa ise buton gösterilmesin
+    const isHomePage = checkIfHomePage();
+    if (isHomePage) {
+      console.log("🚫 [Tüm Listem] Ana sayfa - buton gösterilmeyecek");
+      return false;
+    }
+
     const buttons = Array.from(
       document.querySelectorAll(
-        "button, a, input[type='button'], input[type='submit']"
+        "button, a, input[type='button'], input[type='submit'], div[role='button'], div[onclick], span[role='button'], span[onclick], div[class*='btn'], span[class*='btn'], div[class*='button'], span[class*='button'], div[class*='add'], span[class*='add'], div[class*='cart'], span[class*='cart'], div[class*='basket'], span[class*='basket'], div[class*='sepete'], span[class*='sepete'], div[class*='ekle'], span[class*='ekle']"
       )
     );
-    return buttons.some((btn) => {
-      const text = (btn.innerText || btn.value || "").toLowerCase();
-      return KEYWORDS.some((keyword) => text.includes(keyword));
+
+    console.log("🔍 [Tüm Listem] Butonlar taranıyor:", buttons.length, "adet");
+
+    const relevantButtons = buttons.filter((btn) => {
+      const text = (
+        btn.innerText ||
+        btn.value ||
+        btn.textContent ||
+        ""
+      ).toLowerCase();
+      const hasKeyword = KEYWORDS.some((keyword) => text.includes(keyword));
+      if (hasKeyword) {
+        console.log(`✅ [Tüm Listem] İlgili buton: "${text}"`);
+      }
+      return hasKeyword;
     });
+
+    console.log(
+      "🎯 [Tüm Listem] İlgili butonlar:",
+      relevantButtons.length,
+      "adet"
+    );
+
+    // Eğer hiç ilgili buton yoksa false döndür
+    if (relevantButtons.length === 0) {
+      console.log("🚫 [Tüm Listem] İlgili buton bulunamadı");
+      return false;
+    }
+
+    console.log("✅ [Tüm Listem] Buton gösterilecek");
+
+    return true;
+  }
+
+  function checkIfHomePage() {
+    // Ana sayfa göstergeleri
+    const homePageIndicators = [
+      // URL göstergeleri
+      () => {
+        const path = window.location.pathname.toLowerCase();
+        return (
+          path === "/" ||
+          path === "/home" ||
+          path === "/anasayfa" ||
+          path === "/index" ||
+          path.includes("/home/") ||
+          path.includes("/anasayfa/")
+        );
+      },
+
+      // Sayfa başlığı göstergeleri
+      () => {
+        const title = document.title.toLowerCase();
+        return (
+          title.includes("ana sayfa") ||
+          title.includes("homepage") ||
+          title.includes("anasayfa") ||
+          title.includes("home") ||
+          title.includes("index")
+        );
+      },
+
+      // Meta description göstergeleri
+      () => {
+        const metaDescription = document.querySelector(
+          'meta[name="description"]'
+        );
+        if (!metaDescription) return false;
+        const content = metaDescription.content.toLowerCase();
+        return (
+          content.includes("ana sayfa") ||
+          content.includes("homepage") ||
+          content.includes("anasayfa") ||
+          content.includes("home")
+        );
+      },
+
+      // Ana sayfa elementleri
+      () => {
+        const homePageElements = [
+          "hero",
+          "banner",
+          "slider",
+          "carousel",
+          "main-banner",
+          "home-banner",
+          "welcome",
+          "hoşgeldiniz",
+        ];
+
+        return homePageElements.some((element) => {
+          const elements = document.querySelectorAll(
+            `[class*="${element}"], [id*="${element}"]`
+          );
+          return elements.length > 0;
+        });
+      },
+    ];
+
+    const positiveIndicators = homePageIndicators.filter((indicator) => {
+      try {
+        return indicator();
+      } catch (e) {
+        return false;
+      }
+    });
+
+    return positiveIndicators.length >= 2;
   }
 
   function getLargestImage() {
-    const images = Array.from(document.images).filter(
-      (img) => img.naturalWidth && img.naturalHeight
-    );
-    if (!images.length) return "";
-    images.sort(
-      (a, b) =>
-        b.naturalWidth * b.naturalHeight - a.naturalWidth * a.naturalHeight
-    );
-    return images[0].src;
+    // Tüm resimleri topla - farklı kaynaklardan
+    const allImages = [
+      // Normal img tagları
+      ...Array.from(document.querySelectorAll("img")),
+      // Lazy loading için data-src, data-lazy-src vb.
+      ...Array.from(document.querySelectorAll("img[data-src]")),
+      ...Array.from(document.querySelectorAll("img[data-lazy-src]")),
+      ...Array.from(document.querySelectorAll("img[data-original]")),
+      // Background image olan div'ler
+      ...Array.from(
+        document.querySelectorAll("div[style*='background-image']")
+      ),
+      // Ürün resmi class'ları
+      ...Array.from(document.querySelectorAll("[class*='product-image']")),
+      ...Array.from(document.querySelectorAll("[class*='product-img']")),
+      ...Array.from(document.querySelectorAll("[class*='item-image']")),
+      ...Array.from(document.querySelectorAll("[class*='item-img']")),
+    ];
+
+    // Resim URL'lerini topla
+    const imageUrls = [];
+
+    allImages.forEach((img, index) => {
+      let src = "";
+
+      if (img.tagName === "IMG") {
+        // Normal img tag
+        src =
+          img.src ||
+          img.getAttribute("data-src") ||
+          img.getAttribute("data-lazy-src") ||
+          img.getAttribute("data-original");
+      } else if (img.tagName === "DIV") {
+        // Background image
+        const style = img.style.backgroundImage;
+        if (style && style.includes("url(")) {
+          src = style.match(/url\(['"]?([^'"]+)['"]?\)/)?.[1] || "";
+        }
+      }
+
+      if (src && src.length > 0) {
+        imageUrls.push({
+          src: src,
+          element: img,
+          index: index,
+        });
+      }
+    });
+
+    // Resimleri filtrele ve sırala
+    const validImages = imageUrls.filter((img) => {
+      const src = img.src.toLowerCase();
+
+      // Geçersiz resimleri filtrele
+      const invalidPatterns = [
+        "data:image",
+        "placeholder",
+        "blank",
+        "empty",
+        "default",
+        "logo",
+        "icon",
+        "avatar",
+        "profile",
+        "banner",
+        "ad",
+        "loading",
+        "spinner",
+        "loader",
+        "skeleton",
+      ];
+
+      return !invalidPatterns.some((pattern) => src.includes(pattern));
+    });
+
+    if (validImages.length === 0) {
+      return "";
+    }
+
+    // En büyük resmi seç (URL'deki boyut bilgisine göre)
+    const largestImage = validImages.reduce((largest, current) => {
+      const currentSize = getImageSizeFromUrl(current.src);
+      const largestSize = getImageSizeFromUrl(largest.src);
+
+      if (currentSize > largestSize) {
+        return current;
+      }
+      return largest;
+    });
+
+    return largestImage.src;
+  }
+
+  function getImageSizeFromUrl(url) {
+    // URL'den boyut bilgisini çıkar (örn: image.jpg?w=800&h=600)
+    const sizeMatch = url.match(/[?&](w|width|h|height)=(\d+)/g);
+    if (sizeMatch) {
+      const sizes = sizeMatch.map((match) => parseInt(match.split("=")[1]));
+      return Math.max(...sizes);
+    }
+
+    // URL'de boyut yoksa varsayılan değer
+    return 100;
   }
 
   function getLargestHeading() {
@@ -129,28 +350,287 @@
     return getLargestHeading();
   }
 
-  function getProductInfo() {
-    let name = getProductName();
-    // Ürün adı filtreleme koşullarını gevşet
-    if (
-      /ürün|fiyat|sepete|ekle|alışveriş|basket|cart|add/i.test(name) &&
-      name.length < 10
-    ) {
-      name = "";
-    }
-    const price = getFirstPriceText();
-    let image = getLargestImage();
-    const url = window.location.href;
-    const site = window.location.hostname;
+  // Meta tag'leri çeken fonksiyon
+  function getMetaTags() {
+    const metaTags = {};
 
-    // Eğer görsel yoksa boş string olarak bırak
-    return { name, price, image, url, site };
+    // Title tag'ini al
+    const titleElement = document.querySelector("title");
+    if (titleElement) {
+      metaTags.title = titleElement.textContent.trim();
+    }
+
+    // Meta tag'leri tara
+    const metaElements = document.querySelectorAll("meta");
+    metaElements.forEach((meta) => {
+      const name = meta.getAttribute("name") || meta.getAttribute("property");
+      const content = meta.getAttribute("content");
+
+      if (name && content) {
+        metaTags[name.toLowerCase()] = content;
+      }
+    });
+
+    return metaTags;
+  }
+
+  // Fiyat için kapsamlı kontrol
+  function getProductPrice(metaTags, domInfo) {
+    // Meta tag öncelik sırası - indirimli fiyatlar önce
+    const priceSources = [
+      metaTags["og:price:sale_price"], // İndirimli fiyat (öncelik)
+      metaTags["product:price:sale_price"], // E-ticaret indirimli fiyat
+      metaTags["item:price:sale_price"], // Schema.org indirimli fiyat
+      metaTags["sale_price"], // Genel indirimli fiyat
+      metaTags["discount_price"], // İndirimli fiyat
+      metaTags["final_price"], // Final fiyat
+      metaTags["current_price"], // Güncel fiyat
+      metaTags["og:price:amount"], // Normal fiyat
+      metaTags["product:price:amount"], // E-ticaret normal fiyat
+      metaTags["item:price:amount"], // Schema.org normal fiyat
+      metaTags["price"], // Genel fiyat
+      metaTags["product_price"], // Özel format
+      metaTags["product-price"], // Kebab case
+      metaTags["twitter:data1"], // Twitter
+      metaTags["twitter:label1"], // Twitter label
+      metaTags["price:amount"], // Alternatif
+      metaTags["amount"], // Kısa
+      metaTags["cost"], // Maliyet
+      metaTags["value"], // Değer
+      domInfo.price, // DOM fallback
+    ];
+
+    for (const source of priceSources) {
+      if (source && source.trim()) {
+        // Fiyat formatını temizle ve kontrol et
+        const cleanPrice = source.replace(/[^\d.,]/g, "").trim();
+        if (cleanPrice && cleanPrice.length > 0) {
+          // Sayısal değer kontrolü
+          const numericPrice = parseFloat(cleanPrice.replace(",", "."));
+          if (!isNaN(numericPrice) && numericPrice > 0) {
+            return cleanPrice;
+          }
+        }
+      }
+    }
+
+    return "";
+  }
+
+  // DOM'dan bilgi çeken fonksiyon (fallback)
+  function getDOMInfo() {
+    let name = "";
+    let price = "";
+    let image_url = "";
+
+    // Ürün adı - en büyük heading'i bul
+    const headings = Array.from(
+      document.querySelectorAll("h1, h2, h3, h4, h5, h6")
+    );
+    if (headings.length > 0) {
+      // En büyük heading'i seç (genelde h1 ürün adıdır)
+      const mainHeading =
+        headings.find((h) => h.tagName === "H1") || headings[0];
+      name = mainHeading.textContent.trim();
+    }
+
+    // Fiyat - gelişmiş fiyat tespiti
+    price = findPriceInDOM();
+
+    // Resim - en büyük resmi bul
+    image_url = getLargestImage();
+
+    return { name, price, image_url };
+  }
+
+  // DOM'dan fiyat bulma fonksiyonu
+  function findPriceInDOM() {
+    // Fiyat için arama yapılacak selector'lar
+    const priceSelectors = [
+      '[class*="price"]',
+      '[class*="fiyat"]',
+      '[class*="cost"]',
+      '[class*="amount"]',
+      '[class*="value"]',
+      '[class*="money"]',
+      "span",
+      "div",
+      "p",
+      "strong",
+      "b",
+    ];
+
+    // Fiyat pattern'leri
+    const pricePatterns = [
+      /[\d.,]+\s*(₺|TL|\$|€)/, // 1000 ₺
+      /(₺|TL|\$|€)\s*[\d.,]+/, // ₺ 1000
+      /[\d.,]+\s*(TL|TRY|USD|EUR)/, // 1000 TL
+      /(TL|TRY|USD|EUR)\s*[\d.,]+/, // TL 1000
+      /fiyat[:\s]*[\d.,]+/i, // fiyat: 1000
+      /price[:\s]*[\d.,]+/i, // price: 1000
+      /cost[:\s]*[\d.,]+/i, // cost: 1000
+      /[\d.,]+\s*(kuruş|cent)/i, // 1000 kuruş
+      /[\d.,]+\s*(bin|milyon)/i, // 1000 bin
+    ];
+
+    // Tüm selector'ları dene
+    for (const selector of priceSelectors) {
+      const elements = document.querySelectorAll(selector);
+
+      for (const element of elements) {
+        const text = element.textContent.trim();
+
+        // Pattern'leri kontrol et
+        for (const pattern of pricePatterns) {
+          if (pattern.test(text)) {
+            // Fiyatı temizle
+            const match = text.match(pattern);
+            if (match) {
+              const cleanPrice = match[0].replace(/[^\d.,]/g, "").trim();
+              if (cleanPrice && cleanPrice.length > 0) {
+                const numericPrice = parseFloat(cleanPrice.replace(",", "."));
+                if (!isNaN(numericPrice) && numericPrice > 0) {
+                  return cleanPrice;
+                }
+              }
+            }
+          }
+        }
+
+        // Ek kontroller
+        if (
+          text.match(/[\d.,]+/) &&
+          (text.includes("₺") ||
+            text.includes("TL") ||
+            text.includes("$") ||
+            text.includes("€"))
+        ) {
+          const cleanPrice = text.replace(/[^\d.,]/g, "").trim();
+          if (cleanPrice && cleanPrice.length > 0) {
+            const numericPrice = parseFloat(cleanPrice.replace(",", "."));
+            if (!isNaN(numericPrice) && numericPrice > 0) {
+              return cleanPrice;
+            }
+          }
+        }
+      }
+    }
+
+    return "";
+  }
+
+  // Gelişmiş ürün bilgisi çekme fonksiyonu
+  function getProductInfo() {
+    // Meta tag'lerden bilgi çek
+    const metaTags = getMetaTags();
+
+    // DOM'dan da bilgi çek (fallback için)
+    const domInfo = getDOMInfo();
+
+    // Kapsamlı meta tag kontrolü
+    const productInfo = {
+      name: getProductName(metaTags, domInfo),
+      price: getProductPrice(metaTags, domInfo),
+      image_url: getProductImage(metaTags, domInfo),
+      product_url: window.location.href,
+      site: window.location.hostname,
+    };
+
+    return productInfo;
+  }
+
+  // Ürün adı için kapsamlı kontrol
+  function getProductName(metaTags, domInfo) {
+    // Meta tag öncelik sırası
+    const nameSources = [
+      metaTags["og:title"],
+      metaTags["twitter:title"],
+      metaTags.title,
+      metaTags["product:name"],
+      metaTags["item:name"],
+      metaTags["name"],
+      metaTags["product_name"],
+      metaTags["product-name"],
+      domInfo.name,
+    ];
+
+    for (const source of nameSources) {
+      if (source && source.trim()) {
+        return source.trim();
+      }
+    }
+
+    return "Ürün";
+  }
+
+  // Fiyat için kapsamlı kontrol
+  function getProductPrice(metaTags, domInfo) {
+    // Meta tag öncelik sırası
+    const priceSources = [
+      metaTags["og:price:amount"],
+      metaTags["product:price:amount"],
+      metaTags["item:price:amount"],
+      metaTags["price"],
+      metaTags["product_price"],
+      metaTags["product-price"],
+      metaTags["twitter:data1"],
+      metaTags["twitter:label1"],
+      metaTags["price:amount"],
+      metaTags["amount"],
+      domInfo.price,
+    ];
+
+    for (const source of priceSources) {
+      if (source && source.trim()) {
+        // Fiyat formatını temizle
+        const cleanPrice = source.replace(/[^\d.,]/g, "").trim();
+        if (cleanPrice) {
+          return cleanPrice;
+        }
+      }
+    }
+
+    return "";
+  }
+
+  // Resim için kapsamlı kontrol
+  function getProductImage(metaTags, domInfo) {
+    // Meta tag öncelik sırası
+    const imageSources = [
+      metaTags["og:image"],
+      metaTags["twitter:image"],
+      metaTags["image"],
+      metaTags["product:image"],
+      metaTags["item:image"],
+      metaTags["product_image"],
+      metaTags["product-image"],
+      metaTags["thumbnail"],
+      metaTags["photo"],
+      metaTags["picture"],
+      domInfo.image_url,
+    ];
+
+    for (const source of imageSources) {
+      if (source && source.trim() && isValidImageUrl(source)) {
+        return source.trim();
+      }
+    }
+
+    return "";
+  }
+
+  // Resim URL'sinin geçerli olup olmadığını kontrol et
+  function isValidImageUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:";
+    } catch {
+      return false;
+    }
   }
 
   async function saveProductToAPI(productInfo) {
     try {
-      console.log("🚀 API'ye ürün gönderiliyor:", productInfo);
-
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: {
@@ -159,8 +639,8 @@
         body: JSON.stringify({
           name: productInfo.name,
           price: productInfo.price,
-          image_url: productInfo.image,
-          product_url: productInfo.url,
+          image_url: productInfo.image_url,
+          product_url: productInfo.product_url,
           site: productInfo.site,
         }),
       });
@@ -168,14 +648,11 @@
       const result = await response.json();
 
       if (response.ok) {
-        console.log("✅ Ürün API'ye başarıyla kaydedildi:", result);
         return { success: true, data: result };
       } else {
-        console.error("❌ API hatası:", result);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("❌ Network hatası:", error);
       return { success: false, error: error.message };
     }
   }
@@ -183,7 +660,7 @@
   function showConfirmation(success = true, message = null) {
     const div = document.createElement("div");
     div.textContent = success
-      ? message || "Ürün My List Sepetine eklendi!"
+      ? message || "Ürün Tüm Listeme eklendi!"
       : message || "Ürün eklenirken hata oluştu!";
     div.setAttribute(
       "style",
@@ -196,10 +673,23 @@
   }
 
   function addButton() {
-    if (buttonAdded || document.getElementById(BUTTON_ID)) return;
+    console.log("🔧 [Tüm Listem] Buton ekleme başladı");
+
+    if (buttonAdded || document.getElementById(BUTTON_ID)) {
+      console.log("🚫 [Tüm Listem] Buton zaten eklenmiş");
+      return;
+    }
 
     // Anahtar kelime içeren buton yoksa ekleme
-    if (!hasRelevantButton()) return;
+    const hasRelevant = hasRelevantButton();
+    console.log("🔍 [Tüm Listem] Buton tespiti:", hasRelevant);
+
+    if (!hasRelevant) {
+      console.log("🚫 [Tüm Listem] Buton eklenmeyecek");
+      return;
+    }
+
+    console.log("✅ [Tüm Listem] Buton ekleniyor...");
 
     if (document.body && document.body.children.length > 0) {
       const btn = document.createElement("button");
@@ -207,28 +697,24 @@
       btn.innerHTML = `
         <span class="my-list-btn-content" style="display:flex;align-items:center;gap:8px;">
           <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13' /></svg>
-          <span class="my-list-btn-text">My List Sepetime Ekle</span>
+          <span class="my-list-btn-text">Tüm Listeme Ekle</span>
         </span>
       `;
       btn.setAttribute("tabindex", "0");
-      btn.setAttribute("aria-label", "My List Sepetime Ekle");
+      btn.setAttribute("aria-label", "Tüm Listeme Ekle");
       btn.setAttribute("type", "button");
       btn.setAttribute(
         "style",
-        `position:fixed;top:50%;right:0;transform:translateY(-50%);background:#2563eb;color:white;padding:0 8px 0 0;border:none;border-radius:24px 0 0 24px;font-size:18px;cursor:pointer;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.15);height:48px;min-width:32px;max-width:200px;transition:all 0.3s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;align-items:center;justify-content:flex-start;`
+        `position:fixed;top:50%;right:0;transform:translateY(-50%);background:#2563eb;color:white;padding:0 24px 0 12px;border:none;border-radius:24px 0 0 24px;font-size:18px;cursor:pointer;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.15);height:48px;width:200px;transition:margin-right 0.3s cubic-bezier(.4,0,.2,1);overflow:hidden;display:flex;align-items:center;justify-content:flex-start;margin-right:-168px;`
       );
-      btn.querySelector(".my-list-btn-text").style.display = "none";
+      btn.querySelector(".my-list-btn-text").style.display = "inline";
 
-      // Hover ile aç/kapa
+      // Hover ile aç/kapa - margin ile
       btn.addEventListener("mouseenter", () => {
-        btn.style.maxWidth = "200px";
-        btn.style.padding = "0 24px 0 12px";
-        btn.querySelector(".my-list-btn-text").style.display = "inline";
+        btn.style.marginRight = "0px";
       });
       btn.addEventListener("mouseleave", () => {
-        btn.style.maxWidth = "32px";
-        btn.style.padding = "0 8px 0 0";
-        btn.querySelector(".my-list-btn-text").style.display = "none";
+        btn.style.marginRight = "-168px";
       });
 
       btn.addEventListener("click", async function handleClick() {
@@ -236,9 +722,9 @@
         btn.querySelector(".my-list-btn-text").textContent = "Ekleniyor...";
 
         const product = getProductInfo();
-        console.log("🔍 Tespit edilen ürün bilgileri:", product);
+        console.log("🔍 [Tüm Listem] Ürün tespit edildi:", product.name);
 
-        if (product.url) {
+        if (product.product_url) {
           const result = await saveProductToAPI(product);
 
           if (result.success) {
@@ -251,13 +737,14 @@
         }
 
         btn.disabled = false;
-        btn.querySelector(".my-list-btn-text").textContent =
-          "My List Sepetime Ekle";
+        btn.querySelector(".my-list-btn-text").textContent = "Tüm Listeme Ekle";
       });
 
       document.body.appendChild(btn);
       buttonAdded = true;
-      console.log("✅ My List Sepetime Ekle butonu eklendi (hover gizli)");
+      console.log("✅ [Tüm Listem] Buton eklendi");
+    } else {
+      console.log("🚫 [Tüm Listem] Document body bulunamadı");
     }
   }
 

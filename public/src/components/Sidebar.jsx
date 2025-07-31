@@ -76,21 +76,28 @@ function Sidebar({ onScrollToSection, onToggle }) {
           <span className="text-xl flex-shrink-0">🛒</span>
           {!isCollapsed && (
             <h1 className="text-lg font-bold text-gray-900 ml-2 flex-shrink-0">
-              My List Sepet
+              Tüm Listem
             </h1>
           )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="p-4 space-y-2">
+      <nav className={`${isCollapsed ? "px-0 py-4" : "p-4"} space-y-2`}>
         {menuItems.map((item) => (
-          <div key={item.id} className="relative group">
+          <div
+            key={item.id}
+            className={`relative group ${
+              isCollapsed ? "flex justify-center" : ""
+            }`}
+          >
             <Button
               variant="ghost"
               onClick={item.action}
-              className={`w-full justify-start ${
-                isCollapsed ? "px-2" : "px-4"
+              className={`w-full justify-start h-9 ${
+                isCollapsed
+                  ? "w-12 flex items-center justify-center mx-0"
+                  : "px-4"
               }`}
             >
               <span className="w-5 h-5 flex-shrink-0">{item.icon}</span>

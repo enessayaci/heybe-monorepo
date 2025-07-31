@@ -134,7 +134,10 @@
 
   async function saveProductToAPI(productInfo) {
     try {
-      console.log("🚀 API'ye ürün gönderiliyor:", productInfo);
+      console.log(
+        "🚀 [Tüm Listem] API'ye ürün gönderiliyor:",
+        productInfo.name
+      );
 
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
@@ -153,7 +156,10 @@
       const result = await response.json();
 
       if (response.ok) {
-        console.log("✅ Ürün API'ye başarıyla kaydedildi:", result);
+        console.log(
+          "✅ [Tüm Listem] Ürün API'ye kaydedildi:",
+          result.product.name
+        );
         return { success: true, data: result };
       } else {
         console.error("❌ API hatası:", result);
@@ -202,7 +208,7 @@
         btn.textContent = "Ekleniyor...";
 
         const product = getProductInfo();
-        console.log("🔍 Tespit edilen ürün bilgileri:", product);
+        console.log("🔍 [Tüm Listem] Ürün tespit edildi:", product.name);
 
         // Koşulları gevşet - sadece URL olsa bile ekle
         if (product.url) {
@@ -224,7 +230,7 @@
 
       document.body.appendChild(btn);
       buttonAdded = true;
-      console.log("✅ My List Sepetime Ekle butonu eklendi");
+      console.log("✅ [Tüm Listem] Buton eklendi");
     }
   }
 

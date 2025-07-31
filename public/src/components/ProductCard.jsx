@@ -14,50 +14,70 @@ function ProductCard({ product, onDelete, onOpenProduct }) {
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-white rounded-lg border hover:shadow-md transition-all duration-200">
-      {/* Ürün Resmi */}
-      <div className="flex-shrink-0">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-16 h-16 object-cover rounded-lg border"
-            onError={(e) => {
-              e.target.style.display = "none";
-              e.target.nextSibling.style.display = "flex";
-            }}
-          />
-        ) : null}
-        <div
-          className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-400 text-xs"
-          style={{ display: product.image_url ? "none" : "flex" }}
-        >
-          Yok
+    <div className="bg-white rounded-lg border hover:shadow-lg transition-all duration-200 overflow-hidden">
+      {/* Thumbnail Card - WhatsApp tarzı */}
+      <div className="flex p-4">
+        {/* Ürün Resmi - Daha büyük */}
+        <div className="flex-shrink-0 mr-4">
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="w-20 h-20 object-cover rounded-lg border"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextSibling.style.display = "flex";
+              }}
+            />
+          ) : null}
+          <div
+            className="w-20 h-20 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-400 text-xs"
+            style={{ display: product.image_url ? "none" : "flex" }}
+          >
+            Yok
+          </div>
         </div>
-      </div>
 
-      {/* Ürün Bilgileri */}
-      <div className="flex-1 min-w-0">
-        <h3
-          className="font-semibold text-gray-900 mb-1 line-clamp-1"
-          title={product.name}
-        >
-          {product.name}
-        </h3>
-        <p className="text-sm text-gray-500 uppercase font-medium">
-          {product.site}
-        </p>
-      </div>
+        {/* Ürün Bilgileri - WhatsApp tarzı */}
+        <div className="flex-1 min-w-0">
+          {/* Başlık - Bold ve büyük */}
+          <h3
+            className="font-bold text-gray-900 text-lg mb-1 line-clamp-2"
+            title={product.name}
+          >
+            {product.name}
+          </h3>
 
-      {/* Butonlar */}
-      <div className="flex gap-2 flex-shrink-0">
-        <Button variant="outline" size="sm" onClick={handleOpenProduct}>
-          <ExternalLink className="w-4 h-4 mr-1" />
-          Git
-        </Button>
-        <Button variant="destructive" size="sm" onClick={handleDelete}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
+          {/* Fiyat - Varsa göster */}
+          {product.price && (
+            <p className="text-lg font-semibold text-green-600 mb-2">
+              {product.price} ₺
+            </p>
+          )}
+
+          {/* Site adı - Normal yazı */}
+          <p className="text-xs text-gray-400 font-medium">{product.site}</p>
+        </div>
+
+        {/* Butonlar - Sağ tarafta yan yana */}
+        <div className="flex-shrink-0 ml-4 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenProduct}
+            className="w-20"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            className="w-20"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

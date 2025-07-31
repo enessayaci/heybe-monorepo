@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     const result = await pool.query(query);
     const products = result.rows;
 
-    console.log("✅ Ürünler başarıyla getirildi:", products.length);
+    console.log("✅ [Tüm Listem] Ürünler getirildi:", products.length, "adet");
 
     res.json({
       success: true,
