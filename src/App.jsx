@@ -147,7 +147,7 @@ export default function App() {
       try {
         setLoading(true);
         setError(null);
-        console.log("🚀 Popup açıldı, veri alınıyor...");
+        console.log("🚀 Sayfa yüklendi, veri alınıyor...");
 
         const result = await fetchMyListFromDatabase(setExtensionStatus);
         console.log("📋 fetchMyListFromDatabase'den dönen sonuç:", result);
@@ -160,7 +160,7 @@ export default function App() {
         setProducts(result);
         console.log("✅ setProducts çağrıldı");
       } catch (error) {
-        console.error("❌ Popup: Veri alınırken hata:", error);
+        console.error("❌ Sayfa: Veri alınırken hata:", error);
         setError(error.message);
         setProducts([]);
       } finally {
@@ -169,7 +169,46 @@ export default function App() {
       }
     };
 
-    fetchData();
+    // Sayfa yüklendiğinde hemen extension kontrolü yap
+    const checkExtensionOnLoad = async () => {
+      console.log("🔍 Sayfa yüklendi, extension kontrol ediliyor...");
+      
+      if (window.chrome && chrome.runtime) {
+        try {
+          const userId = await new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage(
+              { action: "getUserId" },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.log("⚠️ Extension mesaj hatası:", chrome.runtime.lastError);
+                  reject(new Error("Extension bulunamadı"));
+                  return;
+                }
+                resolve(response?.userId);
+              }
+            );
+          });
+
+          if (userId) {
+            console.log("✅ Extension bulundu, UUID:", userId);
+            setExtensionStatus("found");
+            fetchData();
+          } else {
+            console.log("❌ Extension UUID bulunamadı");
+            setExtensionStatus("missing");
+          }
+        } catch (error) {
+          console.log("⚠️ Extension kontrol hatası:", error.message);
+          setExtensionStatus("missing");
+        }
+      } else {
+        console.log("❌ Chrome API mevcut değil");
+        setExtensionStatus("missing");
+      }
+    };
+
+    // Sayfa yüklendiğinde extension kontrolü yap
+    checkExtensionOnLoad();
 
     // Extension kontrol timer'ı (extension sonradan yüklenirse)
     const extensionCheckTimer = setInterval(async () => {
