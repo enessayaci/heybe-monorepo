@@ -314,7 +314,7 @@ function App() {
   // Helper hazır olana kadar bekle
   function waitForSharedDB() {
     if (window.ExtensionSharedDB) return Promise.resolve();
-    
+
     // Event zaten gönderilmiş olabilir, kısa bir süre bekle
     return new Promise((res) => {
       const checkReady = () => {
@@ -325,7 +325,7 @@ function App() {
         setTimeout(checkReady, 100);
       };
       checkReady();
-      
+
       // Event listener da ekle (backup)
       window.addEventListener("ExtensionSharedDBReady", res, { once: true });
     });
