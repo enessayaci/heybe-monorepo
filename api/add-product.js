@@ -22,6 +22,54 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // Handle GET request - Ürünleri getir
+  if (req.method === "GET") {
+    try {
+      const { user_id } = req.query;
+
+      if (!user_id) {
+        return res.status(400).json({ error: "user_id parameter is required" });
+      }
+
+      console.log("👤 [Tüm Listem] Ürünler getiriliyor - Kullanıcı ID:", user_id);
+
+      // Kullanıcının ürünlerini çek (en yeniler önce)
+      const query = `
+        SELECT 
+          id,
+          name,
+          price,
+          image_url,
+          product_url,
+          site,
+          created_at,
+          updated_at,
+          user_id
+        FROM products 
+        WHERE user_id = $1 
+        ORDER BY created_at DESC
+      `;
+
+      const result = await pool.query(query, [user_id]);
+
+      console.log(`📦 [Tüm Listem] ${result.rows.length} ürün bulundu`);
+
+      return res.status(200).json({
+        success: true,
+        products: result.rows,
+        count: result.rows.length,
+        user_id: user_id,
+      });
+    } catch (error) {
+      console.error("GET Database error:", error);
+      return res.status(500).json({
+        error: "Internal server error",
+        details: error.message,
+      });
+    }
+  }
+
+  // Handle POST request - Ürün ekle
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
