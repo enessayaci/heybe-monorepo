@@ -180,7 +180,16 @@ function App() {
 
       if (response.ok) {
         console.log("✅ Ürün silindi:", productId);
-        fetchProducts(); // Listeyi yenile
+        // Ürünü local state den kaldır
+        setProducts((prevProducts) =>
+          prevProducts.filter((product) => product.id !== productId)
+        );
+        setFilteredProducts((prevProducts) =>
+          prevProducts.filter((product) => product.id !== productId)
+        );
+        
+        // Başarı mesajı göster
+        alert("✅ Ürün başarıyla silindi!");
       } else {
         setError("Ürün silinirken hata oluştu");
       }
