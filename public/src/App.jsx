@@ -259,10 +259,7 @@ function App() {
 
   const stats = calculateStats();
 
-  useEffect(() => {
-    console.log("🚀 Ana sayfa yüklendi");
-    fetchProducts();
-  }, []);
+
 
   // UUID oluşturma fonksiyonu
   function generateUUID() {
