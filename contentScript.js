@@ -12,31 +12,56 @@
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur (Backup sistemi ile)
+    // Kullanıcı ID'sini al veya oluştur (Backup sistemi ile)
   async function getUserId() {
     try {
-      // Ana UUID'yi kontrol et
-      let userId = await extensionStorage.get("tum_listem_user_id");
+      // Ana UUID ve backup UUID'yi kontrol et
+      const [mainUUID, backupUUID] = await Promise.all([
+        extensionStorage.get("tum_listem_user_id"),
+        extensionStorage.get("tum_listem_backup_uuid")
+      ]);
+
+      console.log("🔍 [Tüm Listem] UUID Kontrolü:");
+      console.log("  Ana UUID:", mainUUID);
+      console.log("  Backup UUID:", backupUUID);
+
+      let userId = mainUUID;
 
       // Ana UUID yoksa backup'tan dene
-      if (!userId) {
-        const backupUUID = await extensionStorage.get("tum_listem_backup_uuid");
-        if (backupUUID) {
-          console.log(
-            "🔄 [Tüm Listem] Ana UUID yok, backup UUID kullanılıyor:",
-            backupUUID
-          );
-          userId = backupUUID;
-          // Backup'ı ana UUID'ye restore et
-          await extensionStorage.set("tum_listem_user_id", userId);
-          console.log("✅ [Tüm Listem] Backup UUID restore edildi");
-        }
+      if (!userId && backupUUID) {
+        console.log(
+          "🔄 [Tüm Listem] Ana UUID yok, backup UUID kullanılıyor:",
+          backupUUID
+        );
+        userId = backupUUID;
+        // Backup'ı ana UUID'ye restore et
+        await extensionStorage.set("tum_listem_user_id", userId);
+        console.log("✅ [Tüm Listem] Backup UUID restore edildi");
+      }
+
+      // Ana UUID var ama backup yoksa backup oluştur
+      if (userId && !backupUUID) {
+        console.log("💾 [Tüm Listem] Backup UUID oluşturuluyor:", userId);
+        await extensionStorage.set("tum_listem_backup_uuid", userId);
+      }
+
+      // Ana UUID ve backup farklıysa, backup'ı kullan (eski verileri korumak için)
+      if (userId && backupUUID && userId !== backupUUID) {
+        console.log("⚠️ [Tüm Listem] UUID uyumsuzluğu tespit edildi!");
+        console.log("  Ana UUID:", userId);
+        console.log("  Backup UUID:", backupUUID);
+        console.log("🔄 [Tüm Listem] Backup UUID kullanılıyor (eski verileri korumak için):", backupUUID);
+        userId = backupUUID;
+        // Backup'ı ana UUID'ye restore et
+        await extensionStorage.set("tum_listem_user_id", userId);
+        console.log("✅ [Tüm Listem] Backup UUID ana UUID olarak restore edildi");
       }
 
       // Hala UUID yoksa yeni oluştur
       if (!userId) {
         userId = generateUUID();
         await extensionStorage.set("tum_listem_user_id", userId);
+        await extensionStorage.set("tum_listem_backup_uuid", userId);
         console.log(
           "👤 [Tüm Listem] İlk kurulum - Yeni kullanıcı ID oluşturuldu:",
           userId,
@@ -48,15 +73,6 @@
           userId,
           `(${extensionStorage.getBrowserName()})`
         );
-      }
-
-      // Backup'ı güncelle/oluştur
-      const currentBackup = await extensionStorage.get(
-        "tum_listem_backup_uuid"
-      );
-      if (!currentBackup || currentBackup !== userId) {
-        await extensionStorage.set("tum_listem_backup_uuid", userId);
-        console.log("💾 [Tüm Listem] UUID backup güncellendi");
       }
 
       return userId;

@@ -25,14 +25,19 @@ if (browserAPI) {
         ["tum_listem_user_id", "tum_listem_backup_uuid"],
         (result) => {
           let foundUUID = result.tum_listem_user_id;
+          const backupUUID = result.tum_listem_backup_uuid;
+
+          console.log("🔍 [Background] UUID Kontrolü:");
+          console.log("  Ana UUID:", foundUUID);
+          console.log("  Backup UUID:", backupUUID);
 
           // Ana UUID yoksa backup'tan dene
-          if (!foundUUID && result.tum_listem_backup_uuid) {
+          if (!foundUUID && backupUUID) {
             console.log(
               "🔄 [Background] Ana UUID yok, backup UUID kullanılıyor:",
-              result.tum_listem_backup_uuid
+              backupUUID
             );
-            foundUUID = result.tum_listem_backup_uuid;
+            foundUUID = backupUUID;
 
             // Backup'ı ana UUID'ye restore et
             browserAPI.storage.local.set(
@@ -43,10 +48,26 @@ if (browserAPI) {
             );
           }
 
-          // Backup yoksa ve ana UUID varsa backup oluştur
-          if (foundUUID && !result.tum_listem_backup_uuid) {
+          // Ana UUID var ama backup yoksa backup oluştur
+          if (foundUUID && !backupUUID) {
             console.log("💾 [Background] Backup UUID oluşturuluyor:", foundUUID);
             browserAPI.storage.local.set({ tum_listem_backup_uuid: foundUUID });
+          }
+
+          // Ana UUID ve backup farklıysa, backup'ı kullan (eski verileri korumak için)
+          if (foundUUID && backupUUID && foundUUID !== backupUUID) {
+            console.log("⚠️ [Background] UUID uyumsuzluğu tespit edildi!");
+            console.log("  Ana UUID:", foundUUID);
+            console.log("  Backup UUID:", backupUUID);
+            console.log("🔄 [Background] Backup UUID kullanılıyor (eski verileri korumak için):", backupUUID);
+            foundUUID = backupUUID;
+            // Backup'ı ana UUID'ye restore et
+            browserAPI.storage.local.set(
+              { tum_listem_user_id: foundUUID },
+              () => {
+                console.log("✅ [Background] Backup UUID ana UUID olarak restore edildi");
+              }
+            );
           }
 
           console.log("👤 [Background] UUID döndürülüyor:", foundUUID);

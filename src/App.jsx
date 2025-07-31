@@ -237,10 +237,18 @@ export default function App() {
               );
               const data = await response.json();
               console.log("📦 Database'den gelen ürünler:", data);
+              
+              // UUID sync durumunu kontrol et
+              let syncStatus = "✅ Senkronize";
+              if (data.products && data.products.length === 0) {
+                syncStatus = "⚠️ UUID senkronizasyon sorunu olabilir";
+              }
+              
               alert(
                 `Extension UUID: ${userId}\n` +
                   `Ürün sayısı: ${data.products?.length || 0}\n` +
-                  `Database bağlantısı: ✅`
+                  `Database bağlantısı: ✅\n` +
+                  `Sync Durumu: ${syncStatus}`
               );
             } catch (error) {
               console.error("❌ Database debug hatası:", error);
