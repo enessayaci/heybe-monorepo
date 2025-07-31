@@ -12,11 +12,11 @@
     );
   }
 
-    // Kullanıcı ID'sini al veya oluştur (IndexedDB Shared Storage ile)
+  // Kullanıcı ID'sini al veya oluştur (IndexedDB Shared Storage ile)
   async function getUserId() {
     try {
       console.log("🔍 [Tüm Listem] UUID Kontrolü (IndexedDB shared storage):");
-      
+
       // 1. IndexedDB'den kontrol et (shared storage)
       let userId = null;
       try {
@@ -33,11 +33,11 @@
       } catch (e) {
         console.log("❌ IndexedDB okunamadı:", e);
       }
-      
+
       // 2. Extension storage'dan kontrol et (fallback)
       const [mainUUID, backupUUID] = await Promise.all([
         extensionStorage.get("tum_listem_user_id"),
-        extensionStorage.get("tum_listem_backup_uuid")
+        extensionStorage.get("tum_listem_backup_uuid"),
       ]);
 
       console.log("  Extension Ana UUID:", mainUUID);
@@ -68,31 +68,39 @@
         console.log("⚠️ [Tüm Listem] UUID uyumsuzluğu tespit edildi!");
         console.log("  Ana UUID:", userId);
         console.log("  Backup UUID:", backupUUID);
-        console.log("🔄 [Tüm Listem] Backup UUID kullanılıyor (eski verileri korumak için):", backupUUID);
+        console.log(
+          "🔄 [Tüm Listem] Backup UUID kullanılıyor (eski verileri korumak için):",
+          backupUUID
+        );
         userId = backupUUID;
         // Backup'ı ana UUID'ye restore et
         await extensionStorage.set("tum_listem_user_id", userId);
-        console.log("✅ [Tüm Listem] Backup UUID ana UUID olarak restore edildi");
+        console.log(
+          "✅ [Tüm Listem] Backup UUID ana UUID olarak restore edildi"
+        );
       }
 
       // Hala UUID yoksa yeni oluştur
       if (!userId) {
         userId = generateUUID();
-        
+
         // IndexedDB'ye yaz (shared storage)
         try {
           if (window.ExtensionSharedDB) {
             await window.ExtensionSharedDB.setUUID(userId);
-            console.log("✅ [Tüm Listem] Yeni UUID IndexedDB'ye yazıldı:", userId);
+            console.log(
+              "✅ [Tüm Listem] Yeni UUID IndexedDB'ye yazıldı:",
+              userId
+            );
           }
         } catch (e) {
           console.log("❌ IndexedDB yazılamadı:", e);
         }
-        
+
         // Extension storage'a da yaz (backup)
         await extensionStorage.set("tum_listem_user_id", userId);
         await extensionStorage.set("tum_listem_backup_uuid", userId);
-        
+
         console.log(
           "👤 [Tüm Listem] İlk kurulum - Yeni kullanıcı ID oluşturuldu:",
           userId,
@@ -104,7 +112,7 @@
           userId,
           `(${extensionStorage.getBrowserName()})`
         );
-        
+
         // IndexedDB'ye de yaz (sync)
         try {
           if (window.ExtensionSharedDB) {

@@ -101,25 +101,22 @@ function App() {
       }
     })();
 
-    // Polling geçici olarak kapalı - Manuel test için
-    console.log("⏸️ [Polling] Geçici olarak kapalı - Manuel test için");
-    
-    // Manuel test: 5 saniye sonra UUID'yi kontrol et
+    // Basit: UUID hazır olduğunda ürünleri çek
+    console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
     setTimeout(async () => {
-      console.log("🧪 [Manuel Test] UUID kontrol ediliyor...");
       try {
         const userId = await getUserId();
-        console.log("🧪 [Manuel Test] getUserId() sonucu:", userId);
+        console.log("🚀 [Basit] getUserId() sonucu:", userId);
         if (userId) {
-          console.log("✅ [Manuel Test] UUID bulundu:", userId);
+          console.log("✅ [Basit] UUID bulundu, ürünler çekiliyor:", userId);
           await fetchProducts();
         } else {
-          console.log("❌ [Manuel Test] UUID bulunamadı");
+          console.log("❌ [Basit] UUID bulunamadı");
         }
       } catch (e) {
-        console.log("⚠️ [Manuel Test] Hata:", e);
+        console.log("⚠️ [Basit] Hata:", e);
       }
-    }, 5000);
+    }, 2000); // 2 saniye bekle
   }, []);
 
   // Test fonksiyonu
@@ -324,6 +321,7 @@ function App() {
 
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
+    console.log("🚀 [getUserId] Fonksiyon başladı");
     await waitForSharedDB();
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
 
