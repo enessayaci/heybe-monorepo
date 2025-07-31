@@ -150,7 +150,7 @@ function App() {
   const fetchProducts = async () => {
     try {
       setStatus("loading");
-      const userId = getUserId();
+      const userId = await getUserId();
       const response = await fetch(
         `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
       );
@@ -179,7 +179,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: productId, user_id: getUserId() }),
+        body: JSON.stringify({ id: productId, user_id: await getUserId() }),
       });
 
       if (response.ok) {
