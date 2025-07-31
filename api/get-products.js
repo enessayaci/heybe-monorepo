@@ -1,10 +1,7 @@
 const { Pool } = require("pg");
 
-// PostgreSQL bağlantı konfigürasyonu
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgresql://neondb_owner:npg_bLEYoHIWzK12@ep-small-wildflower-a2k0k4l4-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
@@ -25,31 +22,24 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // Only allow GET method
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const query = `
-      SELECT id, name, price, image_url, product_url, site, created_at, updated_at
-      FROM products
+      SELECT * FROM products 
       ORDER BY created_at DESC
     `;
 
     const result = await pool.query(query);
-    const products = result.rows;
 
-    console.log("✅ [Tüm Listem] Ürünler getirildi:", products.length, "adet");
-
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Ürünler başarıyla getirildi",
-      products: products,
-      count: products.length,
+      products: result.rows,
     });
   } catch (error) {
-    console.error("❌ Veritabanı hatası:", error);
+    console.error("Database error:", error);
     res.status(500).json({
       error: "Internal server error",
       details: error.message,

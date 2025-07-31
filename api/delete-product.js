@@ -1,10 +1,7 @@
 const { Pool } = require("pg");
 
-// PostgreSQL bağlantı konfigürasyonu
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgresql://neondb_owner:npg_bLEYoHIWzK12@ep-small-wildflower-a2k0k4l4-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
@@ -25,7 +22,6 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // Only allow DELETE method
   if (req.method !== "DELETE") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -34,35 +30,27 @@ module.exports = async (req, res) => {
     const { id } = req.body;
 
     if (!id) {
-      return res.status(400).json({
-        error: "Missing required field: id",
-      });
+      return res.status(400).json({ error: "Product ID is required" });
     }
 
     const query = `
       DELETE FROM products 
-      WHERE id = $1 
-      RETURNING id, name
+      WHERE id = $1
+      RETURNING *
     `;
 
     const result = await pool.query(query, [id]);
 
     if (result.rowCount === 0) {
-      return res.status(404).json({
-        error: "Product not found",
-      });
+      return res.status(404).json({ error: "Product not found" });
     }
 
-    const deletedProduct = result.rows[0];
-    console.log("✅ [Tüm Listem] Ürün silindi:", deletedProduct.name);
-
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Ürün başarıyla silindi",
-      deletedProduct: deletedProduct,
+      message: "Product deleted successfully",
     });
   } catch (error) {
-    console.error("❌ Veritabanı hatası:", error);
+    console.error("Database error:", error);
     res.status(500).json({
       error: "Internal server error",
       details: error.message,

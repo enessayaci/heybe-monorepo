@@ -14,6 +14,7 @@ function App() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [showWarning, setShowWarning] = useState(true);
+  const [deletingProductId, setDeletingProductId] = useState(null);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -167,8 +168,8 @@ function App() {
     }
   };
 
-  // Ürün sil
   const handleDeleteProduct = async (productId) => {
+    setDeletingProductId(productId);
     try {
       const response = await fetch(DELETE_PRODUCT_ENDPOINT, {
         method: "DELETE",
@@ -196,9 +197,10 @@ function App() {
     } catch (error) {
       console.error("❌ Silme hatası:", error);
       setError("Silme hatası: " + error.message);
+    } finally {
+      setDeletingProductId(null);
     }
   };
-
   // Tümünü sil
   const handleClearAll = async () => {
     if (
@@ -400,6 +402,7 @@ function App() {
                   key={product.id}
                   product={product}
                   onDelete={handleDeleteProduct}
+                  isDeleting={deletingProductId === product.id}
                   onOpenProduct={handleOpenProduct}
                 />
               ))}

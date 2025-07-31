@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Trash2 } from "lucide-react";
 
-function ProductCard({ product, onDelete, onOpenProduct }) {
+function ProductCard({ product, onDelete, onOpenProduct, isDeleting }) {
   const handleDelete = () => {
     if (confirm("Bu ürünü silmek istediğinizden emin misiniz?")) {
       onDelete(product.id);
@@ -10,7 +10,7 @@ function ProductCard({ product, onDelete, onOpenProduct }) {
   };
 
   const handleOpenProduct = () => {
-    onOpenProduct(product.product_url);
+    onOpenProduct(product);
   };
 
   return (
@@ -73,9 +73,14 @@ function ProductCard({ product, onDelete, onOpenProduct }) {
             variant="destructive"
             size="sm"
             onClick={handleDelete}
+            disabled={isDeleting}
             className="w-20"
           >
-            <Trash2 className="w-4 h-4" />
+            {isDeleting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </div>
