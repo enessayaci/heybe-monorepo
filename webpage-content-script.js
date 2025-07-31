@@ -4,6 +4,7 @@ console.log("🌐 [Web Site Content Script] Yüklendi");
 // Web sitesine UUID bilgisini gönderen fonksiyon
 async function sendUUIDToWebSite(uuid) {
   console.log("📤 [Web Site] UUID web sitesine gönderiliyor:", uuid);
+  console.log("👤 Extension'dan gelen UUID:", uuid);
   
   // 1. IndexedDB'ye yaz (ana yöntem)
   try {
