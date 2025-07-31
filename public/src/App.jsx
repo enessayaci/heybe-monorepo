@@ -107,16 +107,16 @@ function App() {
   }, []);
 
   // Test fonksiyonu
-  const handleTest = () => {
+  const handleTest = async () => {
     console.log("🧪 Test butonu tıklandı");
-    fetch(GET_PRODUCTS_ENDPOINT)
-      .then((response) => response.json())
-      .then((data) => {
-        alert("API Test: " + JSON.stringify(data, null, 2));
-      })
-      .catch((error) => {
-        alert("API Test Hatası: " + error.message);
-      });
+    try {
+      const userId = await getUserId();
+      const response = await fetch(`${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`);
+      const data = await response.json();
+      alert("API Test: " + JSON.stringify(data, null, 2));
+    } catch (error) {
+      alert("API Test Hatası: " + error.message);
+    }
   };
 
   // URL'den ürün ID'sini al
