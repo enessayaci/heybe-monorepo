@@ -101,36 +101,25 @@ function App() {
       }
     })();
 
-    // Polling: Extension'dan UUID gelene kadar bekle
-    const pollInterval = setInterval(async () => {
-      console.log("🔍 [Polling] UUID kontrol ediliyor...");
+    // Polling geçici olarak kapalı - Manuel test için
+    console.log("⏸️ [Polling] Geçici olarak kapalı - Manuel test için");
+    
+    // Manuel test: 5 saniye sonra UUID'yi kontrol et
+    setTimeout(async () => {
+      console.log("🧪 [Manuel Test] UUID kontrol ediliyor...");
       try {
         const userId = await getUserId();
-        console.log("🔍 [Polling] getUserId() sonucu:", userId);
+        console.log("🧪 [Manuel Test] getUserId() sonucu:", userId);
         if (userId) {
-          console.log(
-            "✅ [Polling] UUID bulundu, polling durduruluyor:",
-            userId
-          );
-          clearInterval(pollInterval);
-          await fetchProducts(); // Ürünleri çek
+          console.log("✅ [Manuel Test] UUID bulundu:", userId);
+          await fetchProducts();
         } else {
-          console.log("❌ [Polling] UUID bulunamadı, devam ediyor...");
+          console.log("❌ [Manuel Test] UUID bulunamadı");
         }
       } catch (e) {
-        console.log("⚠️ [Polling] UUID kontrol hatası:", e);
+        console.log("⚠️ [Manuel Test] Hata:", e);
       }
-    }, 1000); // Her 1 saniyede kontrol et
-
-    // 30 saniye sonra polling'i durdur
-    setTimeout(() => {
-      console.log("⏰ [Polling] 30 saniye geçti, polling durduruluyor");
-      clearInterval(pollInterval);
-    }, 30000);
-
-    return () => {
-      clearInterval(pollInterval);
-    };
+    }, 5000);
   }, []);
 
   // Test fonksiyonu
