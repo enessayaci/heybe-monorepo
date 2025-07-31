@@ -264,16 +264,28 @@ function App() {
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur
+  // Kullanıcı ID'sini al veya oluştur - Extension UUID öncelikli
   function getUserId() {
-    let userId = localStorage.getItem("tum_listem_user_id");
+    // Extension'dan gelen UUID'yi kullan (öncelik extension'da)
+    let userId = localStorage.getItem("EXTENSION_UUID");
+
+    // Extension UUID yoksa fallback olarak eski key'i kontrol et
+    if (!userId) {
+      userId = localStorage.getItem("tum_listem_user_id");
+    }
 
     if (!userId) {
       userId = generateUUID();
-      localStorage.setItem("tum_listem_user_id", userId);
+      localStorage.setItem("EXTENSION_UUID", userId);
+      localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
       console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
     } else {
       console.log("👤 [Tüm Listem] Mevcut kullanıcı ID:", userId);
+      
+      // Extension UUID'si varsa, eski key'i de güncelle
+      if (localStorage.getItem("EXTENSION_UUID")) {
+        localStorage.setItem("tum_listem_user_id", userId); // Sync
+      }
     }
 
     return userId;
