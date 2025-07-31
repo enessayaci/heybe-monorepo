@@ -45,9 +45,11 @@ function fetchMyListFromExtension() {
   });
 }
 
-function handleGoToProduct(url) {
-  window.open(url, "_blank");
-}
+// Ürün linkini aç
+const handleOpenProduct = (product) => {
+  console.log("🔗 [Tüm Listem] Ürün linki açılıyor:", product.product_url);
+  window.open(product.product_url, "_blank");
+};
 
 export default function App() {
   const [products, setProducts] = useState([]);
@@ -234,9 +236,9 @@ export default function App() {
                   className="mt-2 text-xs text-blue-600 underline hover:text-blue-800 focus:outline-none"
                   tabIndex={0}
                   aria-label="Ürüne git"
-                  onClick={() => handleGoToProduct(product.url)}
+                  onClick={() => handleOpenProduct(product)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleGoToProduct(product.url);
+                    if (e.key === "Enter") handleOpenProduct(product);
                   }}
                 >
                   Ürüne Git

@@ -231,8 +231,8 @@ function App() {
   };
 
   // Ürün linkini aç
-  const handleOpenProduct = (url) => {
-    window.open(url, "_blank");
+  const handleOpenProduct = (product) => {
+    window.open(product.product_url, "_blank");
   };
 
   // Minimal istatistikler
