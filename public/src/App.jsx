@@ -64,9 +64,29 @@ function App() {
   };
 
   // Refresh fonksiyonu
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     console.log("🔄 Refresh butonu tıklandı");
-    fetchProducts();
+    try {
+      setStatus("loading");
+      const userId = await getUserId();
+      const response = await fetch(
+        `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data.products || []);
+        setFilteredProducts(data.products || []); // Başlangıçta tüm ürünler
+        setStatus("success");
+      } else {
+        setError("Ürünler yüklenirken hata oluştu");
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      setError("Network hatası");
+      setStatus("error");
+    }
   };
 
   // Sayfa ilk yüklendiğinde ürünleri çek
@@ -79,14 +99,17 @@ function App() {
         console.error("Initial fetch error", e);
       }
     })();
-    
+
     // Polling: Extension'dan UUID gelene kadar bekle
     const pollInterval = setInterval(async () => {
       console.log("🔍 [Polling] UUID kontrol ediliyor...");
       try {
         const userId = await getUserId();
         if (userId) {
-          console.log("✅ [Polling] UUID bulundu, polling durduruluyor:", userId);
+          console.log(
+            "✅ [Polling] UUID bulundu, polling durduruluyor:",
+            userId
+          );
           clearInterval(pollInterval);
           await fetchProducts(); // Ürünleri çek
         }
@@ -94,13 +117,13 @@ function App() {
         console.log("⚠️ [Polling] UUID kontrol hatası:", e);
       }
     }, 1000); // Her 1 saniyede kontrol et
-    
+
     // 30 saniye sonra polling'i durdur
     setTimeout(() => {
       console.log("⏰ [Polling] 30 saniye geçti, polling durduruluyor");
       clearInterval(pollInterval);
     }, 30000);
-    
+
     return () => {
       clearInterval(pollInterval);
     };
@@ -111,7 +134,9 @@ function App() {
     console.log("🧪 Test butonu tıklandı");
     try {
       const userId = await getUserId();
-      const response = await fetch(`${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`);
+      const response = await fetch(
+        `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
+      );
       const data = await response.json();
       alert("API Test: " + JSON.stringify(data, null, 2));
     } catch (error) {
@@ -284,8 +309,6 @@ function App() {
 
   const stats = calculateStats();
 
-
-
   // UUID oluşturma fonksiyonu
   function generateUUID() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
@@ -301,17 +324,19 @@ function App() {
   // Helper hazır olana kadar bekle
   function waitForSharedDB() {
     if (window.ExtensionSharedDB) return Promise.resolve();
-    return new Promise((res) => window.addEventListener('ExtensionSharedDBReady', res, { once: true }));
+    return new Promise((res) =>
+      window.addEventListener("ExtensionSharedDBReady", res, { once: true })
+    );
   }
 
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
     await waitForSharedDB();
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
-    
+
     // IndexedDB'den UUID'yi al (tüm domain'ler paylaşır)
     let userId = null;
-    
+
     try {
       if (window.ExtensionSharedDB) {
         userId = await window.ExtensionSharedDB.getUUID();
@@ -326,11 +351,14 @@ function App() {
     } catch (e) {
       console.log("❌ IndexedDB okunamadı:", e);
     }
-    
+
     // Fallback: localStorage (sadece bu domain için)
     userId = localStorage.getItem("EXTENSION_UUID");
     if (userId) {
-      console.log("⚠️ [Web Site] UUID localStorage'dan alındı (fallback):", userId);
+      console.log(
+        "⚠️ [Web Site] UUID localStorage'dan alındı (fallback):",
+        userId
+      );
       console.log("👤 Extension'dan gelen UUID:", userId);
       // IndexedDB'ye de yaz (shared olsun)
       try {
@@ -346,7 +374,7 @@ function App() {
 
     // Hiç UUID yok, yeni oluştur
     userId = generateUUID();
-    
+
     // IndexedDB'ye yaz (shared storage)
     try {
       if (window.ExtensionSharedDB) {
@@ -356,11 +384,11 @@ function App() {
     } catch (e) {
       console.log("❌ IndexedDB yazılamadı:", e);
     }
-    
+
     // Fallback: localStorage'a da yaz
     localStorage.setItem("EXTENSION_UUID", userId);
     localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
-    
+
     console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
     return userId;
   }
