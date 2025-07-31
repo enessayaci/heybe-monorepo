@@ -1,4 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+
+// Global event listener - component dışında
+const handleGlobalExtensionUUID = (event) => {
+  const uuid = event.detail.uuid;
+  console.log("📨 [Global] Content script'ten UUID alındı:", uuid);
+  
+  // Global state'e UUID'yi kaydet
+  window.extensionUUID = uuid;
+  
+  // Event'i tekrar tetikle (React component'i için)
+  document.dispatchEvent(new CustomEvent('extensionUUIDForReact', {
+    detail: { uuid: uuid }
+  }));
+};
+
+// Global event listener'ı ekle
+if (typeof window !== 'undefined') {
+  window.addEventListener('extensionUUIDReceived', handleGlobalExtensionUUID);
+}
 
 async function fetchMyListFromDatabase(setExtensionStatus = null) {
   try {
@@ -209,10 +228,10 @@ export default function App() {
       }
     };
 
-    // Content script'ten gelen UUID'yi dinle
-    const handleExtensionUUID = (event) => {
+    // Content script'ten gelen UUID'yi dinle (React component için)
+    const handleExtensionUUID = useCallback((event) => {
       const uuid = event.detail.uuid;
-      console.log("📨 [Web Site] Content script'ten UUID alındı:", uuid);
+      console.log("📨 [React] Content script'ten UUID alındı:", uuid);
       
       if (uuid) {
         console.log("✅ Extension bulundu, UUID:", uuid);
@@ -223,10 +242,10 @@ export default function App() {
         console.log("❌ Extension UUID bulunamadı");
         setExtensionStatus("missing");
       }
-    };
+    }, []);
 
-    // UUID event listener'ını ekle
-    document.addEventListener('extensionUUIDReceived', handleExtensionUUID);
+    // UUID event listener'ını ekle (React component için)
+    document.addEventListener('extensionUUIDForReact', handleExtensionUUID);
 
     // Content script'ten UUID gelmezse 5 saniye sonra uyarı ver
     const timeoutId = setTimeout(() => {
@@ -270,7 +289,7 @@ export default function App() {
     return () => {
       clearInterval(extensionCheckTimer);
       clearTimeout(timeoutId);
-      document.removeEventListener('extensionUUIDReceived', handleExtensionUUID);
+      document.removeEventListener('extensionUUIDForReact', handleExtensionUUID);
     };
   }, [products.length]);
 

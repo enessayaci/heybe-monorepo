@@ -12,6 +12,16 @@ function sendUUIDToWebSite(uuid) {
   
   document.dispatchEvent(event);
   console.log("✅ [Web Site] UUID event'i gönderildi");
+  
+  // Event'in gönderildiğini doğrula
+  setTimeout(() => {
+    console.log("🔍 [Web Site] Event gönderildi, listener çalışıyor mu kontrol ediliyor...");
+    if (window.extensionUUID) {
+      console.log("✅ [Web Site] Global UUID kaydedildi:", window.extensionUUID);
+    } else {
+      console.log("❌ [Web Site] Global UUID kaydedilmedi");
+    }
+  }, 100);
 }
 
 // Extension'dan UUID al
