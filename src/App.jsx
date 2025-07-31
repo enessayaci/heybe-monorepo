@@ -130,6 +130,46 @@ async function fetchMyListFromDatabase(setExtensionStatus = null) {
   }
 }
 
+// UUID ile veri çekme fonksiyonu (content script'ten gelen UUID için)
+async function fetchDataWithUUID(userId) {
+  try {
+    console.log("🔍 UUID ile veri çekiliyor:", userId);
+    
+    const response = await fetch(
+      `https://my-list-pi.vercel.app/api/get-products?user_id=${userId}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API hatası: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("📦 Database'den gelen veri:", data);
+
+    if (data.success && data.products) {
+      // API formatını frontend formatına çevir
+      const formattedProducts = data.products.map((product) => ({
+        name: product.name,
+        price: product.price,
+        image: product.image_url,
+        product_url: product.product_url,
+        url: product.product_url, // Backward compatibility
+        site: product.site,
+        id: product.id,
+      }));
+
+      console.log(`✅ ${formattedProducts.length} ürün başarıyla alındı`);
+      setProducts(formattedProducts);
+    } else {
+      console.log("⚠️ API başarılı ama ürün yok");
+      setProducts([]);
+    }
+  } catch (error) {
+    console.error("❌ UUID ile veri çekilirken hata:", error);
+    setProducts([]);
+  }
+}
+
 // Ürün linkini aç
 const handleOpenProduct = (product) => {
   console.log("🔗 [Tüm Listem] Ürün linki açılıyor:", product.product_url);
@@ -169,7 +209,26 @@ export default function App() {
       }
     };
 
-    // Sayfa yüklendiğinde hemen extension kontrolü yap
+    // Content script'ten gelen UUID'yi dinle
+    const handleExtensionUUID = (event) => {
+      const uuid = event.detail.uuid;
+      console.log("📨 [Web Site] Content script'ten UUID alındı:", uuid);
+      
+      if (uuid) {
+        console.log("✅ Extension bulundu, UUID:", uuid);
+        setExtensionStatus("found");
+        // UUID'yi kullanarak veri çek
+        fetchDataWithUUID(uuid);
+      } else {
+        console.log("❌ Extension UUID bulunamadı");
+        setExtensionStatus("missing");
+      }
+    };
+
+    // UUID event listener'ını ekle
+    document.addEventListener('extensionUUIDReceived', handleExtensionUUID);
+
+    // Fallback: Eğer content script çalışmazsa manuel kontrol
     const checkExtensionOnLoad = async () => {
       console.log("🔍 Sayfa yüklendi, extension kontrol ediliyor...");
       
@@ -192,7 +251,7 @@ export default function App() {
           if (userId) {
             console.log("✅ Extension bulundu, UUID:", userId);
             setExtensionStatus("found");
-            fetchData();
+            fetchDataWithUUID(userId);
           } else {
             console.log("❌ Extension UUID bulunamadı");
             setExtensionStatus("missing");
@@ -207,8 +266,8 @@ export default function App() {
       }
     };
 
-    // Sayfa yüklendiğinde extension kontrolü yap
-    checkExtensionOnLoad();
+    // 3 saniye sonra fallback kontrolü yap
+    setTimeout(checkExtensionOnLoad, 3000);
 
     // Extension kontrol timer'ı (extension sonradan yüklenirse)
     const extensionCheckTimer = setInterval(async () => {

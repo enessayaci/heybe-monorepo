@@ -18,6 +18,11 @@
       "matches": ["<all_urls>"],
       "js": ["storageHelper.js", "contentScript.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://my-list-pi.vercel.app/*"],
+      "js": ["webpage-content-script.js"],
+      "run_at": "document_start"
     }
   ],
   "background": {
