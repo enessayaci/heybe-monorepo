@@ -4,7 +4,11 @@
   "description": "Browser extension for shopping list management",
   "scripts": {
     "build": "cd public && npm run build",
-    "dev": "cd public && npm run dev"
+    "dev": "cd public && npm run dev",
+    "test:chrome": "echo '🔧 Chrome/Edge için test et'",
+    "test:firefox": "echo '🔧 Firefox için test et'",
+    "test:safari": "echo '🔧 Safari için test et'",
+    "package:all": "echo '📦 Tüm tarayıcılar için paketleme'"
   },
   "devDependencies": {
     "vite": "^5.0.8"

@@ -12,19 +12,32 @@
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur
-  function getUserId() {
-    let userId = localStorage.getItem("tum_listem_user_id");
+  // Kullanıcı ID'sini al veya oluştur (Extension Storage kullanarak)
+  async function getUserId() {
+    try {
+      let userId = await extensionStorage.get("tum_listem_user_id");
 
-    if (!userId) {
-      userId = generateUUID();
-      localStorage.setItem("tum_listem_user_id", userId);
-      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
-    } else {
-      console.log("👤 [Tüm Listem] Mevcut kullanıcı ID:", userId);
+      if (!userId) {
+        userId = generateUUID();
+        await extensionStorage.set("tum_listem_user_id", userId);
+        console.log(
+          "👤 [Tüm Listem] İlk kurulum - Yeni kullanıcı ID oluşturuldu:",
+          userId,
+          `(${extensionStorage.getBrowserName()})`
+        );
+      } else {
+        console.log(
+          "👤 [Tüm Listem] Mevcut kullanıcı ID:",
+          userId,
+          `(${extensionStorage.getBrowserName()})`
+        );
+      }
+
+      return userId;
+    } catch (error) {
+      console.error("❌ [Tüm Listem] Extension Storage hatası:", error);
+      throw new Error("Extension Storage API'ye erişilemiyor!");
     }
-
-    return userId;
   }
 
   // Butonun id'si
@@ -842,7 +855,7 @@
 
   async function saveProductToAPI(productInfo) {
     try {
-      const userId = getUserId();
+      const userId = await getUserId();
 
       const response = await fetch(API_ENDPOINT, {
         method: "POST",

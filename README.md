@@ -1,6 +1,6 @@
-# my-extension
+# Tüm Listem Extension
 
-> An Extension.js example.
+> Farklı e-ticaret sitelerindeki ürünleri tek bir listede toplayan browser extension.
 
 ## Available Scripts
 
@@ -29,6 +29,51 @@ npm start
 ```bash
 npm build
 ```
+
+## Tertemiz İlk Kurulum
+
+### 1. Chrome/Edge İçin:
+
+```
+1. chrome://extensions/ sayfasını açın
+2. "Developer mode" açın (sağ üst köşe)
+3. "Load unpacked" butonuna tıklayın
+4. Bu proje klasörünü seçin
+5. ✅ Extension aktif olacak
+```
+
+### 2. Firefox İçin:
+
+```
+1. about:debugging sayfasını açın
+2. "This Firefox" sekmesini seçin
+3. "Load Temporary Add-on" butonuna tıklayın
+4. manifest.json dosyasını seçin
+5. ✅ Extension aktif olacak
+```
+
+### 3. Test Edin:
+
+```
+1. trendyol.com, amazon.com.tr gibi e-ticaret sitesini açın
+2. F12 → Console açın
+3. Aşağıdaki log'ları göreceksiniz:
+   🔧 [Tüm Listem] Extension Storage yüklendi - Tarayıcı: Chrome/Edge
+   👤 [Tüm Listem] İlk kurulum - Yeni kullanıcı ID oluşturuldu: abc-123-def-456
+4. Sağ tarafta "Tüm Listeme Ekle" butonu görünecek
+```
+
+## Özellikler
+
+- ✅ **Cross-Domain UUID**: Tüm sitelerde aynı kullanıcı kimliği
+- ✅ **Extension Storage**: Chrome/Firefox native storage API
+- ✅ **Akıllı Ürün Tespiti**: Meta tag'lerden ürün bilgisi çıkarma
+- ✅ **Cross-Browser**: Chrome, Firefox, Edge uyumlu
+- ✅ **Clean API**: localStorage bağımlılığı yok
+
+## API Endpoint
+
+Backend: https://my-list-pi.vercel.app/api/add-product
 
 ## Learn More
 
