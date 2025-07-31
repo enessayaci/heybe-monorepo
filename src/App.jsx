@@ -289,14 +289,30 @@ export default function App() {
       }
     }, []);
 
-    // Sayfa yüklendiğinde hemen kontrol et
+    // Sayfa yüklendiğinde biraz bekleyip kontrol et (IndexedDB'nin açılması için)
     setTimeout(async () => {
-      console.log("🚀 [Polling] İlk UUID kontrolü başlıyor...");
+      console.log("🚀 [Polling] İlk UUID kontrolü başlıyor... (IndexedDB için beklendi)");
       const found = await checkForUUID();
       if (!found) {
         console.log("⚠️ [Polling] İlk kontrolde UUID bulunamadı");
       }
-    }, 1000);
+    }, 3000); // 3 saniye bekle
+
+    // IndexedDB UUID yazıldığında hemen kontrol et
+    const handleIndexedDBWrite = async (event) => {
+      const uuid = event.detail.uuid;
+      console.log("📨 [Event] IndexedDB'ye UUID yazıldı:", uuid);
+      
+      if (extensionStatus === "checking") {
+        console.log("✅ [Event] Hemen UUID kontrolü yapılıyor...");
+        const found = await checkForUUID();
+        if (found) {
+          console.log("✅ [Event] UUID bulundu!");
+        }
+      }
+    };
+    
+    window.addEventListener('indexedDBUUIDWritten', handleIndexedDBWrite);
 
     // 2 saniyede bir UUID kontrol et (content script UUID'yi yazana kadar)
     const uuidPollingInterval = setInterval(async () => {
@@ -353,6 +369,7 @@ export default function App() {
       clearInterval(extensionCheckTimer);
       clearInterval(uuidPollingInterval);
       clearTimeout(timeoutId);
+      window.removeEventListener('indexedDBUUIDWritten', handleIndexedDBWrite);
     };
   }, [products.length]);
 

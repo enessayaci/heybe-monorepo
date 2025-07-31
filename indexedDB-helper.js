@@ -60,7 +60,11 @@ class ExtensionSharedDB {
         const request = store.put(data);
         
         request.onsuccess = () => {
-          console.log("✅ [IndexedDB] UUID başarıyla yazıldı");
+          console.log("✅ [IndexedDB] UUID başarıyla yazıldı:", uuid);
+          // Global notification gönder
+          window.dispatchEvent(new CustomEvent('indexedDBUUIDWritten', { 
+            detail: { uuid: uuid } 
+          }));
           resolve(true);
         };
         
