@@ -5,23 +5,20 @@ console.log("🌐 [Web Site Content Script] Yüklendi");
 function sendUUIDToWebSite(uuid) {
   console.log("📤 [Web Site] UUID web sitesine gönderiliyor:", uuid);
   
-  // Custom event ile web sitesine UUID'yi gönder
-  const event = new CustomEvent('extensionUUIDReceived', {
-    detail: { uuid: uuid }
-  });
+  // Global variable'a UUID'yi yaz
+  window.EXTENSION_UUID = uuid;
+  window.EXTENSION_UUID_TIMESTAMP = Date.now();
   
-  document.dispatchEvent(event);
-  console.log("✅ [Web Site] UUID event'i gönderildi");
+  // localStorage'a da yaz (backup)
+  try {
+    localStorage.setItem('EXTENSION_UUID', uuid);
+    localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
+  } catch (e) {
+    console.log("⚠️ localStorage yazılamadı:", e);
+  }
   
-  // Event'in gönderildiğini doğrula
-  setTimeout(() => {
-    console.log("🔍 [Web Site] Event gönderildi, listener çalışıyor mu kontrol ediliyor...");
-    if (window.extensionUUID) {
-      console.log("✅ [Web Site] Global UUID kaydedildi:", window.extensionUUID);
-    } else {
-      console.log("❌ [Web Site] Global UUID kaydedilmedi");
-    }
-  }, 100);
+  console.log("✅ [Web Site] UUID global variable'a yazıldı:", uuid);
+  console.log("🔍 [Web Site] window.EXTENSION_UUID:", window.EXTENSION_UUID);
 }
 
 // Extension'dan UUID al

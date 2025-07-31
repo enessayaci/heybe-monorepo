@@ -1,22 +1,36 @@
 import React, { useEffect, useState, useCallback } from "react";
 
-// Global event listener - component dışında
-const handleGlobalExtensionUUID = (event) => {
-  const uuid = event.detail.uuid;
-  console.log("📨 [Global] Content script'ten UUID alındı:", uuid);
+// UUID'yi global variable'dan al
+function getUUIDFromGlobal() {
+  // 1. window.EXTENSION_UUID'yi kontrol et
+  if (window.EXTENSION_UUID) {
+    console.log("✅ [Global] UUID window'dan alındı:", window.EXTENSION_UUID);
+    return window.EXTENSION_UUID;
+  }
   
-  // Global state'e UUID'yi kaydet
-  window.extensionUUID = uuid;
+  // 2. localStorage'dan kontrol et
+  try {
+    const uuid = localStorage.getItem('EXTENSION_UUID');
+    const timestamp = localStorage.getItem('EXTENSION_UUID_TIMESTAMP');
+    
+    if (uuid && timestamp) {
+      // 5 dakikadan eski değilse kullan
+      const age = Date.now() - parseInt(timestamp);
+      if (age < 5 * 60 * 1000) { // 5 dakika
+        console.log("✅ [Global] UUID localStorage'dan alındı:", uuid);
+        return uuid;
+      } else {
+        console.log("⚠️ [Global] localStorage UUID'si eski, temizleniyor");
+        localStorage.removeItem('EXTENSION_UUID');
+        localStorage.removeItem('EXTENSION_UUID_TIMESTAMP');
+      }
+    }
+  } catch (e) {
+    console.log("⚠️ localStorage okunamadı:", e);
+  }
   
-  // Event'i tekrar tetikle (React component'i için)
-  document.dispatchEvent(new CustomEvent('extensionUUIDForReact', {
-    detail: { uuid: uuid }
-  }));
-};
-
-// Global event listener'ı ekle
-if (typeof window !== 'undefined') {
-  window.addEventListener('extensionUUIDReceived', handleGlobalExtensionUUID);
+  console.log("❌ [Global] UUID bulunamadı");
+  return null;
 }
 
 async function fetchMyListFromDatabase(setExtensionStatus = null) {
@@ -228,32 +242,50 @@ export default function App() {
       }
     };
 
-    // Content script'ten gelen UUID'yi dinle (React component için)
-    const handleExtensionUUID = useCallback((event) => {
-      const uuid = event.detail.uuid;
-      console.log("📨 [React] Content script'ten UUID alındı:", uuid);
+    // UUID polling sistemi
+    const checkForUUID = useCallback(() => {
+      console.log("🔍 [Polling] UUID kontrol ediliyor...");
+      
+      const uuid = getUUIDFromGlobal();
       
       if (uuid) {
         console.log("✅ Extension bulundu, UUID:", uuid);
         setExtensionStatus("found");
         // UUID'yi kullanarak veri çek
         fetchDataWithUUID(uuid);
+        return true; // UUID bulundu
       } else {
         console.log("❌ Extension UUID bulunamadı");
-        setExtensionStatus("missing");
+        return false; // UUID bulunamadı
       }
     }, []);
 
-    // UUID event listener'ını ekle (React component için)
-    document.addEventListener('extensionUUIDForReact', handleExtensionUUID);
+    // Sayfa yüklendiğinde hemen kontrol et
+    setTimeout(() => {
+      console.log("🚀 [Polling] İlk UUID kontrolü başlıyor...");
+      if (!checkForUUID()) {
+        console.log("⚠️ [Polling] İlk kontrolde UUID bulunamadı");
+      }
+    }, 1000);
 
-    // Content script'ten UUID gelmezse 5 saniye sonra uyarı ver
+    // 2 saniyede bir UUID kontrol et (content script UUID'yi yazana kadar)
+    const uuidPollingInterval = setInterval(() => {
+      if (extensionStatus === "checking") {
+        if (checkForUUID()) {
+          console.log("✅ [Polling] UUID bulundu, polling durduruluyor");
+          clearInterval(uuidPollingInterval);
+        }
+      }
+    }, 2000);
+
+    // 10 saniye sonra UUID bulunamazsa missing yap
     const timeoutId = setTimeout(() => {
       if (extensionStatus === "checking") {
-        console.log("⚠️ [Web Site] Content script'ten UUID gelmedi, extension kontrol ediliyor...");
+        console.log("⚠️ [Web Site] 10 saniye sonra UUID bulunamadı");
         setExtensionStatus("missing");
+        clearInterval(uuidPollingInterval);
       }
-    }, 5000);
+    }, 10000);
 
     // Extension kontrol timer'ı (extension sonradan yüklenirse)
     const extensionCheckTimer = setInterval(async () => {
@@ -288,8 +320,8 @@ export default function App() {
     // Cleanup
     return () => {
       clearInterval(extensionCheckTimer);
+      clearInterval(uuidPollingInterval);
       clearTimeout(timeoutId);
-      document.removeEventListener('extensionUUIDForReact', handleExtensionUUID);
     };
   }, [products.length]);
 
