@@ -2,31 +2,45 @@ import React, { useEffect, useState, useCallback } from "react";
 
 // UUID'yi global variable'dan al
 function getUUIDFromGlobal() {
-  // 1. window.EXTENSION_UUID'yi kontrol et
-  if (window.EXTENSION_UUID) {
-    console.log("✅ [Global] UUID window'dan alındı:", window.EXTENSION_UUID);
-    return window.EXTENSION_UUID;
-  }
+  console.log("🔍 [Global] UUID aranıyor...");
+  console.log("  window.EXTENSION_UUID:", window.EXTENSION_UUID);
+  console.log("  localStorage EXTENSION_UUID:", localStorage.getItem('EXTENSION_UUID'));
   
-  // 2. localStorage'dan kontrol et
+  // 1. localStorage'dan kontrol et (öncelik localStorage'da)
   try {
     const uuid = localStorage.getItem('EXTENSION_UUID');
     const timestamp = localStorage.getItem('EXTENSION_UUID_TIMESTAMP');
     
-    if (uuid && timestamp) {
-      // 5 dakikadan eski değilse kullan
-      const age = Date.now() - parseInt(timestamp);
-      if (age < 5 * 60 * 1000) { // 5 dakika
-        console.log("✅ [Global] UUID localStorage'dan alındı:", uuid);
-        return uuid;
+    if (uuid) {
+      if (timestamp) {
+        // 5 dakikadan eski değilse kullan
+        const age = Date.now() - parseInt(timestamp);
+        if (age < 5 * 60 * 1000) { // 5 dakika
+          console.log("✅ [Global] UUID localStorage'dan alındı:", uuid);
+          // window'a da yaz
+          window.EXTENSION_UUID = uuid;
+          return uuid;
+        } else {
+          console.log("⚠️ [Global] localStorage UUID'si eski, temizleniyor");
+          localStorage.removeItem('EXTENSION_UUID');
+          localStorage.removeItem('EXTENSION_UUID_TIMESTAMP');
+        }
       } else {
-        console.log("⚠️ [Global] localStorage UUID'si eski, temizleniyor");
-        localStorage.removeItem('EXTENSION_UUID');
-        localStorage.removeItem('EXTENSION_UUID_TIMESTAMP');
+        // timestamp yoksa UUID'yi kullan ama yeni timestamp ekle
+        console.log("✅ [Global] UUID localStorage'dan alındı (timestamp eklendi):", uuid);
+        localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
+        window.EXTENSION_UUID = uuid;
+        return uuid;
       }
     }
   } catch (e) {
     console.log("⚠️ localStorage okunamadı:", e);
+  }
+  
+  // 2. window.EXTENSION_UUID'yi kontrol et
+  if (window.EXTENSION_UUID) {
+    console.log("✅ [Global] UUID window'dan alındı:", window.EXTENSION_UUID);
+    return window.EXTENSION_UUID;
   }
   
   console.log("❌ [Global] UUID bulunamadı");
