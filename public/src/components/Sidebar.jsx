@@ -52,7 +52,7 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId }) {
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-50 ${
+      className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-50 flex flex-col ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
