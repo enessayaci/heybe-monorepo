@@ -9,30 +9,39 @@ async function fetchMyListFromDatabase(setExtensionStatus = null) {
 
     if (window.chrome && chrome.storage && chrome.storage.local) {
       userId = await new Promise((resolve) => {
-        chrome.storage.local.get(["tum_listem_user_id", "tum_listem_backup_uuid"], (result) => {
-          let foundUUID = result.tum_listem_user_id;
-          
-          // Ana UUID yoksa backup'tan dene
-          if (!foundUUID && result.tum_listem_backup_uuid) {
-            console.log("🔄 Ana UUID yok, backup UUID kullanılıyor:", result.tum_listem_backup_uuid);
-            foundUUID = result.tum_listem_backup_uuid;
-            
-            // Backup'ı ana UUID'ye kopyala
-            chrome.storage.local.set({ "tum_listem_user_id": foundUUID }, () => {
-              console.log("✅ Backup UUID ana UUID olarak restore edildi");
-            });
+        chrome.storage.local.get(
+          ["tum_listem_user_id", "tum_listem_backup_uuid"],
+          (result) => {
+            let foundUUID = result.tum_listem_user_id;
+
+            // Ana UUID yoksa backup'tan dene
+            if (!foundUUID && result.tum_listem_backup_uuid) {
+              console.log(
+                "🔄 Ana UUID yok, backup UUID kullanılıyor:",
+                result.tum_listem_backup_uuid
+              );
+              foundUUID = result.tum_listem_backup_uuid;
+
+              // Backup'ı ana UUID'ye kopyala
+              chrome.storage.local.set(
+                { tum_listem_user_id: foundUUID },
+                () => {
+                  console.log("✅ Backup UUID ana UUID olarak restore edildi");
+                }
+              );
+            }
+
+            // Backup yoksa ve ana UUID varsa backup oluştur
+            if (foundUUID && !result.tum_listem_backup_uuid) {
+              console.log("💾 Backup UUID oluşturuluyor:", foundUUID);
+              chrome.storage.local.set({ tum_listem_backup_uuid: foundUUID });
+            }
+
+            resolve(foundUUID);
           }
-          
-          // Backup yoksa ve ana UUID varsa backup oluştur
-          if (foundUUID && !result.tum_listem_backup_uuid) {
-            console.log("💾 Backup UUID oluşturuluyor:", foundUUID);
-            chrome.storage.local.set({ "tum_listem_backup_uuid": foundUUID });
-          }
-          
-          resolve(foundUUID);
-        });
+        );
       });
-      
+
       if (userId && setExtensionStatus) {
         setExtensionStatus("found");
       }
@@ -160,35 +169,39 @@ export default function App() {
   const handleDebugStorage = () => {
     console.log("🔧 Debug butonu tıklandı");
 
-        if (window.chrome && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(["tum_listem_user_id", "tum_listem_backup_uuid"], async (result) => {
-        console.log("📦 Extension Storage:", result);
-        console.log("👤 Ana UUID:", result.tum_listem_user_id);
-        console.log("💾 Backup UUID:", result.tum_listem_backup_uuid);
-        
-        const activeUUID = result.tum_listem_user_id || result.tum_listem_backup_uuid;
-        
-        if (activeUUID) {
-          try {
-            const response = await fetch(
-              `https://my-list-pi.vercel.app/api/get-products?user_id=${activeUUID}`
-            );
-            const data = await response.json();
-            console.log("📦 Database'den gelen ürünler:", data);
-            alert(
-              `Ana UUID: ${result.tum_listem_user_id || "YOK"}\n` +
-              `Backup UUID: ${result.tum_listem_backup_uuid || "YOK"}\n` +
-              `Aktif UUID: ${activeUUID}\n` +
-              `Ürün sayısı: ${data.products?.length || 0}`
-            );
-          } catch (error) {
-            console.error("❌ Database debug hatası:", error);
-            alert("Database bağlantı hatası! Console'a bakın.");
+    if (window.chrome && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(
+        ["tum_listem_user_id", "tum_listem_backup_uuid"],
+        async (result) => {
+          console.log("📦 Extension Storage:", result);
+          console.log("👤 Ana UUID:", result.tum_listem_user_id);
+          console.log("💾 Backup UUID:", result.tum_listem_backup_uuid);
+
+          const activeUUID =
+            result.tum_listem_user_id || result.tum_listem_backup_uuid;
+
+          if (activeUUID) {
+            try {
+              const response = await fetch(
+                `https://my-list-pi.vercel.app/api/get-products?user_id=${activeUUID}`
+              );
+              const data = await response.json();
+              console.log("📦 Database'den gelen ürünler:", data);
+              alert(
+                `Ana UUID: ${result.tum_listem_user_id || "YOK"}\n` +
+                  `Backup UUID: ${result.tum_listem_backup_uuid || "YOK"}\n` +
+                  `Aktif UUID: ${activeUUID}\n` +
+                  `Ürün sayısı: ${data.products?.length || 0}`
+              );
+            } catch (error) {
+              console.error("❌ Database debug hatası:", error);
+              alert("Database bağlantı hatası! Console'a bakın.");
+            }
+          } else {
+            alert("Hiç UUID bulunamadı! Extension yüklü mü?");
           }
-        } else {
-          alert("Hiç UUID bulunamadı! Extension yüklü mü?");
         }
-      });
+      );
     } else {
       console.log("❌ Chrome API debug için mevcut değil");
       alert("Chrome API mevcut değil!");

@@ -17,12 +17,15 @@
     try {
       // Ana UUID'yi kontrol et
       let userId = await extensionStorage.get("tum_listem_user_id");
-      
+
       // Ana UUID yoksa backup'tan dene
       if (!userId) {
         const backupUUID = await extensionStorage.get("tum_listem_backup_uuid");
         if (backupUUID) {
-          console.log("🔄 [Tüm Listem] Ana UUID yok, backup UUID kullanılıyor:", backupUUID);
+          console.log(
+            "🔄 [Tüm Listem] Ana UUID yok, backup UUID kullanılıyor:",
+            backupUUID
+          );
           userId = backupUUID;
           // Backup'ı ana UUID'ye restore et
           await extensionStorage.set("tum_listem_user_id", userId);
@@ -48,7 +51,9 @@
       }
 
       // Backup'ı güncelle/oluştur
-      const currentBackup = await extensionStorage.get("tum_listem_backup_uuid");
+      const currentBackup = await extensionStorage.get(
+        "tum_listem_backup_uuid"
+      );
       if (!currentBackup || currentBackup !== userId) {
         await extensionStorage.set("tum_listem_backup_uuid", userId);
         console.log("💾 [Tüm Listem] UUID backup güncellendi");

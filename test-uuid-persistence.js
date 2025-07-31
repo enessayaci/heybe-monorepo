@@ -27,12 +27,14 @@ async function checkDatabaseProducts(uuid) {
   }
 
   try {
-    const response = await fetch(`https://my-list-pi.vercel.app/api/get-products?user_id=${uuid}`);
+    const response = await fetch(
+      `https://my-list-pi.vercel.app/api/get-products?user_id=${uuid}`
+    );
     const data = await response.json();
-    
+
     console.log("📦 Database'den gelen ürünler:", data);
     console.log(`📊 Toplam ürün sayısı: ${data.products?.length || 0}`);
-    
+
     if (data.products && data.products.length > 0) {
       console.log("🎉 Ürünler korunmuş!");
       data.products.forEach((product, index) => {
@@ -49,7 +51,7 @@ async function checkDatabaseProducts(uuid) {
 // 3. Test UUID oluştur (sadece test için)
 function createTestUUID() {
   const testUUID = "test-persistence-" + Date.now();
-  chrome.storage.local.set({ "tum_listem_user_id": testUUID }, () => {
+  chrome.storage.local.set({ tum_listem_user_id: testUUID }, () => {
     console.log("🆕 Test UUID oluşturuldu:", testUUID);
   });
   return testUUID;
@@ -59,15 +61,15 @@ function createTestUUID() {
 async function runPersistenceTest() {
   console.log("\n🔍 1. Extension Storage Kontrolü:");
   const uuid = await checkExtensionUUID();
-  
+
   console.log("\n🔍 2. Database Kontrolü:");
   await checkDatabaseProducts(uuid);
-  
+
   console.log("\n📋 Test Sonuçları:");
   console.log("✅ Extension Storage → Database bağlantısı çalışıyor");
   console.log("✅ UUID persistent (extension sil/kur işlemlerinde korunur)");
   console.log("✅ Ürünler database'de güvenli");
-  
+
   console.log("\n🧪 Persistence Test Talimatları:");
   console.log("1. chrome://extensions/ → Extension'ı disable et");
   console.log("2. Bu script'i tekrar çalıştır → UUID kaybolur");
@@ -83,7 +85,7 @@ window.testUUID = {
   check: checkExtensionUUID,
   database: checkDatabaseProducts,
   create: createTestUUID,
-  run: runPersistenceTest
+  run: runPersistenceTest,
 };
 
 console.log("\n🔧 Manuel Kullanım:");
