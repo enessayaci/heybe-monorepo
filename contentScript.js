@@ -148,12 +148,9 @@
   const API_ENDPOINT = "https://my-list-pi.vercel.app/api/add-product";
 
   function hasRelevantButton() {
-    console.log("🔍 [Tüm Listem] Buton tespiti başladı");
-
     // Ana sayfa kontrolü - eğer ana sayfa ise buton gösterilmesin
     const isHomePage = checkIfHomePage();
     if (isHomePage) {
-      console.log("🚫 [Tüm Listem] Ana sayfa - buton gösterilmeyecek");
       return false;
     }
 
@@ -163,8 +160,6 @@
       )
     );
 
-    console.log("🔍 [Tüm Listem] Butonlar taranıyor:", buttons.length, "adet");
-
     const relevantButtons = buttons.filter((btn) => {
       const text = (
         btn.innerText ||
@@ -173,25 +168,13 @@
         ""
       ).toLowerCase();
       const hasKeyword = KEYWORDS.some((keyword) => text.includes(keyword));
-      if (hasKeyword) {
-        console.log(`✅ [Tüm Listem] İlgili buton: "${text}"`);
-      }
       return hasKeyword;
     });
 
-    console.log(
-      "🎯 [Tüm Listem] İlgili butonlar:",
-      relevantButtons.length,
-      "adet"
-    );
-
     // Eğer hiç ilgili buton yoksa false döndür
     if (relevantButtons.length === 0) {
-      console.log("🚫 [Tüm Listem] İlgili buton bulunamadı");
       return false;
     }
-
-    console.log("✅ [Tüm Listem] Buton gösterilecek");
 
     return true;
   }
@@ -983,23 +966,16 @@
   }
 
   function addButton() {
-    console.log("🔧 [Tüm Listem] Buton ekleme başladı");
-
     if (buttonAdded || document.getElementById(BUTTON_ID)) {
-      console.log("🚫 [Tüm Listem] Buton zaten eklenmiş");
       return;
     }
 
     // Anahtar kelime içeren buton yoksa ekleme
     const hasRelevant = hasRelevantButton();
-    console.log("🔍 [Tüm Listem] Buton tespiti:", hasRelevant);
 
     if (!hasRelevant) {
-      console.log("🚫 [Tüm Listem] Buton eklenmeyecek");
       return;
     }
-
-    console.log("✅ [Tüm Listem] Buton ekleniyor...");
 
     if (document.body && document.body.children.length > 0) {
       const btn = document.createElement("button");
@@ -1052,9 +1028,6 @@
 
       document.body.appendChild(btn);
       buttonAdded = true;
-      console.log("✅ [Tüm Listem] Buton eklendi");
-    } else {
-      console.log("🚫 [Tüm Listem] Document body bulunamadı");
     }
   }
 
