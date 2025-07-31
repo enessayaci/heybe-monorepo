@@ -228,46 +228,13 @@ export default function App() {
     // UUID event listener'ını ekle
     document.addEventListener('extensionUUIDReceived', handleExtensionUUID);
 
-    // Fallback: Eğer content script çalışmazsa manuel kontrol
-    const checkExtensionOnLoad = async () => {
-      console.log("🔍 Sayfa yüklendi, extension kontrol ediliyor...");
-      
-      if (window.chrome && chrome.runtime) {
-        try {
-          const userId = await new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage(
-              { action: "getUserId" },
-              (response) => {
-                if (chrome.runtime.lastError) {
-                  console.log("⚠️ Extension mesaj hatası:", chrome.runtime.lastError);
-                  reject(new Error("Extension bulunamadı"));
-                  return;
-                }
-                resolve(response?.userId);
-              }
-            );
-          });
-
-          if (userId) {
-            console.log("✅ Extension bulundu, UUID:", userId);
-            setExtensionStatus("found");
-            fetchDataWithUUID(userId);
-          } else {
-            console.log("❌ Extension UUID bulunamadı");
-            setExtensionStatus("missing");
-          }
-        } catch (error) {
-          console.log("⚠️ Extension kontrol hatası:", error.message);
-          setExtensionStatus("missing");
-        }
-      } else {
-        console.log("❌ Chrome API mevcut değil");
+    // Content script'ten UUID gelmezse 5 saniye sonra uyarı ver
+    const timeoutId = setTimeout(() => {
+      if (extensionStatus === "checking") {
+        console.log("⚠️ [Web Site] Content script'ten UUID gelmedi, extension kontrol ediliyor...");
         setExtensionStatus("missing");
       }
-    };
-
-    // 3 saniye sonra fallback kontrolü yap
-    setTimeout(checkExtensionOnLoad, 3000);
+    }, 5000);
 
     // Extension kontrol timer'ı (extension sonradan yüklenirse)
     const extensionCheckTimer = setInterval(async () => {
@@ -302,6 +269,8 @@ export default function App() {
     // Cleanup
     return () => {
       clearInterval(extensionCheckTimer);
+      clearTimeout(timeoutId);
+      document.removeEventListener('extensionUUIDReceived', handleExtensionUUID);
     };
   }, [products.length]);
 
