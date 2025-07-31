@@ -1,12 +1,29 @@
 import React, { useEffect, useState, useCallback } from "react";
 
-// UUID'yi global variable'dan al
-function getUUIDFromGlobal() {
-  console.log("🔍 [Global] UUID aranıyor...");
-  console.log("  window.EXTENSION_UUID:", window.EXTENSION_UUID);
-  console.log("  localStorage EXTENSION_UUID:", localStorage.getItem('EXTENSION_UUID'));
+// UUID'yi shared storage'dan al
+async function getUUIDFromSharedStorage() {
+  console.log("🔍 [Shared Storage] UUID aranıyor...");
   
-  // 1. localStorage'dan kontrol et (öncelik localStorage'da)
+  // 1. IndexedDB'den kontrol et (ana yöntem)
+  try {
+    if (window.ExtensionSharedDB) {
+      const uuid = await window.ExtensionSharedDB.getUUID();
+      if (uuid) {
+        console.log("✅ [Shared Storage] UUID IndexedDB'den alındı:", uuid);
+        // Backup'lara da yaz
+        window.EXTENSION_UUID = uuid;
+        localStorage.setItem('EXTENSION_UUID', uuid);
+        localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
+        return uuid;
+      }
+    } else {
+      console.log("⚠️ [Shared Storage] IndexedDB helper yüklenmemiş");
+    }
+  } catch (e) {
+    console.log("❌ IndexedDB okunamadı:", e);
+  }
+  
+  // 2. localStorage'dan kontrol et (backup)
   try {
     const uuid = localStorage.getItem('EXTENSION_UUID');
     const timestamp = localStorage.getItem('EXTENSION_UUID_TIMESTAMP');
@@ -16,18 +33,16 @@ function getUUIDFromGlobal() {
         // 5 dakikadan eski değilse kullan
         const age = Date.now() - parseInt(timestamp);
         if (age < 5 * 60 * 1000) { // 5 dakika
-          console.log("✅ [Global] UUID localStorage'dan alındı:", uuid);
-          // window'a da yaz
+          console.log("✅ [Shared Storage] UUID localStorage'dan alındı:", uuid);
           window.EXTENSION_UUID = uuid;
           return uuid;
         } else {
-          console.log("⚠️ [Global] localStorage UUID'si eski, temizleniyor");
+          console.log("⚠️ [Shared Storage] localStorage UUID'si eski, temizleniyor");
           localStorage.removeItem('EXTENSION_UUID');
           localStorage.removeItem('EXTENSION_UUID_TIMESTAMP');
         }
       } else {
-        // timestamp yoksa UUID'yi kullan ama yeni timestamp ekle
-        console.log("✅ [Global] UUID localStorage'dan alındı (timestamp eklendi):", uuid);
+        console.log("✅ [Shared Storage] UUID localStorage'dan alındı (timestamp eklendi):", uuid);
         localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
         window.EXTENSION_UUID = uuid;
         return uuid;
@@ -37,13 +52,13 @@ function getUUIDFromGlobal() {
     console.log("⚠️ localStorage okunamadı:", e);
   }
   
-  // 2. window.EXTENSION_UUID'yi kontrol et
+  // 3. window.EXTENSION_UUID'yi kontrol et (backup)
   if (window.EXTENSION_UUID) {
-    console.log("✅ [Global] UUID window'dan alındı:", window.EXTENSION_UUID);
+    console.log("✅ [Shared Storage] UUID window'dan alındı:", window.EXTENSION_UUID);
     return window.EXTENSION_UUID;
   }
   
-  console.log("❌ [Global] UUID bulunamadı");
+  console.log("❌ [Shared Storage] UUID bulunamadı");
   return null;
 }
 
@@ -256,11 +271,11 @@ export default function App() {
       }
     };
 
-    // UUID polling sistemi
-    const checkForUUID = useCallback(() => {
+    // UUID polling sistemi (async)
+    const checkForUUID = useCallback(async () => {
       console.log("🔍 [Polling] UUID kontrol ediliyor...");
       
-      const uuid = getUUIDFromGlobal();
+      const uuid = await getUUIDFromSharedStorage();
       
       if (uuid) {
         console.log("✅ Extension bulundu, UUID:", uuid);
@@ -275,17 +290,19 @@ export default function App() {
     }, []);
 
     // Sayfa yüklendiğinde hemen kontrol et
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log("🚀 [Polling] İlk UUID kontrolü başlıyor...");
-      if (!checkForUUID()) {
+      const found = await checkForUUID();
+      if (!found) {
         console.log("⚠️ [Polling] İlk kontrolde UUID bulunamadı");
       }
     }, 1000);
 
     // 2 saniyede bir UUID kontrol et (content script UUID'yi yazana kadar)
-    const uuidPollingInterval = setInterval(() => {
+    const uuidPollingInterval = setInterval(async () => {
       if (extensionStatus === "checking") {
-        if (checkForUUID()) {
+        const found = await checkForUUID();
+        if (found) {
           console.log("✅ [Polling] UUID bulundu, polling durduruluyor");
           clearInterval(uuidPollingInterval);
         }

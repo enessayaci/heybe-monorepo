@@ -2,14 +2,26 @@
 console.log("🌐 [Web Site Content Script] Yüklendi");
 
 // Web sitesine UUID bilgisini gönderen fonksiyon
-function sendUUIDToWebSite(uuid) {
+async function sendUUIDToWebSite(uuid) {
   console.log("📤 [Web Site] UUID web sitesine gönderiliyor:", uuid);
   
-  // Global variable'a UUID'yi yaz
+  // 1. IndexedDB'ye yaz (ana yöntem)
+  try {
+    if (window.ExtensionSharedDB) {
+      await window.ExtensionSharedDB.setUUID(uuid);
+      console.log("✅ [Web Site] UUID IndexedDB'ye yazıldı:", uuid);
+    } else {
+      console.log("⚠️ [Web Site] IndexedDB helper bulunamadı");
+    }
+  } catch (e) {
+    console.log("❌ IndexedDB yazılamadı:", e);
+  }
+  
+  // 2. Global variable'a UUID'yi yaz (backup)
   window.EXTENSION_UUID = uuid;
   window.EXTENSION_UUID_TIMESTAMP = Date.now();
   
-  // localStorage'a da yaz (backup)
+  // 3. localStorage'a da yaz (backup)
   try {
     localStorage.setItem('EXTENSION_UUID', uuid);
     localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
@@ -17,8 +29,7 @@ function sendUUIDToWebSite(uuid) {
     console.log("⚠️ localStorage yazılamadı:", e);
   }
   
-  console.log("✅ [Web Site] UUID global variable'a yazıldı:", uuid);
-  console.log("🔍 [Web Site] window.EXTENSION_UUID:", window.EXTENSION_UUID);
+  console.log("✅ [Web Site] UUID tüm storage'lara yazıldı:", uuid);
 }
 
 // Extension'dan UUID al

@@ -21,7 +21,7 @@
     },
     {
       "matches": ["https://my-list-pi.vercel.app/*"],
-      "js": ["webpage-content-script.js"],
+      "js": ["indexedDB-helper.js", "webpage-content-script.js"],
       "run_at": "document_start"
     }
   ],
