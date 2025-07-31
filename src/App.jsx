@@ -1,56 +1,64 @@
 import React, { useEffect, useState } from "react";
 
-async function fetchMyListFromDatabase() {
+async function fetchMyListFromDatabase(setExtensionStatus = null) {
   try {
     console.log("🔍 Database'den ürünler getiriliyor...");
-    
+
     // 1. Extension'dan UUID'yi al
     let userId = null;
-    
+
     if (window.chrome && chrome.storage && chrome.storage.local) {
       userId = await new Promise((resolve) => {
         chrome.storage.local.get(["tum_listem_user_id"], (result) => {
           resolve(result.tum_listem_user_id);
         });
       });
+      
+      if (userId && setExtensionStatus) {
+        setExtensionStatus("found");
+      }
     }
-    
+
     if (!userId) {
       console.log("❌ UUID bulunamadı, boş liste döndürülüyor");
+      if (setExtensionStatus) {
+        setExtensionStatus("missing");
+      }
       return [];
     }
-    
+
     console.log("👤 UUID bulundu:", userId);
-    
+
     // 2. Database'den ürünleri çek
-    const response = await fetch(`https://my-list-pi.vercel.app/api/get-products?user_id=${userId}`);
-    
+    const response = await fetch(
+      `https://my-list-pi.vercel.app/api/get-products?user_id=${userId}`
+    );
+
     if (!response.ok) {
       throw new Error(`API hatası: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log("📦 Database'den gelen veri:", data);
-    
+
     if (data.success && data.products) {
       // API formatını frontend formatına çevir
-      const formattedProducts = data.products.map(product => ({
+      const formattedProducts = data.products.map((product) => ({
         name: product.name,
         price: product.price,
         image: product.image_url,
         product_url: product.product_url,
         url: product.product_url, // Backward compatibility
         site: product.site,
-        id: product.id
+        id: product.id,
       }));
-      
+
       console.log(`✅ ${formattedProducts.length} ürün başarıyla alındı`);
       return formattedProducts;
     } else {
       console.log("⚠️ API başarılı ama ürün yok");
       return [];
     }
-    
   } catch (error) {
     console.error("❌ Database'den veri alınırken hata:", error);
     return [];
@@ -67,6 +75,7 @@ export default function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [extensionStatus, setExtensionStatus] = useState("checking"); // checking, found, missing
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,8 +84,8 @@ export default function App() {
         setError(null);
         console.log("🚀 Popup açıldı, veri alınıyor...");
 
-        const result = await fetchMyListFromDatabase();
-        console.log("📋 fetchMyListFromExtension'dan dönen sonuç:", result);
+        const result = await fetchMyListFromDatabase(setExtensionStatus);
+        console.log("📋 fetchMyListFromDatabase'den dönen sonuç:", result);
         console.log("📋 Sonuç uzunluğu:", result.length);
         console.log("📋 Sonuç tipi:", typeof result);
         console.log("📋 Array mi?", Array.isArray(result));
@@ -96,7 +105,31 @@ export default function App() {
     };
 
     fetchData();
-  }, []);
+
+    // Extension kontrol timer'ı (extension sonradan yüklenirse)
+    const extensionCheckTimer = setInterval(async () => {
+      console.log("🔄 Extension kontrol ediliyor...");
+      
+      if (window.chrome && chrome.storage && chrome.storage.local) {
+        const userId = await new Promise((resolve) => {
+          chrome.storage.local.get(["tum_listem_user_id"], (result) => {
+            resolve(result.tum_listem_user_id);
+          });
+        });
+        
+        if (userId && products.length === 0) {
+          console.log("🎉 Extension UUID bulundu, veriler yeniden yükleniyor!");
+          setExtensionStatus("found");
+          fetchData();
+        }
+      }
+    }, 5000); // 5 saniyede bir kontrol
+
+    // Cleanup
+    return () => {
+      clearInterval(extensionCheckTimer);
+    };
+  }, [products.length]);
 
   // State değişikliklerini izle
   useEffect(() => {
@@ -107,18 +140,24 @@ export default function App() {
   // Debug fonksiyonu - Extension Storage ve Database bilgilerini göster
   const handleDebugStorage = () => {
     console.log("🔧 Debug butonu tıklandı");
-    
+
     if (window.chrome && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(["tum_listem_user_id"], async (result) => {
         console.log("📦 Extension Storage:", result);
         console.log("👤 User ID:", result.tum_listem_user_id);
-        
+
         if (result.tum_listem_user_id) {
           try {
-            const response = await fetch(`https://my-list-pi.vercel.app/api/get-products?user_id=${result.tum_listem_user_id}`);
+            const response = await fetch(
+              `https://my-list-pi.vercel.app/api/get-products?user_id=${result.tum_listem_user_id}`
+            );
             const data = await response.json();
             console.log("📦 Database'den gelen ürünler:", data);
-            alert(`UUID: ${result.tum_listem_user_id}\nÜrün sayısı: ${data.products?.length || 0}`);
+            alert(
+              `UUID: ${result.tum_listem_user_id}\nÜrün sayısı: ${
+                data.products?.length || 0
+              }`
+            );
           } catch (error) {
             console.error("❌ Database debug hatası:", error);
             alert("Database bağlantı hatası! Console'a bakın.");
@@ -195,17 +234,36 @@ export default function App() {
       </div>
 
       <div className="text-sm text-gray-600 mb-4 p-2 bg-gray-100 rounded">
-        <div>Popup çalışıyor! Ürün sayısı: {products.length}</div>
+        <div>Ürün sayısı: {products.length}</div>
+        <div>Extension Durumu: {
+          extensionStatus === "checking" ? "🔄 Kontrol ediliyor..." :
+          extensionStatus === "found" ? "✅ Extension bulundu" :
+          "❌ Extension bulunamadı"
+        }</div>
         <div>Chrome API: {window.chrome ? "✅ Mevcut" : "❌ Yok"}</div>
         <div>
           Storage API: {window.chrome?.storage ? "✅ Mevcut" : "❌ Yok"}
         </div>
-        <div>Runtime ID: {window.chrome?.runtime?.id || "Yok"}</div>
-        <div>
-          Products state: {JSON.stringify(products).substring(0, 100)}...
-        </div>
         {error && <div className="text-red-600">Hata: {error}</div>}
       </div>
+
+      {/* Extension Kurulum Uyarısı */}
+      {extensionStatus === "missing" && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center">
+            <div className="text-yellow-600 mr-2">⚠️</div>
+            <div>
+              <div className="font-medium text-yellow-800">Tüm Listem Extension Gerekli</div>
+              <div className="text-sm text-yellow-700 mt-1">
+                Ürünlerinizi görmek için önce browser extension'ını kurmanız gerekiyor.
+              </div>
+              <div className="text-xs text-yellow-600 mt-2">
+                Extension kurulduktan sonra bu sayfa otomatik olarak güncellenecek.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {products.length === 0 ? (
         <div className="text-gray-500 text-center py-10">
