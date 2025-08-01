@@ -145,7 +145,7 @@ function App() {
 
   // currentUserId değiştiğinde fetchProducts çağır
   useEffect(() => {
-    if (currentUserId && status !== "loading") {
+    if (currentUserId) {
       console.log(
         "🔄 [currentUserId] Değişti, fetchProducts çağırılıyor:",
         currentUserId
@@ -236,14 +236,6 @@ function App() {
   // API'den ürünleri çek
   const fetchProducts = async () => {
     console.log("🚀 [fetchProducts] Başladı");
-
-    // Eğer zaten loading durumundaysa tekrar istek atma
-    if (status === "loading") {
-      console.log(
-        "⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor"
-      );
-      return;
-    }
 
     // Eğer userId yoksa bekle
     if (!currentUserId) {
@@ -382,11 +374,9 @@ function App() {
     setIsGettingUserId(true);
 
     try {
-      // ExtensionSharedDBReady event'ini bekle (max 3 saniye)
+      // ExtensionSharedDBReady event'ini bekle (max 1 saniye)
       if (!window.ExtensionSharedDB) {
-        console.log(
-          "⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor..."
-        );
+        console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
         await new Promise((resolve) => {
           const handleReady = () => {
             console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
@@ -395,14 +385,12 @@ function App() {
           };
           window.addEventListener("ExtensionSharedDBReady", handleReady);
 
-          // Timeout: 3 saniye sonra devam et
+          // Timeout: 1 saniye sonra devam et
           setTimeout(() => {
-            console.log(
-              "⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor"
-            );
+            console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
             window.removeEventListener("ExtensionSharedDBReady", handleReady);
             resolve();
-          }, 3000);
+          }, 1000);
         });
       }
 
