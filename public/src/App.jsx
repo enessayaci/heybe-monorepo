@@ -107,9 +107,16 @@ function App() {
         "📨 [Web Site] extensionUUIDWritten event alındı:",
         event.detail.uuid
       );
+      
+      // Eğer aynı UUID zaten set edilmişse tekrar işlem yapma
+      if (currentUserId === event.detail.uuid) {
+        console.log("⚠️ [Event] Aynı UUID zaten set edilmiş, işlem yapılmıyor");
+        return;
+      }
+      
       setCurrentUserId(event.detail.uuid);
 
-      // UUID alındığında ürünleri çek
+      // UUID alındığında ürünleri çek (sadece 1 kere)
       setTimeout(async () => {
         console.log(
           "🚀 [Event] UUID alındı, ürünler çekiliyor:",
@@ -225,6 +232,13 @@ function App() {
   // API'den ürünleri çek
   const fetchProducts = async () => {
     console.log("🚀 [fetchProducts] Başladı");
+    
+    // Eğer zaten loading durumundaysa tekrar istek atma
+    if (status === "loading") {
+      console.log("⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor");
+      return;
+    }
+    
     try {
       setStatus("loading");
       const userId = await getUserId();
