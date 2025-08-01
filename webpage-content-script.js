@@ -28,13 +28,7 @@ async function sendUUIDToWebSite(uuid) {
   window.EXTENSION_UUID = uuid;
   window.EXTENSION_UUID_TIMESTAMP = Date.now();
   
-  // 3. localStorage'a da yaz (backup)
-  try {
-    localStorage.setItem('EXTENSION_UUID', uuid);
-    localStorage.setItem('EXTENSION_UUID_TIMESTAMP', Date.now().toString());
-  } catch (e) {
-    console.log("⚠️ localStorage yazılamadı:", e);
-  }
+
   
   console.log("✅ [Web Site] UUID tüm storage'lara yazıldı:", uuid);
 }

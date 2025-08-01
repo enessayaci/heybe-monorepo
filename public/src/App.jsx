@@ -107,13 +107,13 @@ function App() {
         "📨 [Web Site] extensionUUIDWritten event alındı:",
         event.detail.uuid
       );
-      
+
       // Eğer aynı UUID zaten set edilmişse tekrar işlem yapma
       if (currentUserId === event.detail.uuid) {
         console.log("⚠️ [Event] Aynı UUID zaten set edilmiş, işlem yapılmıyor");
         return;
       }
-      
+
       setCurrentUserId(event.detail.uuid);
 
       // UUID alındığında ürünleri çek (sadece 1 kere)
@@ -232,13 +232,15 @@ function App() {
   // API'den ürünleri çek
   const fetchProducts = async () => {
     console.log("🚀 [fetchProducts] Başladı");
-    
+
     // Eğer zaten loading durumundaysa tekrar istek atma
     if (status === "loading") {
-      console.log("⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor");
+      console.log(
+        "⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor"
+      );
       return;
     }
-    
+
     try {
       setStatus("loading");
       const userId = await getUserId();
@@ -384,26 +386,7 @@ function App() {
       console.log("❌ IndexedDB okunamadı:", e);
     }
 
-    // Fallback: localStorage (sadece bu domain için)
-    userId = localStorage.getItem("EXTENSION_UUID");
-    if (userId) {
-      console.log(
-        "⚠️ [Web Site] UUID localStorage'dan alındı (fallback):",
-        userId
-      );
-      console.log("👤 Extension'dan gelen UUID:", userId);
-      setCurrentUserId(userId);
-      // IndexedDB'ye de yaz (shared olsun)
-      try {
-        if (window.ExtensionSharedDB) {
-          await window.ExtensionSharedDB.setUUID(userId);
-          console.log("✅ [Web Site] UUID IndexedDB'ye kopyalandı");
-        }
-      } catch (e) {
-        console.log("❌ IndexedDB yazılamadı:", e);
-      }
-      return userId;
-    }
+
 
     // Hiç UUID yok, yeni oluştur
     userId = generateUUID();
@@ -418,9 +401,7 @@ function App() {
       console.log("❌ IndexedDB yazılamadı:", e);
     }
 
-    // Fallback: localStorage'a da yaz
-    localStorage.setItem("EXTENSION_UUID", userId);
-    localStorage.setItem("tum_listem_user_id", userId); // Backward compatibility
+
 
     console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
     setCurrentUserId(userId);
