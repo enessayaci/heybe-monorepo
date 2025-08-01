@@ -16,6 +16,7 @@ function App() {
   const [showWarning, setShowWarning] = useState(true);
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isGettingUserId, setIsGettingUserId] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -360,27 +361,26 @@ function App() {
 
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
+    // Eğer zaten çalışıyorsa bekle
+    if (isGettingUserId) {
+      console.log("⏳ [getUserId] Zaten çalışıyor, bekleniyor...");
+      while (isGettingUserId) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return currentUserId;
+    }
+
     console.log("🚀 [getUserId] Fonksiyon başladı");
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
 
-    // ExtensionSharedDBReady event'ini bekle
-    if (!window.ExtensionSharedDB) {
-      console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
-      await new Promise((resolve) => {
-        const handleReady = () => {
-          console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
-          window.removeEventListener('ExtensionSharedDBReady', handleReady);
-          resolve();
-        };
-        window.addEventListener('ExtensionSharedDBReady', handleReady);
-        
-        // Timeout: 5 saniye sonra devam et
-        setTimeout(() => {
-          console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
-          window.removeEventListener('ExtensionSharedDBReady', handleReady);
-          resolve();
-        }, 5000);
-      });
+    setIsGettingUserId(true);
+
+    // IndexedDB helper'ın hazır olmasını bekle (basit polling)
+    let attempts = 0;
+    while (!window.ExtensionSharedDB && attempts < 25) {
+      console.log("⏳ [getUserId] IndexedDB helper bekleniyor... (deneme:", attempts + 1, ")");
+      await new Promise(resolve => setTimeout(resolve, 200));
+      attempts++;
     }
 
     let userId = null;
@@ -420,6 +420,7 @@ function App() {
 
     console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
     setCurrentUserId(userId);
+    setIsGettingUserId(false);
     return userId;
   }
 
