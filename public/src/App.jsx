@@ -103,12 +103,15 @@ function App() {
 
     // Extension'dan UUID event'ini dinle
     const handleExtensionUUID = (event) => {
-      console.log("📨 [Web Site] extensionUUIDWritten event alındı:", event.detail.uuid);
+      console.log(
+        "📨 [Web Site] extensionUUIDWritten event alındı:",
+        event.detail.uuid
+      );
       setCurrentUserId(event.detail.uuid);
       fetchProducts();
     };
 
-    window.addEventListener('extensionUUIDWritten', handleExtensionUUID);
+    window.addEventListener("extensionUUIDWritten", handleExtensionUUID);
 
     // Basit: UUID hazır olduğunda ürünleri çek
     console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
@@ -128,7 +131,7 @@ function App() {
     }, 2000); // 2 saniye bekle
 
     return () => {
-      window.removeEventListener('extensionUUIDWritten', handleExtensionUUID);
+      window.removeEventListener("extensionUUIDWritten", handleExtensionUUID);
     };
   }, []);
 
