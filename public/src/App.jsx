@@ -108,10 +108,13 @@ function App() {
         event.detail.uuid
       );
       setCurrentUserId(event.detail.uuid);
-      
+
       // UUID alındığında ürünleri çek
       setTimeout(async () => {
-        console.log("🚀 [Event] UUID alındı, ürünler çekiliyor:", event.detail.uuid);
+        console.log(
+          "🚀 [Event] UUID alındı, ürünler çekiliyor:",
+          event.detail.uuid
+        );
         await fetchProducts();
       }, 100);
     };
