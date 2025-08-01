@@ -85,11 +85,14 @@ async function initializeUUID() {
   }
 }
 
-// Sayfa yüklendiğinde çalıştır
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeUUID);
-} else {
-  initializeUUID();
+// Sadece web sitesinde çalıştır
+if (window.location.hostname === 'my-list-pi.vercel.app') {
+  // Sayfa yüklendiğinde çalıştır
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeUUID);
+  } else {
+    initializeUUID();
+  }
 }
 
 // Extension'dan gelen mesajları dinle

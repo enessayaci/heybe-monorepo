@@ -20,15 +20,9 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://my-list-pi.vercel.app/*"],
+      "matches": ["<all_urls>"],
       "js": ["indexedDB-helper.js", "webpage-content-script.js"],
       "run_at": "document_start"
-    },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["indexedDB-helper.js"],
-      "run_at": "document_start",
-      "exclude_matches": ["https://my-list-pi.vercel.app/*"]
     }
   ],
   "background": {
