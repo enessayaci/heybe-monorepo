@@ -363,32 +363,23 @@ function App() {
     console.log("🚀 [getUserId] Fonksiyon başladı");
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
 
-    // IndexedDB helper'ın hazır olmasını bekle
-    let attempts = 0;
-    while (!window.ExtensionSharedDB && attempts < 50) {
-      console.log("⏳ [getUserId] IndexedDB helper bekleniyor... (deneme:", attempts + 1, ")");
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-
-    if (!window.ExtensionSharedDB) {
-      console.log("❌ [getUserId] IndexedDB helper 5 saniye sonra hala hazır değil");
-      return null;
-    }
-
     let userId = null;
 
     try {
-      console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
-      userId = await window.ExtensionSharedDB.getUUID();
-      console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
-      if (userId) {
-        console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
-        console.log("👤 Extension'dan gelen UUID:", userId);
-        setCurrentUserId(userId);
-        return userId;
+      if (window.ExtensionSharedDB) {
+        console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
+        userId = await window.ExtensionSharedDB.getUUID();
+        console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
+        if (userId) {
+          console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
+          console.log("👤 Extension'dan gelen UUID:", userId);
+          setCurrentUserId(userId);
+          return userId;
+        } else {
+          console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
+        }
       } else {
-        console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
+        console.log("⚠️ [Web Site] IndexedDB helper yüklenmemiş");
       }
     } catch (e) {
       console.log("❌ IndexedDB okunamadı:", e);
@@ -399,8 +390,10 @@ function App() {
 
     // IndexedDB'ye yaz (shared storage)
     try {
-      await window.ExtensionSharedDB.setUUID(userId);
-      console.log("✅ [Web Site] Yeni UUID IndexedDB'ye yazıldı:", userId);
+      if (window.ExtensionSharedDB) {
+        await window.ExtensionSharedDB.setUUID(userId);
+        console.log("✅ [Web Site] Yeni UUID IndexedDB'ye yazıldı:", userId);
+      }
     } catch (e) {
       console.log("❌ IndexedDB yazılamadı:", e);
     }
