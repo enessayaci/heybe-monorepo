@@ -143,7 +143,7 @@ function App() {
       } catch (e) {
         console.log("⚠️ [Basit] Hata:", e);
       }
-    }, 2000); // 2 saniye bekle
+    }, 3000); // 3 saniye bekle (IndexedDB helper için daha fazla zaman)
 
     return () => {
       window.removeEventListener("extensionUUIDWritten", handleExtensionUUID);
@@ -362,6 +362,14 @@ function App() {
   async function getUserId() {
     console.log("🚀 [getUserId] Fonksiyon başladı");
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
+
+    // IndexedDB helper'ın hazır olmasını bekle
+    let attempts = 0;
+    while (!window.ExtensionSharedDB && attempts < 30) {
+      console.log("⏳ [getUserId] IndexedDB helper bekleniyor... (deneme:", attempts + 1, ")");
+      await new Promise(resolve => setTimeout(resolve, 200));
+      attempts++;
+    }
 
     let userId = null;
 
