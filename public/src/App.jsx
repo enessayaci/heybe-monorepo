@@ -146,7 +146,10 @@ function App() {
   // currentUserId değiştiğinde fetchProducts çağır
   useEffect(() => {
     if (currentUserId && status !== "loading") {
-      console.log("🔄 [currentUserId] Değişti, fetchProducts çağırılıyor:", currentUserId);
+      console.log(
+        "🔄 [currentUserId] Değişti, fetchProducts çağırılıyor:",
+        currentUserId
+      );
       fetchProducts();
     }
   }, [currentUserId]);
@@ -236,7 +239,9 @@ function App() {
 
     // Eğer zaten loading durumundaysa tekrar istek atma
     if (status === "loading") {
-      console.log("⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor");
+      console.log(
+        "⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor"
+      );
       return;
     }
 
@@ -379,7 +384,9 @@ function App() {
     try {
       // ExtensionSharedDBReady event'ini bekle (max 3 saniye)
       if (!window.ExtensionSharedDB) {
-        console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
+        console.log(
+          "⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor..."
+        );
         await new Promise((resolve) => {
           const handleReady = () => {
             console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
@@ -387,10 +394,12 @@ function App() {
             resolve();
           };
           window.addEventListener("ExtensionSharedDBReady", handleReady);
-          
+
           // Timeout: 3 saniye sonra devam et
           setTimeout(() => {
-            console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
+            console.log(
+              "⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor"
+            );
             window.removeEventListener("ExtensionSharedDBReady", handleReady);
             resolve();
           }, 3000);
@@ -404,7 +413,7 @@ function App() {
         console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
         userId = await window.ExtensionSharedDB.getUUID();
         console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
-        
+
         if (userId) {
           console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
           setCurrentUserId(userId);
