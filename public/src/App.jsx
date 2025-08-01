@@ -116,15 +116,7 @@ function App() {
       }
 
       setCurrentUserId(event.detail.uuid);
-
-      // UUID alındığında ürünleri çek (sadece 1 kere)
-      setTimeout(async () => {
-        console.log(
-          "🚀 [Event] UUID alındı, ürünler çekiliyor:",
-          event.detail.uuid
-        );
-        await fetchProducts();
-      }, 100);
+      console.log("✅ [Event] UUID set edildi:", event.detail.uuid);
     };
 
     window.addEventListener("extensionUUIDWritten", handleExtensionUUID);
@@ -136,8 +128,8 @@ function App() {
         const userId = await getUserId();
         console.log("🚀 [Basit] getUserId() sonucu:", userId);
         if (userId) {
-          console.log("✅ [Basit] UUID bulundu, ürünler çekiliyor:", userId);
-          await fetchProducts();
+          console.log("✅ [Basit] UUID bulundu:", userId);
+          // fetchProducts'ı çağırma, currentUserId set edildiğinde otomatik çalışacak
         } else {
           console.log("❌ [Basit] UUID bulunamadı");
         }
@@ -150,6 +142,14 @@ function App() {
       window.removeEventListener("extensionUUIDWritten", handleExtensionUUID);
     };
   }, []);
+
+  // currentUserId değiştiğinde fetchProducts çağır
+  useEffect(() => {
+    if (currentUserId && status !== "loading") {
+      console.log("🔄 [currentUserId] Değişti, fetchProducts çağırılıyor:", currentUserId);
+      fetchProducts();
+    }
+  }, [currentUserId]);
 
   // Test fonksiyonu
   const handleTest = async () => {
@@ -236,18 +236,21 @@ function App() {
 
     // Eğer zaten loading durumundaysa tekrar istek atma
     if (status === "loading") {
-      console.log(
-        "⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor"
-      );
+      console.log("⚠️ [fetchProducts] Zaten loading durumunda, istek atılmıyor");
+      return;
+    }
+
+    // Eğer userId yoksa bekle
+    if (!currentUserId) {
+      console.log("⏳ [fetchProducts] userId yok, bekleniyor...");
       return;
     }
 
     try {
       setStatus("loading");
-      const userId = await getUserId();
-      console.log("🚀 [fetchProducts] userId:", userId);
+      console.log("🚀 [fetchProducts] userId:", currentUserId);
 
-      const url = `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`;
+      const url = `${GET_PRODUCTS_ENDPOINT}?user_id=${currentUserId}`;
       console.log("🚀 [fetchProducts] API URL:", url);
 
       const response = await fetch(url);
@@ -365,35 +368,47 @@ function App() {
     if (isGettingUserId) {
       console.log("⏳ [getUserId] Zaten çalışıyor, bekleniyor...");
       while (isGettingUserId) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
       return currentUserId;
     }
 
     console.log("🚀 [getUserId] Fonksiyon başladı");
-    console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
-
     setIsGettingUserId(true);
 
-    // IndexedDB helper'ın hazır olmasını bekle (basit polling)
-    let attempts = 0;
-    while (!window.ExtensionSharedDB && attempts < 25) {
-      console.log("⏳ [getUserId] IndexedDB helper bekleniyor... (deneme:", attempts + 1, ")");
-      await new Promise(resolve => setTimeout(resolve, 200));
-      attempts++;
-    }
-
-    let userId = null;
-
     try {
+      // ExtensionSharedDBReady event'ini bekle (max 3 saniye)
+      if (!window.ExtensionSharedDB) {
+        console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
+        await new Promise((resolve) => {
+          const handleReady = () => {
+            console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
+            window.removeEventListener("ExtensionSharedDBReady", handleReady);
+            resolve();
+          };
+          window.addEventListener("ExtensionSharedDBReady", handleReady);
+          
+          // Timeout: 3 saniye sonra devam et
+          setTimeout(() => {
+            console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
+            window.removeEventListener("ExtensionSharedDBReady", handleReady);
+            resolve();
+          }, 3000);
+        });
+      }
+
+      let userId = null;
+
+      // IndexedDB'den UUID'yi oku
       if (window.ExtensionSharedDB) {
         console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
         userId = await window.ExtensionSharedDB.getUUID();
         console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
+        
         if (userId) {
           console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
-          console.log("👤 Extension'dan gelen UUID:", userId);
           setCurrentUserId(userId);
+          setIsGettingUserId(false);
           return userId;
         } else {
           console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
@@ -401,27 +416,25 @@ function App() {
       } else {
         console.log("⚠️ [Web Site] IndexedDB helper yüklenmemiş");
       }
-    } catch (e) {
-      console.log("❌ IndexedDB okunamadı:", e);
-    }
 
-    // Hiç UUID yok, yeni oluştur
-    userId = generateUUID();
+      // Hiç UUID yok, yeni oluştur
+      userId = generateUUID();
+      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
 
-    // IndexedDB'ye yaz (shared storage)
-    try {
+      // IndexedDB'ye yaz (shared storage)
       if (window.ExtensionSharedDB) {
         await window.ExtensionSharedDB.setUUID(userId);
         console.log("✅ [Web Site] Yeni UUID IndexedDB'ye yazıldı:", userId);
       }
-    } catch (e) {
-      console.log("❌ IndexedDB yazılamadı:", e);
-    }
 
-    console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
-    setCurrentUserId(userId);
-    setIsGettingUserId(false);
-    return userId;
+      setCurrentUserId(userId);
+      setIsGettingUserId(false);
+      return userId;
+    } catch (error) {
+      console.error("❌ [getUserId] Hata:", error);
+      setIsGettingUserId(false);
+      return null;
+    }
   }
 
   return (

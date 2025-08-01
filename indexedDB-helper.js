@@ -157,8 +157,17 @@ class ExtensionSharedDB {
   }
 }
 
-// Global instance oluştur ve READY event'i fırlat
+// Global instance oluştur ve database açıldıktan sonra READY event'i fırlat
 window.ExtensionSharedDB = new ExtensionSharedDB();
-window.dispatchEvent(new Event('ExtensionSharedDBReady'));
 
-console.log("🗄️ [IndexedDB Helper] Yüklendi - READY event gönderildi");
+// Database açıldıktan sonra READY event'i gönder
+window.ExtensionSharedDB.openDB().then(() => {
+  console.log("🗄️ [IndexedDB Helper] Database açıldı - READY event gönderiliyor");
+  window.dispatchEvent(new Event('ExtensionSharedDBReady'));
+}).catch(error => {
+  console.error("❌ [IndexedDB Helper] Database açılamadı:", error);
+  // Hata olsa bile event'i gönder (fallback için)
+  window.dispatchEvent(new Event('ExtensionSharedDBReady'));
+});
+
+console.log("🗄️ [IndexedDB Helper] Yüklendi - Database açılıyor...");
