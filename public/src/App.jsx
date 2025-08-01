@@ -108,7 +108,12 @@ function App() {
         event.detail.uuid
       );
       setCurrentUserId(event.detail.uuid);
-      fetchProducts();
+      
+      // UUID alındığında ürünleri çek
+      setTimeout(async () => {
+        console.log("🚀 [Event] UUID alındı, ürünler çekiliyor:", event.detail.uuid);
+        await fetchProducts();
+      }, 100);
     };
 
     window.addEventListener("extensionUUIDWritten", handleExtensionUUID);
@@ -333,8 +338,6 @@ function App() {
       }
     );
   }
-
-
 
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
