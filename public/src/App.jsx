@@ -221,10 +221,10 @@ function App() {
       setStatus("loading");
       const userId = await getUserId();
       console.log("🚀 [fetchProducts] userId:", userId);
-      
+
       const url = `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`;
       console.log("🚀 [fetchProducts] API URL:", url);
-      
+
       const response = await fetch(url);
       console.log("🚀 [fetchProducts] Response status:", response.status);
 
@@ -345,14 +345,25 @@ function App() {
     console.log("⏳ [waitForSharedDB] ExtensionSharedDB bekleniyor...");
     // Event zaten gönderilmiş olabilir, kısa bir süre bekle
     return new Promise((res) => {
+      let attempts = 0;
+      const maxAttempts = 50; // 5 saniye (50 * 100ms)
+      
       const checkReady = () => {
+        attempts++;
         if (window.ExtensionSharedDB) {
           console.log("✅ [waitForSharedDB] ExtensionSharedDB bulundu");
           res();
           return;
         }
+        
+        if (attempts >= maxAttempts) {
+          console.log("❌ [waitForSharedDB] ExtensionSharedDB bulunamadı, timeout");
+          res(); // Timeout, devam et
+          return;
+        }
+        
         console.log(
-          "⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, tekrar kontrol ediliyor..."
+          `⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, deneme ${attempts}/${maxAttempts}`
         );
         setTimeout(checkReady, 100);
       };
