@@ -347,7 +347,7 @@ function App() {
     return new Promise((res) => {
       let attempts = 0;
       const maxAttempts = 50; // 5 saniye (50 * 100ms)
-      
+
       const checkReady = () => {
         attempts++;
         if (window.ExtensionSharedDB) {
@@ -355,13 +355,15 @@ function App() {
           res();
           return;
         }
-        
+
         if (attempts >= maxAttempts) {
-          console.log("❌ [waitForSharedDB] ExtensionSharedDB bulunamadı, timeout");
+          console.log(
+            "❌ [waitForSharedDB] ExtensionSharedDB bulunamadı, timeout"
+          );
           res(); // Timeout, devam et
           return;
         }
-        
+
         console.log(
           `⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, deneme ${attempts}/${maxAttempts}`
         );
