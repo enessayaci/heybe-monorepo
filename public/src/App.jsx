@@ -216,24 +216,31 @@ function App() {
 
   // API'den ürünleri çek
   const fetchProducts = async () => {
+    console.log("🚀 [fetchProducts] Başladı");
     try {
       setStatus("loading");
       const userId = await getUserId();
-      const response = await fetch(
-        `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
-      );
+      console.log("🚀 [fetchProducts] userId:", userId);
+      
+      const url = `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`;
+      console.log("🚀 [fetchProducts] API URL:", url);
+      
+      const response = await fetch(url);
+      console.log("🚀 [fetchProducts] Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
+        console.log("🚀 [fetchProducts] Response data:", data);
         setProducts(data.products || []);
         setFilteredProducts(data.products || []); // Başlangıçta tüm ürünler
         setStatus("success");
       } else {
+        console.log("❌ [fetchProducts] Response not ok:", response.status);
         setError("Ürünler yüklenirken hata oluştu");
         setStatus("error");
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("❌ [fetchProducts] Error:", error);
       setError("Network hatası");
       setStatus("error");
     }
