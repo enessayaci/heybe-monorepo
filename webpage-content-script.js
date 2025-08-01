@@ -11,6 +11,12 @@ async function sendUUIDToWebSite(uuid) {
     if (window.ExtensionSharedDB) {
       await window.ExtensionSharedDB.setUUID(uuid);
       console.log("✅ [Web Site] UUID IndexedDB'ye yazıldı:", uuid);
+      
+      // Web sitesine event gönder
+      window.dispatchEvent(new CustomEvent('extensionUUIDWritten', { 
+        detail: { uuid: uuid } 
+      }));
+      console.log("📤 [Web Site] extensionUUIDWritten event gönderildi");
     } else {
       console.log("⚠️ [Web Site] IndexedDB helper bulunamadı");
     }

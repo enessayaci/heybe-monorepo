@@ -101,6 +101,15 @@ function App() {
       }
     })();
 
+    // Extension'dan UUID event'ini dinle
+    const handleExtensionUUID = (event) => {
+      console.log("📨 [Web Site] extensionUUIDWritten event alındı:", event.detail.uuid);
+      setCurrentUserId(event.detail.uuid);
+      fetchProducts();
+    };
+
+    window.addEventListener('extensionUUIDWritten', handleExtensionUUID);
+
     // Basit: UUID hazır olduğunda ürünleri çek
     console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
     setTimeout(async () => {
@@ -117,6 +126,10 @@ function App() {
         console.log("⚠️ [Basit] Hata:", e);
       }
     }, 2000); // 2 saniye bekle
+
+    return () => {
+      window.removeEventListener('extensionUUIDWritten', handleExtensionUUID);
+    };
   }, []);
 
   // Test fonksiyonu
@@ -328,7 +341,9 @@ function App() {
           res();
           return;
         }
-        console.log("⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, tekrar kontrol ediliyor...");
+        console.log(
+          "⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, tekrar kontrol ediliyor..."
+        );
         setTimeout(checkReady, 100);
       };
       checkReady();
