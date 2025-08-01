@@ -313,15 +313,22 @@ function App() {
 
   // Helper hazır olana kadar bekle
   function waitForSharedDB() {
-    if (window.ExtensionSharedDB) return Promise.resolve();
+    console.log("🔍 [waitForSharedDB] Kontrol ediliyor...");
+    if (window.ExtensionSharedDB) {
+      console.log("✅ [waitForSharedDB] ExtensionSharedDB mevcut");
+      return Promise.resolve();
+    }
 
+    console.log("⏳ [waitForSharedDB] ExtensionSharedDB bekleniyor...");
     // Event zaten gönderilmiş olabilir, kısa bir süre bekle
     return new Promise((res) => {
       const checkReady = () => {
         if (window.ExtensionSharedDB) {
+          console.log("✅ [waitForSharedDB] ExtensionSharedDB bulundu");
           res();
           return;
         }
+        console.log("⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, tekrar kontrol ediliyor...");
         setTimeout(checkReady, 100);
       };
       checkReady();
