@@ -363,12 +363,24 @@ function App() {
     console.log("🚀 [getUserId] Fonksiyon başladı");
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
 
-    // IndexedDB helper'ın hazır olmasını bekle
-    let attempts = 0;
-    while (!window.ExtensionSharedDB && attempts < 30) {
-      console.log("⏳ [getUserId] IndexedDB helper bekleniyor... (deneme:", attempts + 1, ")");
-      await new Promise(resolve => setTimeout(resolve, 200));
-      attempts++;
+    // ExtensionSharedDBReady event'ini bekle
+    if (!window.ExtensionSharedDB) {
+      console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
+      await new Promise((resolve) => {
+        const handleReady = () => {
+          console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
+          window.removeEventListener('ExtensionSharedDBReady', handleReady);
+          resolve();
+        };
+        window.addEventListener('ExtensionSharedDBReady', handleReady);
+        
+        // Timeout: 5 saniye sonra devam et
+        setTimeout(() => {
+          console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
+          window.removeEventListener('ExtensionSharedDBReady', handleReady);
+          resolve();
+        }, 5000);
+      });
     }
 
     let userId = null;
