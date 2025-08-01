@@ -334,52 +334,11 @@ function App() {
     );
   }
 
-  // Helper hazır olana kadar bekle
-  function waitForSharedDB() {
-    console.log("🔍 [waitForSharedDB] Kontrol ediliyor...");
-    if (window.ExtensionSharedDB) {
-      console.log("✅ [waitForSharedDB] ExtensionSharedDB mevcut");
-      return Promise.resolve();
-    }
 
-    console.log("⏳ [waitForSharedDB] ExtensionSharedDB bekleniyor...");
-    // Event zaten gönderilmiş olabilir, kısa bir süre bekle
-    return new Promise((res) => {
-      let attempts = 0;
-      const maxAttempts = 50; // 5 saniye (50 * 100ms)
-
-      const checkReady = () => {
-        attempts++;
-        if (window.ExtensionSharedDB) {
-          console.log("✅ [waitForSharedDB] ExtensionSharedDB bulundu");
-          res();
-          return;
-        }
-
-        if (attempts >= maxAttempts) {
-          console.log(
-            "❌ [waitForSharedDB] ExtensionSharedDB bulunamadı, timeout"
-          );
-          res(); // Timeout, devam et
-          return;
-        }
-
-        console.log(
-          `⏳ [waitForSharedDB] ExtensionSharedDB henüz yok, deneme ${attempts}/${maxAttempts}`
-        );
-        setTimeout(checkReady, 100);
-      };
-      checkReady();
-
-      // Event listener da ekle (backup)
-      window.addEventListener("ExtensionSharedDBReady", res, { once: true });
-    });
-  }
 
   // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
   async function getUserId() {
     console.log("🚀 [getUserId] Fonksiyon başladı");
-    await waitForSharedDB();
     console.log("🔍 [Web Site] UUID aranıyor (IndexedDB shared storage)...");
 
     // IndexedDB'den UUID'yi al (tüm domain'ler paylaşır)
