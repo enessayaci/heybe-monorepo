@@ -7,7 +7,7 @@
   "icons": {
     "48": "images/extension_48.png"
   },
-  "permissions": ["scripting", "activeTab", "storage"],
+  "permissions": ["scripting", "activeTab", "storage", "unlimitedStorage"],
   "browser_specific_settings": {
     "gecko": {
       "id": "tum-listem@extension.js"

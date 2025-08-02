@@ -169,6 +169,25 @@ function App() {
     }
   };
 
+  // IndexedDB Debug fonksiyonu
+  const handleIndexedDBDebug = async () => {
+    console.log("🔍 [IndexedDB Debug] Başlatılıyor...");
+    console.log("🔍 [IndexedDB Debug] ExtensionSharedDB:", window.ExtensionSharedDB);
+    
+    if (window.ExtensionSharedDB) {
+      try {
+        const allData = await window.ExtensionSharedDB.debugListAll();
+        console.log("🔍 [IndexedDB Debug] Tüm veriler:", allData);
+        alert("IndexedDB Debug: " + JSON.stringify(allData, null, 2));
+      } catch (error) {
+        console.error("🔍 [IndexedDB Debug] Hata:", error);
+        alert("IndexedDB Debug Hatası: " + error.message);
+      }
+    } else {
+      alert("ExtensionSharedDB yok!");
+    }
+  };
+
   // URL'den ürün ID'sini al
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -897,6 +916,12 @@ function App() {
                       className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
                     >
                       Test
+                    </button>
+                    <button
+                      onClick={handleIndexedDBDebug}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                    >
+                      IndexedDB Debug
                     </button>
                   </div>
                 </div>

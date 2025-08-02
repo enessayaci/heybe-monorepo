@@ -48,10 +48,14 @@ class ExtensionSharedDB {
   // UUID'yi yaz
   async setUUID(uuid) {
     try {
-      if (!this.db) await this.openDB();
+      if (!this.db) {
+        console.log("🔧 [IndexedDB] Database açılıyor (setUUID)...");
+        await this.openDB();
+      }
 
       return new Promise((resolve, reject) => {
         console.log("💾 [IndexedDB] UUID yazılıyor:", uuid);
+        console.log("🔧 [IndexedDB] Database durumu (setUUID):", this.db ? "Açık" : "Kapalı");
 
         const transaction = this.db.transaction([this.storeName], "readwrite");
         const store = transaction.objectStore(this.storeName);
@@ -61,6 +65,8 @@ class ExtensionSharedDB {
           value: uuid,
           timestamp: Date.now(),
         };
+
+        console.log("💾 [IndexedDB] Yazılacak data:", data);
 
         const request = store.put(data);
 
@@ -77,11 +83,13 @@ class ExtensionSharedDB {
 
         request.onerror = () => {
           console.error("❌ [IndexedDB] UUID yazılırken hata:", request.error);
+          console.error("❌ [IndexedDB] Error details:", request.error?.message);
           reject(request.error);
         };
       });
     } catch (error) {
       console.error("❌ [IndexedDB] UUID yazma hatası:", error);
+      console.error("❌ [IndexedDB] Error stack:", error.stack);
       return false;
     }
   }
@@ -89,10 +97,15 @@ class ExtensionSharedDB {
   // UUID'yi oku
   async getUUID() {
     try {
-      if (!this.db) await this.openDB();
+      if (!this.db) {
+        console.log("🔧 [IndexedDB] Database açılıyor...");
+        await this.openDB();
+      }
 
       return new Promise((resolve, reject) => {
         console.log("🔍 [IndexedDB] UUID okunuyor...");
+        console.log("🔧 [IndexedDB] Database durumu:", this.db ? "Açık" : "Kapalı");
+        console.log("🔧 [IndexedDB] Store name:", this.storeName);
 
         const transaction = this.db.transaction([this.storeName], "readonly");
         const store = transaction.objectStore(this.storeName);
@@ -100,9 +113,13 @@ class ExtensionSharedDB {
 
         request.onsuccess = () => {
           const result = request.result;
+          console.log("🔍 [IndexedDB] Raw result:", result);
+          
           if (result) {
             // 5 dakikadan eski değilse kullan
             const age = Date.now() - result.timestamp;
+            console.log("🔍 [IndexedDB] UUID age:", age, "ms");
+            
             if (age < 5 * 60 * 1000) {
               // 5 dakika
               console.log(
@@ -116,18 +133,20 @@ class ExtensionSharedDB {
               resolve(null);
             }
           } else {
-            console.log("❌ [IndexedDB] UUID bulunamadı");
+            console.log("❌ [IndexedDB] UUID bulunamadı - result null");
             resolve(null);
           }
         };
 
         request.onerror = () => {
           console.error("❌ [IndexedDB] UUID okuma hatası:", request.error);
+          console.error("❌ [IndexedDB] Error details:", request.error?.message);
           resolve(null);
         };
       });
     } catch (error) {
       console.error("❌ [IndexedDB] UUID okuma hatası:", error);
+      console.error("❌ [IndexedDB] Error stack:", error.stack);
       return null;
     }
   }
@@ -164,6 +183,32 @@ class ExtensionSharedDB {
       this.db.close();
       this.db = null;
       console.log("🔒 [IndexedDB] Database kapatıldı");
+    }
+  }
+
+  // Debug: Tüm verileri listele
+  async debugListAll() {
+    try {
+      if (!this.db) await this.openDB();
+      
+      return new Promise((resolve) => {
+        const transaction = this.db.transaction([this.storeName], "readonly");
+        const store = transaction.objectStore(this.storeName);
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+          console.log("🔍 [IndexedDB Debug] Tüm veriler:", request.result);
+          resolve(request.result);
+        };
+        
+        request.onerror = () => {
+          console.error("❌ [IndexedDB Debug] Hata:", request.error);
+          resolve([]);
+        };
+      });
+    } catch (error) {
+      console.error("❌ [IndexedDB Debug] Hata:", error);
+      return [];
     }
   }
 }
