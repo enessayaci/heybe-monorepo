@@ -55,7 +55,10 @@ class ExtensionSharedDB {
 
       return new Promise((resolve, reject) => {
         console.log("💾 [IndexedDB] UUID yazılıyor:", uuid);
-        console.log("🔧 [IndexedDB] Database durumu (setUUID):", this.db ? "Açık" : "Kapalı");
+        console.log(
+          "🔧 [IndexedDB] Database durumu (setUUID):",
+          this.db ? "Açık" : "Kapalı"
+        );
 
         const transaction = this.db.transaction([this.storeName], "readwrite");
         const store = transaction.objectStore(this.storeName);
@@ -83,7 +86,10 @@ class ExtensionSharedDB {
 
         request.onerror = () => {
           console.error("❌ [IndexedDB] UUID yazılırken hata:", request.error);
-          console.error("❌ [IndexedDB] Error details:", request.error?.message);
+          console.error(
+            "❌ [IndexedDB] Error details:",
+            request.error?.message
+          );
           reject(request.error);
         };
       });
@@ -104,7 +110,10 @@ class ExtensionSharedDB {
 
       return new Promise((resolve, reject) => {
         console.log("🔍 [IndexedDB] UUID okunuyor...");
-        console.log("🔧 [IndexedDB] Database durumu:", this.db ? "Açık" : "Kapalı");
+        console.log(
+          "🔧 [IndexedDB] Database durumu:",
+          this.db ? "Açık" : "Kapalı"
+        );
         console.log("🔧 [IndexedDB] Store name:", this.storeName);
 
         const transaction = this.db.transaction([this.storeName], "readonly");
@@ -114,12 +123,12 @@ class ExtensionSharedDB {
         request.onsuccess = () => {
           const result = request.result;
           console.log("🔍 [IndexedDB] Raw result:", result);
-          
+
           if (result) {
             // 5 dakikadan eski değilse kullan
             const age = Date.now() - result.timestamp;
             console.log("🔍 [IndexedDB] UUID age:", age, "ms");
-            
+
             if (age < 5 * 60 * 1000) {
               // 5 dakika
               console.log(
@@ -140,7 +149,10 @@ class ExtensionSharedDB {
 
         request.onerror = () => {
           console.error("❌ [IndexedDB] UUID okuma hatası:", request.error);
-          console.error("❌ [IndexedDB] Error details:", request.error?.message);
+          console.error(
+            "❌ [IndexedDB] Error details:",
+            request.error?.message
+          );
           resolve(null);
         };
       });
@@ -190,17 +202,17 @@ class ExtensionSharedDB {
   async debugListAll() {
     try {
       if (!this.db) await this.openDB();
-      
+
       return new Promise((resolve) => {
         const transaction = this.db.transaction([this.storeName], "readonly");
         const store = transaction.objectStore(this.storeName);
         const request = store.getAll();
-        
+
         request.onsuccess = () => {
           console.log("🔍 [IndexedDB Debug] Tüm veriler:", request.result);
           resolve(request.result);
         };
-        
+
         request.onerror = () => {
           console.error("❌ [IndexedDB Debug] Hata:", request.error);
           resolve([]);
