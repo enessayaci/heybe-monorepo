@@ -123,7 +123,35 @@ function App() {
 
     // Basit: UUID hazır olduğunda ürünleri çek
     console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
-    setTimeout(async () => {
+    
+    // ExtensionSharedDBReady event'ini bekle
+    const waitForExtensionSharedDB = () => {
+      return new Promise((resolve) => {
+        if (window.ExtensionSharedDB) {
+          console.log("✅ [Basit] ExtensionSharedDB zaten mevcut");
+          resolve();
+          return;
+        }
+
+        console.log("⏳ [Basit] ExtensionSharedDBReady event'i bekleniyor...");
+        const handleReady = () => {
+          console.log("✅ [Basit] ExtensionSharedDBReady event'i alındı");
+          window.removeEventListener("ExtensionSharedDBReady", handleReady);
+          resolve();
+        };
+        window.addEventListener("ExtensionSharedDBReady", handleReady);
+
+        // Timeout: 5 saniye sonra devam et
+        setTimeout(() => {
+          console.log("⚠️ [Basit] ExtensionSharedDBReady timeout, devam ediliyor");
+          window.removeEventListener("ExtensionSharedDBReady", handleReady);
+          resolve();
+        }, 5000);
+      });
+    };
+
+    // ExtensionSharedDB hazır olduğunda UUID kontrol et
+    waitForExtensionSharedDB().then(async () => {
       try {
         const userId = await getUserId();
         console.log("🚀 [Basit] getUserId() sonucu:", userId);
@@ -136,7 +164,7 @@ function App() {
       } catch (e) {
         console.log("⚠️ [Basit] Hata:", e);
       }
-    }, 3000); // 3 saniye bekle (IndexedDB helper için daha fazla zaman)
+    });
 
     return () => {
       window.removeEventListener("extensionUUIDWritten", handleExtensionUUID);
@@ -172,8 +200,11 @@ function App() {
   // IndexedDB Debug fonksiyonu
   const handleIndexedDBDebug = async () => {
     console.log("🔍 [IndexedDB Debug] Başlatılıyor...");
-    console.log("🔍 [IndexedDB Debug] ExtensionSharedDB:", window.ExtensionSharedDB);
-    
+    console.log(
+      "🔍 [IndexedDB Debug] ExtensionSharedDB:",
+      window.ExtensionSharedDB
+    );
+
     if (window.ExtensionSharedDB) {
       try {
         const allData = await window.ExtensionSharedDB.debugListAll();
@@ -393,9 +424,11 @@ function App() {
     setIsGettingUserId(true);
 
     try {
-      // ExtensionSharedDBReady event'ini bekle (max 1 saniye)
+      // ExtensionSharedDBReady event'ini bekle (max 3 saniye)
       if (!window.ExtensionSharedDB) {
-        console.log("⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor...");
+        console.log(
+          "⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor..."
+        );
         await new Promise((resolve) => {
           const handleReady = () => {
             console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
@@ -404,12 +437,14 @@ function App() {
           };
           window.addEventListener("ExtensionSharedDBReady", handleReady);
 
-          // Timeout: 1 saniye sonra devam et
+          // Timeout: 3 saniye sonra devam et
           setTimeout(() => {
-            console.log("⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor");
+            console.log(
+              "⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor"
+            );
             window.removeEventListener("ExtensionSharedDBReady", handleReady);
             resolve();
-          }, 1000);
+          }, 3000);
         });
       }
 

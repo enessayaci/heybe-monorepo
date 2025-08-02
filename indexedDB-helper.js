@@ -1,6 +1,8 @@
 // IndexedDB Helper - Cross-Origin Shared Storage
 // Tüm domain'ler bu database'e erişebilir
 
+console.log("🗄️ [IndexedDB Helper] Yüklendi");
+
 class ExtensionSharedDB {
   constructor() {
     this.dbName = "ExtensionSharedStorage";
@@ -77,7 +79,7 @@ class ExtensionSharedDB {
           console.log("✅ [IndexedDB] UUID başarıyla yazıldı:", uuid);
           // Global notification gönder
           window.dispatchEvent(
-            new CustomEvent("indexedDBUUIDWritten", {
+            new CustomEvent("extensionUUIDWritten", {
               detail: { uuid: uuid },
             })
           );
