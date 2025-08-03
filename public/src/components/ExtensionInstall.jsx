@@ -52,7 +52,7 @@ function ExtensionInstall() {
 
         <Button
           variant="outline"
-          onClick={() => window.open("/tum-listem-extension.zip", "_blank")}
+          onClick={() => window.open("/heybe-extension.zip", "_blank")}
           className="flex-1 min-w-[200px]"
         >
           <Download className="w-4 h-4 mr-2" />
@@ -63,7 +63,7 @@ function ExtensionInstall() {
           variant="outline"
           onClick={() =>
             window.open(
-              "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
+              "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
               "_blank"
             )
           }

@@ -1406,7 +1406,7 @@ function createAddToListButton() {
       showErrorMessage("Ürün eklenirken hata oluştu!");
       // Hata durumunda buton durumunu geri al
       addButton.disabled = false;
-              addButton.querySelector("span").textContent = "Heybeye Ekle";
+      addButton.querySelector("span").textContent = "Heybeye Ekle";
     }
   });
 

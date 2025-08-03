@@ -987,8 +987,8 @@ function App() {
                         onClick={() => {
                           try {
                             const link = document.createElement("a");
-                            link.href = "/extension-files.zip";
-                            link.download = "my-list-sepet-extension.zip";
+                            link.href = "/heybe-extension.zip";
+                            link.download = "heybe-extension.zip";
                             link.target = "_blank";
                             link.onerror = () => {
                               alert(
@@ -1015,7 +1015,7 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
+                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
                             "_blank"
                           )
                         }
@@ -1037,6 +1037,7 @@ function App() {
                   </ol>
                 </div>
 
+                {/* Firefox ve Safari desteği şimdilik gizli
                 <div>
                   <h5 className="font-medium text-orange-600">Firefox:</h5>
                   <ol className="list-decimal list-inside ml-2 space-y-1">
@@ -1074,7 +1075,7 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
+                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
                             "_blank"
                           )
                         }
@@ -1135,11 +1136,11 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
+                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
                             "_blank"
                           )
                         }
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
+                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
                       >
                         Drive
                       </button>
@@ -1151,6 +1152,7 @@ function App() {
                     <li>İndirdiğiniz klasörü seçin</li>
                   </ol>
                 </div>
+                */}
               </div>
             </div>
           </div>
