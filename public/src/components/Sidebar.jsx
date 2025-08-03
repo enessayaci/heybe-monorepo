@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-function Sidebar({ onScrollToSection, onToggle, currentUserId }) {
+function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const scrollToSection = (sectionId) => {
@@ -42,12 +42,13 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId }) {
       label: "Kaldırma",
       action: () => scrollToSection("uninstall"),
     },
-    {
+    // Sadece admin kullanıcılar için "Geliştirici" menüsü
+    ...(userRole === 'admin' ? [{
       id: "technical",
       icon: "🔧",
       label: "Geliştirici",
       action: () => scrollToSection("technical"),
-    },
+    }] : []),
   ];
 
   return (
@@ -139,9 +140,8 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId }) {
           
           {/* Tooltip for full UUID */}
           {currentUserId && (
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="absolute left-full ml-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
               {currentUserId}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
             </div>
           )}
         </div>

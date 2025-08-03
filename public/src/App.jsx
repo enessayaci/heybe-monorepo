@@ -17,6 +17,7 @@ function App() {
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [uuidType, setUuidType] = useState(null); // 'guest' veya 'permanent'
+  const [userRole, setUserRole] = useState('user'); // 'user' veya 'admin'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -841,9 +842,10 @@ function App() {
                     if (response.ok && result.uuid) {
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
+                      setUserRole(result.role || 'user');
                       setIsLoggedIn(true);
                       setShowLoginForm(false);
-                      console.log("✅ [Web Site] Login başarılı:", result.uuid);
+                      console.log("✅ [Web Site] Login başarılı:", result.uuid, "Role:", result.role);
                     } else {
                       alert(
                         "Giriş başarısız: " +
@@ -966,9 +968,10 @@ function App() {
                     if (response.ok && result.uuid) {
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
+                      setUserRole(result.role || 'user');
                       setIsLoggedIn(true);
                       setShowRegisterForm(false);
-                      console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
+                      console.log("✅ [Web Site] Kayıt başarılı:", result.uuid, "Role:", result.role);
                     } else {
                       alert(
                         "Kayıt başarısız: " +
@@ -1043,7 +1046,7 @@ function App() {
       )}
 
       {/* Sidebar */}
-      <Sidebar onToggle={handleSidebarToggle} currentUserId={currentUserId} />
+      <Sidebar onToggle={handleSidebarToggle} currentUserId={currentUserId} userRole={userRole} />
 
       {/* Main Content - Sidebar için dinamik margin */}
       <div
@@ -1061,7 +1064,16 @@ function App() {
 
           {/* Status Bar */}
           <div className="bg-white rounded-lg border p-4 mb-6">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500 flex items-center gap-4">
+                <span>
+                  {status === "error" ? "N/A" : stats.totalProducts} ürün
+                </span>
+                <span>•</span>
+                <span>
+                  {status === "error" ? "N/A" : stats.uniqueSites} farklı site
+                </span>
+              </div>
               <div className="text-sm text-gray-500">
                 Son güncelleme: {new Date().toLocaleTimeString()}
               </div>
@@ -1411,8 +1423,9 @@ function App() {
             </div>
           </div>
 
-          {/* Teknik Bilgiler Section - En alta */}
-          <div id="technical" className="mb-8">
+          {/* Teknik Bilgiler Section - En alta - Sadece admin kullanıcılar için */}
+          {userRole === 'admin' && (
+            <div id="technical" className="mb-8">
             <div className="bg-white rounded-lg border p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 🔧 Geliştirici Bilgileri
@@ -1509,7 +1522,7 @@ function App() {
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
