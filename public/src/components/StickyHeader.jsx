@@ -1,6 +1,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Trash2, Settings, Package } from "lucide-react";
+import {
+  Download,
+  Monitor,
+  Trash2,
+  Settings,
+  Package,
+  ExternalLink,
+} from "lucide-react";
 
 function StickyHeader({ onScrollToSection }) {
   const scrollToSection = (sectionId) => {
@@ -97,6 +104,21 @@ function StickyHeader({ onScrollToSection }) {
             >
               <Download className="w-3 h-3 mr-1" />
               İndir
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                window.open(
+                  "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                  "_blank"
+                )
+              }
+              className="text-xs px-2 py-1 h-8"
+            >
+              <ExternalLink className="w-3 h-3 mr-1" />
+              Drive
             </Button>
 
             <Button

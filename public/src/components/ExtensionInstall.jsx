@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Trash2 } from "lucide-react";
+import { Download, Monitor, Trash2, ExternalLink } from "lucide-react";
 
 function ExtensionInstall() {
   // Extension dosyalarını indir
@@ -36,7 +36,7 @@ function ExtensionInstall() {
   return (
     <div className="bg-white rounded-lg border p-6 mb-6">
       {/* Butonlar */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
         <Button
           variant="outline"
           onClick={() =>
@@ -44,7 +44,7 @@ function ExtensionInstall() {
               .getElementById("install")
               ?.scrollIntoView({ behavior: "smooth" })
           }
-          className="flex-1"
+          className="flex-1 min-w-[200px]"
         >
           <Monitor className="w-4 h-4 mr-2" />
           Kurulum Talimatları
@@ -53,10 +53,24 @@ function ExtensionInstall() {
         <Button
           variant="outline"
           onClick={() => window.open("/tum-listem-extension.zip", "_blank")}
-          className="flex-1"
+          className="flex-1 min-w-[200px]"
         >
           <Download className="w-4 h-4 mr-2" />
           Extension İndir
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={() =>
+            window.open(
+              "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+              "_blank"
+            )
+          }
+          className="flex-1 min-w-[200px]"
+        >
+          <ExternalLink className="w-4 h-4 mr-2" />
+          Google Drive'dan İndir
         </Button>
 
         <Button
@@ -66,7 +80,7 @@ function ExtensionInstall() {
               .getElementById("uninstall")
               ?.scrollIntoView({ behavior: "smooth" })
           }
-          className="flex-1"
+          className="flex-1 min-w-[200px]"
         >
           <Trash2 className="w-4 h-4 mr-2" />
           Kaldırma Talimatları

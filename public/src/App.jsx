@@ -500,26 +500,51 @@ function App() {
   };
   // Tümünü sil
   const handleClearAll = async () => {
+    if (!currentUserId) {
+      alert("Kullanıcı ID bulunamadı. Lütfen sayfayı yenileyin.");
+      return;
+    }
+
     if (
       !confirm(
-        "Tüm ürünleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!"
+        `Mevcut kullanıcının (${currentUserId}) tüm ürünlerini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`
       )
     ) {
       return;
     }
 
     try {
-      for (const product of products) {
+      console.log(
+        "🗑️ [handleClearAll] Kullanıcının tüm ürünleri siliniyor:",
+        currentUserId
+      );
+
+      // Sadece mevcut kullanıcının ürünlerini sil
+      const userProducts = products.filter(
+        (product) => product.user_id === currentUserId
+      );
+
+      if (userProducts.length === 0) {
+        alert("Silinecek ürün bulunamadı.");
+        return;
+      }
+
+      for (const product of userProducts) {
         await fetch(DELETE_PRODUCT_ENDPOINT, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ id: product.id }),
+          body: JSON.stringify({
+            id: product.id,
+            user_id: currentUserId,
+          }),
         });
       }
 
-      console.log("✅ Tüm ürünler silindi");
+      console.log(
+        `✅ ${userProducts.length} ürün silindi (kullanıcı: ${currentUserId})`
+      );
       fetchProducts();
     } catch (error) {
       console.error("❌ Toplu silme hatası:", error);
@@ -1266,6 +1291,17 @@ function App() {
                       >
                         İndir
                       </button>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "_blank"
+                          )
+                        }
+                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
+                      >
+                        Drive
+                      </button>
                     </li>
                     <li>
                       Chrome'da{" "}
@@ -1313,6 +1349,17 @@ function App() {
                         className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
                       >
                         İndir
+                      </button>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "_blank"
+                          )
+                        }
+                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
+                      >
+                        Drive
                       </button>
                     </li>
                     <li>
@@ -1363,6 +1410,17 @@ function App() {
                         className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
                       >
                         İndir
+                      </button>
+                      <button
+                        onClick={() =>
+                          window.open(
+                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "_blank"
+                          )
+                        }
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
+                      >
+                        Drive
                       </button>
                     </li>
                     <li>Safari'de "Develop" menüsünü açın</li>
