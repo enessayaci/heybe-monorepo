@@ -1,4 +1,5 @@
-const { Pool } = require("pg");
+import pkg from 'pg';
+const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -7,7 +8,7 @@ const pool = new Pool({
   },
 });
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
