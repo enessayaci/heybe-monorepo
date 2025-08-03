@@ -116,7 +116,7 @@ async function addProductToMyList(productInfo) {
       });
     });
     
-    // Guest kullanıcı ise uyarı göster
+    // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
     if (uuidData.type === 'guest') {
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {

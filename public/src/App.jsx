@@ -19,6 +19,8 @@ function App() {
   const [uuidType, setUuidType] = useState(null); // 'guest' veya 'permanent'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
   const [showGuestWarning, setShowGuestWarning] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
@@ -768,68 +770,223 @@ function App() {
               yapın veya misafir olarak devam edin.
             </p>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col space-y-3">
               <button
-                onClick={async () => {
+                onClick={() => {
                   setShowGuestWarning(false);
-
-                  try {
-                    // Web sitesinde login yap
-                    const response = await fetch(
-                      "https://my-list-pi.vercel.app/api/login",
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          email: "test@example.com", // Test kullanıcısı
-                          password: "123456",
-                        }),
-                      }
-                    );
-
-                    const result = await response.json();
-
-                    if (response.ok && result.uuid) {
-                      // Permanent UUID'yi set et (extension'dan bağımsız)
-                      setCurrentUserId(result.uuid);
-                      setUuidType("permanent");
-                      setIsLoggedIn(true);
-
-                      console.log(
-                        "✅ [Web Site] Login başarılı, permanent UUID set edildi:",
-                        result.uuid
-                      );
-
-                      // Ürünleri yeniden yükle
-                      await fetchProducts();
-                    } else {
-                      console.error(
-                        "❌ [Web Site] Login başarısız:",
-                        result.error
-                      );
-                      alert(
-                        "Giriş başarısız: " +
-                          (result.error || "Bilinmeyen hata")
-                      );
-                    }
-                  } catch (error) {
-                    console.error("❌ [Web Site] Login hatası:", error);
-                    alert("Bağlantı hatası");
-                  }
+                  setShowLoginForm(true);
                 }}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 Giriş Yap
               </button>
               <button
                 onClick={() => setShowGuestWarning(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 Misafir Devam Et
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Form Modal */}
+      {showLoginForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+              Giriş Yap
+            </h3>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const email = formData.get('email');
+              const password = formData.get('password');
+
+              try {
+                const response = await fetch("https://my-list-pi.vercel.app/api/login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.uuid) {
+                  setCurrentUserId(result.uuid);
+                  setUuidType("permanent");
+                  setIsLoggedIn(true);
+                  setShowLoginForm(false);
+                  console.log("✅ [Web Site] Login başarılı:", result.uuid);
+                } else {
+                  alert("Giriş başarısız: " + (result.error || "Bilinmeyen hata"));
+                }
+              } catch (error) {
+                console.error("❌ [Web Site] Login hatası:", error);
+                alert("Bağlantı hatası");
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    E-posta
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="ornek@email.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Şifre
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Şifrenizi girin"
+                  />
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    Giriş Yap
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLoginForm(false);
+                      setShowRegisterForm(true);
+                    }}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    Kayıt Ol
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginForm(false)}
+                  className="w-full text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  İptal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Register Form Modal */}
+      {showRegisterForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+              Kayıt Ol
+            </h3>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const name = formData.get('name');
+              const email = formData.get('email');
+              const password = formData.get('password');
+
+              try {
+                const response = await fetch("https://my-list-pi.vercel.app/api/register", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, email, password }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.uuid) {
+                  setCurrentUserId(result.uuid);
+                  setUuidType("permanent");
+                  setIsLoggedIn(true);
+                  setShowRegisterForm(false);
+                  console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
+                } else {
+                  alert("Kayıt başarısız: " + (result.error || "Bilinmeyen hata"));
+                }
+              } catch (error) {
+                console.error("❌ [Web Site] Kayıt hatası:", error);
+                alert("Bağlantı hatası");
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ad Soyad
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Adınız Soyadınız"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    E-posta
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="ornek@email.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Şifre
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="En az 6 karakter"
+                  />
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    Kayıt Ol
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRegisterForm(false);
+                      setShowLoginForm(true);
+                    }}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    Giriş Yap
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterForm(false)}
+                  className="w-full text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  İptal
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

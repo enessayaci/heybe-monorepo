@@ -139,6 +139,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Permanent UUID'yi kaydet
     setPermanentUUID(request.uuid).then(success => {
       console.log("📤 [Background] Permanent UUID kaydetme sonucu:", success);
+      // Login status'u true yap
+      chrome.storage.local.set({ [USER_LOGIN_STATUS]: true });
+      chrome.storage.sync.set({ [USER_LOGIN_STATUS]: true });
       sendResponse({ success: success });
     });
     return true; // Async response
