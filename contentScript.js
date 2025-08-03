@@ -165,7 +165,8 @@ async function addProductToMyList(productInfo) {
     if (isRegistrationInProgress) {
       console.log(
         "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...",
-        "isRegistrationInProgress:", isRegistrationInProgress
+        "isRegistrationInProgress:",
+        isRegistrationInProgress
       );
       pendingProductInfo = productInfo;
       showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
@@ -196,13 +197,32 @@ async function addProductToMyList(productInfo) {
 
     // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
     if (uuidData.type === "guest") {
-      console.log("👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor...");
+      console.log(
+        "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
+      );
+      
+      // Ürün ekleme işlemini beklet
+      pendingProductInfo = productInfo;
+      console.log("⏸️ [Content Script] Ürün bekletiliyor:", productInfo);
+      
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
         console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
+        pendingProductInfo = null;
         return false;
       }
       console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
+      
+      // Eğer kayıt işlemi devam ediyorsa ürünü beklet
+      if (isRegistrationInProgress) {
+        console.log("⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...");
+        showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+        return true;
+      }
+      
+      // Kayıt işlemi yoksa ürünü şimdi ekle
+      console.log("🔄 [Content Script] Ürün şimdi ekleniyor...");
+      pendingProductInfo = null;
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
@@ -421,7 +441,9 @@ function showGuestWarningPopup() {
       document.body.removeChild(popup);
       // Kayıt işlemi başladığını işaretle
       isRegistrationInProgress = true;
-      console.log("🔐 [Content Script] Giriş Yap butonuna tıklandı, isRegistrationInProgress = true");
+      console.log(
+        "🔐 [Content Script] Giriş Yap butonuna tıklandı, isRegistrationInProgress = true"
+      );
       showLoginOrRegisterForm().then((result) => {
         resolve(result);
       });
