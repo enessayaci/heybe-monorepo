@@ -37,7 +37,7 @@ async function checkDatabaseProducts(uuid) {
 
   try {
     const response = await fetch(
-      `https://my-list-pi.vercel.app/api/get-products?user_id=${uuid}`
+      `https://my-heybe.vercel.app/api/get-products?user_id=${uuid}`
     );
     const data = await response.json();
 
