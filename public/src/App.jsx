@@ -597,11 +597,16 @@ function App() {
         chrome.runtime.id
       ) {
         console.log("🔍 [Web Site] Extension mevcut, aktif UUID isteniyor...");
+        console.log("🔍 [Web Site] Extension ID:", chrome.runtime.id);
+        
         try {
           const response = await new Promise((resolve, reject) => {
             chrome.runtime.sendMessage(
               { action: "getActiveUUID" },
               (response) => {
+                console.log("🔍 [Web Site] Extension response:", response);
+                console.log("🔍 [Web Site] Chrome runtime error:", chrome.runtime.lastError);
+                
                 if (chrome.runtime.lastError) {
                   console.log(
                     "❌ [Web Site] Extension mesaj hatası:",
