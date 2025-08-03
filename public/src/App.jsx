@@ -590,7 +590,7 @@ function App() {
 
       // 1. Extension'dan aktif UUID'yi al (Chrome Storage API)
       let extensionUUIDReceived = false; // Extension'dan UUID alındı mı?
-      
+
       if (
         typeof chrome !== "undefined" &&
         chrome.runtime &&
@@ -637,7 +637,9 @@ function App() {
 
       // 2. Extension'dan UUID alınmadıysa localStorage'a bak
       if (!extensionUUIDReceived && (!uuidData || !uuidData.uuid)) {
-        console.log("⚠️ [Web Site] Extension'dan UUID alınamadı, localStorage kontrol ediliyor...");
+        console.log(
+          "⚠️ [Web Site] Extension'dan UUID alınamadı, localStorage kontrol ediliyor..."
+        );
         const backupUserId = localStorage.getItem("tum_listem_user_id");
         if (backupUserId) {
           console.log(
