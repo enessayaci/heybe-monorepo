@@ -807,6 +807,17 @@ function App() {
                 const password = formData.get("password");
 
                 try {
+                  // Extension'dan gelen UUID'yi kullan
+                  if (window.EXTENSION_ACTIVE_UUID) {
+                    console.log("✅ [Web Site] Extension UUID kullanılıyor:", window.EXTENSION_ACTIVE_UUID);
+                    setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
+                    setUuidType("permanent");
+                    setIsLoggedIn(true);
+                    setShowLoginForm(false);
+                    return;
+                  }
+
+                  // Extension yoksa normal API çağrısı
                   const response = await fetch(
                     "https://my-list-pi.vercel.app/api/login",
                     {
@@ -908,6 +919,17 @@ function App() {
                 const password = formData.get("password");
 
                 try {
+                  // Extension'dan gelen UUID'yi kullan
+                  if (window.EXTENSION_ACTIVE_UUID) {
+                    console.log("✅ [Web Site] Extension UUID kullanılıyor:", window.EXTENSION_ACTIVE_UUID);
+                    setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
+                    setUuidType("permanent");
+                    setIsLoggedIn(true);
+                    setShowRegisterForm(false);
+                    return;
+                  }
+
+                  // Extension yoksa normal API çağrısı
                   const response = await fetch(
                     "https://my-list-pi.vercel.app/api/register",
                     {
