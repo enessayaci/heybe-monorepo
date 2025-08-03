@@ -92,6 +92,305 @@ async function sendUUIDToExtension(uuid, type = 'guest') {
   }
 }
 
+// Ürün ekleme fonksiyonu - Guest/Permanent UUID kontrolü ile
+async function addProductToMyList(productInfo) {
+  try {
+    console.log("🛒 [Content Script] Ürün ekleme başlatılıyor:", productInfo);
+    
+    // Önce aktif UUID'yi al
+    const uuidData = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log("❌ [Content Script] Extension mesaj hatası:", chrome.runtime.lastError);
+          reject(new Error("Extension bulunamadı"));
+          return;
+        }
+        
+        if (response && response.uuid) {
+          console.log("✅ [Content Script] Aktif UUID alındı:", response);
+          resolve(response);
+        } else {
+          console.log("❌ [Content Script] UUID bulunamadı");
+          reject(new Error("UUID bulunamadı"));
+        }
+      });
+    });
+    
+    // Guest kullanıcı ise uyarı göster
+    if (uuidData.type === 'guest') {
+      const shouldContinue = await showGuestWarningPopup();
+      if (!shouldContinue) {
+        console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
+        return false;
+      }
+    }
+    
+    // API'ye ürün ekle
+    const apiResponse = await fetch("https://my-list-pi.vercel.app/api/add-product", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...productInfo,
+        user_id: uuidData.uuid,
+      }),
+    });
+    
+    const result = await apiResponse.json();
+    
+    if (apiResponse.ok) {
+      console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
+      showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      return true;
+    } else {
+      console.log("❌ [Content Script] Ürün ekleme hatası:", result);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
+      return false;
+    }
+    
+  } catch (error) {
+    console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+    showErrorMessage("Ürün eklenirken hata oluştu!");
+    return false;
+  }
+}
+
+// Guest kullanıcılar için uyarı popup'ı
+function showGuestWarningPopup() {
+  return new Promise((resolve) => {
+    // Popup container oluştur
+    const popup = document.createElement("div");
+    popup.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+    
+    // Popup content
+    const content = document.createElement("div");
+    content.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      margin: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    `;
+    
+    // Icon
+    const icon = document.createElement("div");
+    icon.style.cssText = `
+      width: 48px;
+      height: 48px;
+      background: #fef3c7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    `;
+    icon.innerHTML = `
+      <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+    `;
+    
+    // Title
+    const title = document.createElement("h3");
+    title.style.cssText = `
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 12px;
+    `;
+    title.textContent = "Misafir Kullanıcı";
+    
+    // Message
+    const message = document.createElement("p");
+    message.style.cssText = `
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 24px;
+      line-height: 1.5;
+    `;
+    message.textContent = "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
+    
+    // Buttons container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 12px;
+    `;
+    
+    // Login button
+    const loginButton = document.createElement("button");
+    loginButton.style.cssText = `
+      flex: 1;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    loginButton.textContent = "Giriş Yap";
+    loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
+    loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
+    loginButton.onclick = () => {
+      document.body.removeChild(popup);
+      // Web sitesine yönlendir
+      window.open("https://my-list-pi.vercel.app/login", "_blank");
+      resolve(false);
+    };
+    
+    // Continue as guest button
+    const guestButton = document.createElement("button");
+    guestButton.style.cssText = `
+      flex: 1;
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    guestButton.textContent = "Misafir Devam Et";
+    guestButton.onmouseover = () => guestButton.style.background = "#e5e7eb";
+    guestButton.onmouseout = () => guestButton.style.background = "#f3f4f6";
+    guestButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(true);
+    };
+    
+    // Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.style.cssText = `
+      width: 100%;
+      background: transparent;
+      color: #6b7280;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background 0.2s;
+    `;
+    cancelButton.textContent = "İptal";
+    cancelButton.onmouseover = () => cancelButton.style.background = "#f9fafb";
+    cancelButton.onmouseout = () => cancelButton.style.background = "transparent";
+    cancelButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(false);
+    };
+    
+    // Assemble popup
+    content.appendChild(icon);
+    content.appendChild(title);
+    content.appendChild(message);
+    buttonsContainer.appendChild(loginButton);
+    buttonsContainer.appendChild(guestButton);
+    content.appendChild(buttonsContainer);
+    content.appendChild(cancelButton);
+    popup.appendChild(content);
+    
+    // Add to page
+    document.body.appendChild(popup);
+    
+    // Close on outside click
+    popup.onclick = (e) => {
+      if (e.target === popup) {
+        document.body.removeChild(popup);
+        resolve(false);
+      }
+    };
+  });
+}
+
+// Başarı mesajı göster
+function showSuccessMessage(message) {
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.textContent = message;
+  
+  // CSS animation
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(notification);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 3000);
+}
+
+// Hata mesajı göster
+function showErrorMessage(message) {
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ef4444;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 3000);
+}
+
 // Web sitesinden gelen mesajları dinle
 window.addEventListener("message", (event) => {
   // Sadece aynı origin'den gelen mesajları kabul et
@@ -110,6 +409,11 @@ window.addEventListener("message", (event) => {
   if (event.data.type === "GET_ACTIVE_UUID") {
     console.log("📨 [Content Script] Web sitesinden aktif UUID isteği alındı");
     sendActiveUUIDToWebSite();
+  }
+  
+  if (event.data.type === "ADD_PRODUCT") {
+    console.log("📨 [Content Script] Web sitesinden ürün ekleme isteği alındı:", event.data.product);
+    addProductToMyList(event.data.product);
   }
 });
 
@@ -136,15 +440,214 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Sayfa yüklendiğinde aktif UUID'yi gönder
+// Ürün bilgilerini çek
+function getProductInfo() {
+  try {
+    // Meta tag'lerden bilgi çek
+    const metaTags = {};
+    document.querySelectorAll("meta").forEach((meta) => {
+      const name = meta.getAttribute("name") || meta.getAttribute("property");
+      const content = meta.getAttribute("content");
+      if (name && content) {
+        metaTags[name.toLowerCase()] = content;
+      }
+    });
+
+    // Ürün adı
+    let productName = 
+      metaTags["og:title"] || 
+      metaTags["twitter:title"] || 
+      metaTags.title || 
+      document.title || 
+      "Ürün";
+
+    // Fiyat
+    let price = "";
+    const priceSelectors = [
+      '[class*="price"]',
+      '[class*="fiyat"]',
+      '[class*="cost"]',
+      '[class*="amount"]',
+      'span',
+      'div',
+      'p'
+    ];
+
+    for (const selector of priceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const element of elements) {
+        const text = element.textContent.trim();
+        if (text.match(/[\d.,]+\s*(₺|TL|\$|€)/) || text.match(/(₺|TL|\$|€)\s*[\d.,]+/)) {
+          price = text.replace(/[^\d.,]/g, "").trim();
+          break;
+        }
+      }
+      if (price) break;
+    }
+
+    // Resim
+    let imageUrl = 
+      metaTags["og:image"] || 
+      metaTags["twitter:image"] || 
+      metaTags.image || 
+      "";
+
+    if (!imageUrl) {
+      const images = document.querySelectorAll("img");
+      for (const img of images) {
+        const src = img.src || img.getAttribute("data-src");
+        if (src && src.length > 100 && !src.includes("logo") && !src.includes("icon")) {
+          imageUrl = src;
+          break;
+        }
+      }
+    }
+
+    return {
+      name: productName,
+      price: price,
+      image_url: imageUrl,
+      product_url: window.location.href,
+      site: window.location.hostname
+    };
+  } catch (error) {
+    console.error("❌ [Content Script] Ürün bilgisi çekme hatası:", error);
+    return {
+      name: "Ürün",
+      price: "",
+      image_url: "",
+      product_url: window.location.href,
+      site: window.location.hostname
+    };
+  }
+}
+
+// "Tüm Listeme Ekle" butonunu oluştur ve ekle
+function createAddToListButton() {
+  // Eğer buton zaten varsa ekleme
+  if (document.getElementById("tum-listem-ekle-btn")) {
+    return;
+  }
+
+  // Ana sayfa kontrolü - ana sayfada buton gösterme
+  const isHomePage = 
+    window.location.pathname === "/" || 
+    window.location.pathname === "/home" || 
+    window.location.pathname === "/anasayfa" ||
+    document.title.toLowerCase().includes("ana sayfa") ||
+    document.title.toLowerCase().includes("homepage");
+
+  if (isHomePage) {
+    return;
+  }
+
+  // İlgili buton var mı kontrol et
+  const relevantButtons = Array.from(document.querySelectorAll("button, a, input[type='button'], div[role='button']"));
+  const hasRelevantButton = relevantButtons.some(btn => {
+    const text = (btn.innerText || btn.value || "").toLowerCase();
+    return text.includes("sepete ekle") || text.includes("add to cart") || text.includes("buy") || text.includes("satın al");
+  });
+
+  if (!hasRelevantButton) {
+    return;
+  }
+
+  // Buton oluştur
+  const button = document.createElement("button");
+  button.id = "tum-listem-ekle-btn";
+  button.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13" />
+      </svg>
+      <span>Tüm Listeme Ekle</span>
+    </div>
+  `;
+  
+  button.style.cssText = `
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background: #2563eb;
+    color: white;
+    padding: 0 24px 0 12px;
+    border: none;
+    border-radius: 24px 0 0 24px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 99999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    height: 48px;
+    width: 200px;
+    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: -168px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  // Hover efektleri
+  button.addEventListener("mouseenter", () => {
+    button.style.marginRight = "0px";
+  });
+  
+  button.addEventListener("mouseleave", () => {
+    button.style.marginRight = "-168px";
+  });
+
+  // Tıklama olayı
+  button.addEventListener("click", async () => {
+    try {
+      // Buton durumunu güncelle
+      button.disabled = true;
+      button.querySelector("span").textContent = "Ekleniyor...";
+      
+      // Ürün bilgilerini al
+      const productInfo = getProductInfo();
+      console.log("🛒 [Content Script] Ürün bilgileri:", productInfo);
+      
+      // Ürün ekleme fonksiyonunu çağır
+      const success = await addProductToMyList(productInfo);
+      
+      if (success) {
+        console.log("✅ [Content Script] Ürün başarıyla eklendi");
+      } else {
+        console.log("❌ [Content Script] Ürün eklenemedi");
+      }
+      
+    } catch (error) {
+      console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
+    } finally {
+      // Buton durumunu geri al
+      button.disabled = false;
+      button.querySelector("span").textContent = "Tüm Listeme Ekle";
+    }
+  });
+
+  // Sayfaya ekle
+  document.body.appendChild(button);
+  console.log("✅ [Content Script] 'Tüm Listeme Ekle' butonu eklendi");
+}
+
+// Sayfa yüklendiğinde aktif UUID'yi gönder ve buton ekle
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 [Content Script] Sayfa yüklendi, aktif UUID gönderiliyor...");
-    setTimeout(sendActiveUUIDToWebSite, 1000); // 1 saniye bekle
+    setTimeout(() => {
+      sendActiveUUIDToWebSite();
+      createAddToListButton();
+    }, 1000); // 1 saniye bekle
   });
 } else {
   console.log("🚀 [Content Script] Sayfa zaten yüklü, aktif UUID gönderiliyor...");
-  setTimeout(sendActiveUUIDToWebSite, 1000); // 1 saniye bekle
+  setTimeout(() => {
+    sendActiveUUIDToWebSite();
+    createAddToListButton();
+  }, 1000); // 1 saniye bekle
 }
 
 // Web sitesine helper fonksiyonları ekle

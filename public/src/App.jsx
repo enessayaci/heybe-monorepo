@@ -122,12 +122,12 @@ function App() {
 
       setCurrentUserId(uuid);
       setUuidType(type);
-      
+
       // Guest kullanıcı ise uyarı göster
-      if (type === 'guest') {
+      if (type === "guest") {
         setShowGuestWarning(true);
       }
-      
+
       console.log("✅ [Event] Aktif UUID set edildi:", { uuid, type });
     };
 
@@ -139,15 +139,21 @@ function App() {
       );
 
       setIsLoggedIn(event.detail.isLoggedIn);
-      
+
       // Giriş yapıldıysa guest uyarısını kapat
       if (event.detail.isLoggedIn) {
         setShowGuestWarning(false);
       }
     };
 
-    window.addEventListener("extensionActiveUUIDSet", handleExtensionActiveUUID);
-    window.addEventListener("extensionLoginStatusChanged", handleExtensionLoginStatus);
+    window.addEventListener(
+      "extensionActiveUUIDSet",
+      handleExtensionActiveUUID
+    );
+    window.addEventListener(
+      "extensionLoginStatusChanged",
+      handleExtensionLoginStatus
+    );
 
     // Basit: UUID hazır olduğunda ürünleri çek
     console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
@@ -210,8 +216,14 @@ function App() {
     });
 
     return () => {
-      window.removeEventListener("extensionActiveUUIDSet", handleExtensionActiveUUID);
-      window.removeEventListener("extensionLoginStatusChanged", handleExtensionLoginStatus);
+      window.removeEventListener(
+        "extensionActiveUUIDSet",
+        handleExtensionActiveUUID
+      );
+      window.removeEventListener(
+        "extensionLoginStatusChanged",
+        handleExtensionLoginStatus
+      );
     };
   }, []);
 
@@ -257,22 +269,25 @@ function App() {
         chrome.runtime.id
       ) {
         const response = await new Promise((resolve, reject) => {
-          chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.log(
-                "❌ [Storage Debug] Extension mesaj hatası:",
-                chrome.runtime.lastError
-              );
-              reject(new Error("Extension bulunamadı"));
-              return;
-            }
+          chrome.runtime.sendMessage(
+            { action: "getActiveUUID" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.log(
+                  "❌ [Storage Debug] Extension mesaj hatası:",
+                  chrome.runtime.lastError
+                );
+                reject(new Error("Extension bulunamadı"));
+                return;
+              }
 
-            console.log(
-              "🔍 [Storage Debug] Extension'dan aktif UUID:",
-              response
-            );
-            resolve(response);
-          });
+              console.log(
+                "🔍 [Storage Debug] Extension'dan aktif UUID:",
+                response
+              );
+              resolve(response);
+            }
+          );
         });
 
         // localStorage'dan da oku
@@ -533,27 +548,30 @@ function App() {
         console.log("🔍 [Web Site] Extension mevcut, aktif UUID isteniyor...");
         try {
           const response = await new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
-              if (chrome.runtime.lastError) {
-                console.log(
-                  "❌ [Web Site] Extension mesaj hatası:",
-                  chrome.runtime.lastError
-                );
-                reject(new Error("Extension bulunamadı"));
-                return;
-              }
+            chrome.runtime.sendMessage(
+              { action: "getActiveUUID" },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.log(
+                    "❌ [Web Site] Extension mesaj hatası:",
+                    chrome.runtime.lastError
+                  );
+                  reject(new Error("Extension bulunamadı"));
+                  return;
+                }
 
-              if (response && response.uuid) {
-                console.log(
-                  "✅ [Web Site] Extension'dan aktif UUID alındı:",
-                  response
-                );
-                resolve(response);
-              } else {
-                console.log("❌ [Web Site] Extension'dan UUID alınamadı");
-                reject(new Error("UUID bulunamadı"));
+                if (response && response.uuid) {
+                  console.log(
+                    "✅ [Web Site] Extension'dan aktif UUID alındı:",
+                    response
+                  );
+                  resolve(response);
+                } else {
+                  console.log("❌ [Web Site] Extension'dan UUID alınamadı");
+                  reject(new Error("UUID bulunamadı"));
+                }
               }
-            });
+            );
           });
 
           uuidData = response;
@@ -573,7 +591,7 @@ function App() {
             "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
             backupUserId
           );
-          uuidData = { uuid: backupUserId, type: 'guest' };
+          uuidData = { uuid: backupUserId, type: "guest" };
         }
       }
 
@@ -612,7 +630,9 @@ function App() {
                     );
                     resolve(true);
                   } else {
-                    console.log("❌ [Web Site] Guest UUID extension'a yazılamadı");
+                    console.log(
+                      "❌ [Web Site] Guest UUID extension'a yazılamadı"
+                    );
                     reject(new Error("UUID kaydedilemedi"));
                   }
                 }
@@ -633,17 +653,17 @@ function App() {
           newUUID
         );
 
-        uuidData = { uuid: newUUID, type: 'guest' };
+        uuidData = { uuid: newUUID, type: "guest" };
       }
 
       setCurrentUserId(uuidData.uuid);
       setUuidType(uuidData.type);
-      
+
       // Guest kullanıcı ise uyarı göster
-      if (uuidData.type === 'guest') {
+      if (uuidData.type === "guest") {
         setShowGuestWarning(true);
       }
-      
+
       setIsGettingUserId(false);
       return uuidData.uuid;
     } catch (error) {
@@ -661,24 +681,37 @@ function App() {
           <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-6 h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Misafir Kullanıcı</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Misafir Kullanıcı
+              </h3>
             </div>
-            
+
             <p className="text-gray-600 mb-6">
-              Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanıyor ve kısıtlı özellikler mevcut. 
-              Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.
+              Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanıyor ve
+              kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş
+              yapın veya misafir olarak devam edin.
             </p>
-            
+
             <div className="flex space-x-3">
               <button
                 onClick={() => {
                   setShowGuestWarning(false);
                   // Burada login sayfasına yönlendir
-                  window.location.href = '/login';
+                  window.location.href = "/login";
                 }}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
@@ -717,24 +750,44 @@ function App() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${
-                    status === "loading" ? "bg-yellow-500" : 
-                    uuidType === 'permanent' ? "bg-green-500" : 
-                    uuidType === 'guest' ? "bg-orange-500" : "bg-gray-500"
-                  }`}></div>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      status === "loading"
+                        ? "bg-yellow-500"
+                        : uuidType === "permanent"
+                        ? "bg-green-500"
+                        : uuidType === "guest"
+                        ? "bg-orange-500"
+                        : "bg-gray-500"
+                    }`}
+                  ></div>
                   <span className="text-sm text-gray-600">
-                    {status === "loading" ? "Yükleniyor..." : 
-                     uuidType === 'permanent' ? "Kalıcı Kullanıcı" :
-                     uuidType === 'guest' ? "Misafir Kullanıcı" : "Bağlantı Yok"}
+                    {status === "loading"
+                      ? "Yükleniyor..."
+                      : uuidType === "permanent"
+                      ? "Kalıcı Kullanıcı"
+                      : uuidType === "guest"
+                      ? "Misafir Kullanıcı"
+                      : "Bağlantı Yok"}
                   </span>
                 </div>
                 <div className="text-sm text-gray-500">
                   {products.length} ürün
                 </div>
-                {uuidType === 'guest' && (
+                {uuidType === "guest" && (
                   <div className="flex items-center space-x-1">
-                    <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="w-4 h-4 text-yellow-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                     <span className="text-xs text-yellow-600">Geçici</span>
                   </div>
