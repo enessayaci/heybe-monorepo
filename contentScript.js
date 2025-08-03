@@ -164,7 +164,8 @@ async function addProductToMyList(productInfo) {
     // Eğer kayıt işlemi devam ediyorsa ürün bilgisini sakla ve bekle
     if (isRegistrationInProgress) {
       console.log(
-        "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor..."
+        "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...",
+        "isRegistrationInProgress:", isRegistrationInProgress
       );
       pendingProductInfo = productInfo;
       showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
@@ -195,11 +196,13 @@ async function addProductToMyList(productInfo) {
 
     // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
     if (uuidData.type === "guest") {
+      console.log("👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor...");
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
         console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
         return false;
       }
+      console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
@@ -283,8 +286,11 @@ async function addPendingProduct() {
 
 // Bekleyen ürünü belirli UUID ile ekle (kayıt sonrası çağrılır)
 async function addPendingProductWithUUID(uuid) {
-  console.log("🔍 [Content Script] addPendingProductWithUUID çağrıldı, pendingProductInfo:", pendingProductInfo);
-  
+  console.log(
+    "🔍 [Content Script] addPendingProductWithUUID çağrıldı, pendingProductInfo:",
+    pendingProductInfo
+  );
+
   if (pendingProductInfo) {
     console.log(
       "🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:",
@@ -311,7 +317,9 @@ async function addPendingProductWithUUID(uuid) {
       showErrorMessage("Ürün eklenirken hata oluştu!");
     }
   } else {
-    console.log("❌ [Content Script] Bekleyen ürün bulunamadı, pendingProductInfo boş");
+    console.log(
+      "❌ [Content Script] Bekleyen ürün bulunamadı, pendingProductInfo boş"
+    );
   }
 }
 
@@ -413,6 +421,7 @@ function showGuestWarningPopup() {
       document.body.removeChild(popup);
       // Kayıt işlemi başladığını işaretle
       isRegistrationInProgress = true;
+      console.log("🔐 [Content Script] Giriş Yap butonuna tıklandı, isRegistrationInProgress = true");
       showLoginOrRegisterForm().then((result) => {
         resolve(result);
       });
