@@ -73,9 +73,17 @@ function App() {
     console.log("🔄 Refresh butonu tıklandı");
     try {
       setStatus("loading");
-      const userId = await getUserId();
+      
+      // currentUserId kullan (getUserId() çağırma!)
+      if (!currentUserId) {
+        console.log("❌ [handleRefresh] currentUserId yok");
+        setError("Kullanıcı ID bulunamadı");
+        setStatus("error");
+        return;
+      }
+      
       const response = await fetch(
-        `${GET_PRODUCTS_ENDPOINT}?user_id=${userId}`
+        `${GET_PRODUCTS_ENDPOINT}?user_id=${currentUserId}`
       );
 
       if (response.ok) {
@@ -474,7 +482,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: productId, user_id: await getUserId() }),
+        body: JSON.stringify({ id: productId, user_id: currentUserId }),
       });
 
       if (response.ok) {
@@ -556,6 +564,12 @@ function App() {
 
   // Aktif UUID'yi al veya oluştur - Chrome Extension Storage API
   async function getActiveUUID() {
+    // Eğer zaten UUID varsa, onu kullan (değiştirme!)
+    if (currentUserId) {
+      console.log("🔄 [getActiveUUID] Mevcut UUID kullanılıyor:", currentUserId);
+      return currentUserId;
+    }
+
     // Eğer zaten çalışıyorsa bekle
     if (isGettingUserId) {
       console.log("⏳ [getActiveUUID] Zaten çalışıyor, bekleniyor...");
@@ -627,7 +641,7 @@ function App() {
         }
       }
 
-      // 3. Hiç UUID yoksa yeni oluştur
+      // 3. Hiç UUID yoksa yeni oluştur (sadece ilk açılışta!)
       if (!uuidData || !uuidData.uuid) {
         const newUUID = generateUUID();
         console.log("👤 [Web Site] Yeni Guest UUID oluşturuldu:", newUUID);
@@ -740,10 +754,42 @@ function App() {
 
             <div className="flex space-x-3">
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowGuestWarning(false);
-                  // Burada login sayfasına yönlendir
-                  window.location.href = "/login";
+                  
+                  try {
+                    // Web sitesinde login yap
+                    const response = await fetch("https://my-list-pi.vercel.app/api/login", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        email: "test@example.com", // Test kullanıcısı
+                        password: "123456",
+                      }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.uuid) {
+                      // Permanent UUID'yi set et (extension'dan bağımsız)
+                      setCurrentUserId(result.uuid);
+                      setUuidType('permanent');
+                      setIsLoggedIn(true);
+                      
+                      console.log("✅ [Web Site] Login başarılı, permanent UUID set edildi:", result.uuid);
+                      
+                      // Ürünleri yeniden yükle
+                      await fetchProducts();
+                    } else {
+                      console.error("❌ [Web Site] Login başarısız:", result.error);
+                      alert("Giriş başarısız: " + (result.error || "Bilinmeyen hata"));
+                    }
+                  } catch (error) {
+                    console.error("❌ [Web Site] Login hatası:", error);
+                    alert("Bağlantı hatası");
+                  }
                 }}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
