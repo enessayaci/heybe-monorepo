@@ -283,6 +283,8 @@ async function addPendingProduct() {
 
 // Bekleyen ürünü belirli UUID ile ekle (kayıt sonrası çağrılır)
 async function addPendingProductWithUUID(uuid) {
+  console.log("🔍 [Content Script] addPendingProductWithUUID çağrıldı, pendingProductInfo:", pendingProductInfo);
+  
   if (pendingProductInfo) {
     console.log(
       "🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:",
@@ -308,6 +310,8 @@ async function addPendingProductWithUUID(uuid) {
       console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
       showErrorMessage("Ürün eklenirken hata oluştu!");
     }
+  } else {
+    console.log("❌ [Content Script] Bekleyen ürün bulunamadı, pendingProductInfo boş");
   }
 }
 
