@@ -24,13 +24,15 @@ export default function handler(req, res) {
         email: "test@example.com",
         password: "123456", // Gerçek implementasyonda hash'lenmiş olacak
         uuid: "test@example.com", // Email'i UUID olarak kullan
-        name: "Test Kullanıcı"
+        name: "Test Kullanıcı",
+        role: "user"
       },
       {
         email: "admin@example.com", 
         password: "admin123",
         uuid: "admin@example.com", // Email'i UUID olarak kullan
-        name: "Admin Kullanıcı"
+        name: "Admin Kullanıcı",
+        role: "admin"
       }
     ];
 
@@ -47,6 +49,7 @@ export default function handler(req, res) {
       uuid: user.uuid,
       name: user.name,
       email: user.email,
+      role: user.email === 'admin@example.com' ? 'admin' : 'user', // Admin kontrolü
       message: 'Giriş başarılı'
     });
 

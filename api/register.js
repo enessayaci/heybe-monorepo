@@ -12,9 +12,8 @@ export default function handler(req, res) {
       return res.status(400).json({ error: 'Email ve şifre gerekli' });
     }
 
-    if (!name) {
-      return res.status(400).json({ error: 'İsim gerekli' });
-    }
+    // Name is optional now
+    const userName = name || email.split('@')[0]; // Use email prefix if no name provided
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,13 +32,15 @@ export default function handler(req, res) {
         email: "test@example.com",
         password: "123456", // Gerçek implementasyonda hash'lenmiş olacak
         name: "Test Kullanıcı",
-        uuid: "test@example.com" // Email'i UUID olarak kullan
+        uuid: "test@example.com", // Email'i UUID olarak kullan
+        role: "user"
       },
       {
         email: "admin@example.com", 
         password: "admin123",
         name: "Admin Kullanıcı",
-        uuid: "admin@example.com"
+        uuid: "admin@example.com",
+        role: "admin"
       }
     ];
 
@@ -53,7 +54,7 @@ export default function handler(req, res) {
     const newUser = {
       email: email,
       password: password, // Gerçek implementasyonda hash'lenecek
-      name: name,
+      name: userName,
       uuid: email // Email'i permanent UUID olarak kullan
     };
 
@@ -66,6 +67,7 @@ export default function handler(req, res) {
       uuid: newUser.uuid, // Email'i UUID olarak döndür
       name: newUser.name,
       email: newUser.email,
+      role: 'user', // Default role
       message: 'Kayıt başarılı'
     });
 
