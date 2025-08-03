@@ -3,7 +3,7 @@ console.log("🗄️ [Storage Helper] Yüklendi");
 
 class ExtensionStorageHelper {
   constructor() {
-    this.storageKey = "extension_user_id";
+    this.storageKey = "tum_listem_user_id";
     this.isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
   }
 
@@ -48,7 +48,7 @@ class ExtensionStorageHelper {
     }
   }
 
-  // Extension'dan UUID iste
+  // Extension'dan UUID iste - Persistent storage'dan
   async requestFromExtension() {
     try {
       console.log("🔍 [Web Site] Extension'dan UUID isteniyor...");
@@ -75,7 +75,7 @@ class ExtensionStorageHelper {
     } catch (error) {
       console.log("❌ [Web Site] Extension mesajlaşma hatası:", error.message);
       
-      // Fallback: localStorage'dan oku
+      // Fallback: localStorage'dan oku (eski sistem)
       const backupUserId = localStorage.getItem(this.storageKey);
       if (backupUserId) {
         console.log("🔄 [Web Site] Fallback: localStorage'dan UUID okundu:", backupUserId);

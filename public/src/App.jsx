@@ -127,26 +127,34 @@ function App() {
     // Extension hazır olmasını bekle
     const waitForExtension = () => {
       return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        if (
+          typeof chrome !== "undefined" &&
+          chrome.runtime &&
+          chrome.runtime.id
+        ) {
           console.log("✅ [Basit] Extension zaten mevcut");
           resolve();
           return;
         }
 
         console.log("⏳ [Basit] Extension hazır olması bekleniyor...");
-        
+
         // Extension hazır olmasını kontrol et
         const checkExtension = () => {
-          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+          if (
+            typeof chrome !== "undefined" &&
+            chrome.runtime &&
+            chrome.runtime.id
+          ) {
             console.log("✅ [Basit] Extension hazır oldu");
             resolve();
             return;
           }
-          
+
           // 3 saniye daha bekle
           setTimeout(checkExtension, 1000);
         };
-        
+
         checkExtension();
 
         // Timeout: 5 saniye sonra devam et
@@ -207,50 +215,68 @@ function App() {
   // Storage Debug fonksiyonu
   const handleStorageDebug = async () => {
     console.log("🔍 [Storage Debug] Başlatılıyor...");
-    console.log("🔍 [Storage Debug] Chrome API:", typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+    console.log(
+      "🔍 [Storage Debug] Chrome API:",
+      typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id
+    );
 
     try {
       // Extension'dan storage bilgisi al
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.runtime &&
+        chrome.runtime.id
+      ) {
         const response = await new Promise((resolve, reject) => {
           chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
             if (chrome.runtime.lastError) {
-              console.log("❌ [Storage Debug] Extension mesaj hatası:", chrome.runtime.lastError);
+              console.log(
+                "❌ [Storage Debug] Extension mesaj hatası:",
+                chrome.runtime.lastError
+              );
               reject(new Error("Extension bulunamadı"));
               return;
             }
-            
-            console.log("🔍 [Storage Debug] Extension'dan UUID:", response?.userId);
+
+            console.log(
+              "🔍 [Storage Debug] Extension'dan UUID:",
+              response?.userId
+            );
             resolve(response?.userId);
           });
         });
-        
+
         // localStorage'dan da oku
-        const localUserId = localStorage.getItem("extension_user_id");
+        const localUserId = localStorage.getItem("tum_listem_user_id");
         console.log("🔍 [Storage Debug] localStorage UUID:", localUserId);
-        
+
         const debugInfo = {
           extension: response,
           localStorage: localUserId,
           currentUserId: currentUserId,
           hasExtension: true,
-          extensionId: chrome.runtime.id
+          extensionId: chrome.runtime.id,
         };
-        
+
         console.log("🔍 [Storage Debug] Tüm bilgiler:", debugInfo);
         alert("Storage Debug: " + JSON.stringify(debugInfo, null, 2));
       } else {
         // Extension yok, sadece localStorage kontrol et
-        const localUserId = localStorage.getItem("extension_user_id");
+        const localUserId = localStorage.getItem("tum_listem_user_id");
         const debugInfo = {
           extension: null,
           localStorage: localUserId,
           currentUserId: currentUserId,
-          hasExtension: false
+          hasExtension: false,
         };
-        
-        console.log("🔍 [Storage Debug] Extension yok, localStorage:", debugInfo);
-        alert("Storage Debug (Extension yok): " + JSON.stringify(debugInfo, null, 2));
+
+        console.log(
+          "🔍 [Storage Debug] Extension yok, localStorage:",
+          debugInfo
+        );
+        alert(
+          "Storage Debug (Extension yok): " + JSON.stringify(debugInfo, null, 2)
+        );
       }
     } catch (error) {
       console.error("🔍 [Storage Debug] Hata:", error);
@@ -466,19 +492,29 @@ function App() {
       let userId = null;
 
       // 1. Extension'dan UUID'yi al (Chrome Storage API)
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.runtime &&
+        chrome.runtime.id
+      ) {
         console.log("🔍 [Web Site] Extension mevcut, UUID isteniyor...");
         try {
           const response = await new Promise((resolve, reject) => {
             chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
               if (chrome.runtime.lastError) {
-                console.log("❌ [Web Site] Extension mesaj hatası:", chrome.runtime.lastError);
+                console.log(
+                  "❌ [Web Site] Extension mesaj hatası:",
+                  chrome.runtime.lastError
+                );
                 reject(new Error("Extension bulunamadı"));
                 return;
               }
-              
+
               if (response && response.userId) {
-                console.log("✅ [Web Site] Extension'dan UUID alındı:", response.userId);
+                console.log(
+                  "✅ [Web Site] Extension'dan UUID alındı:",
+                  response.userId
+                );
                 resolve(response.userId);
               } else {
                 console.log("❌ [Web Site] Extension'dan UUID alınamadı");
@@ -486,58 +522,83 @@ function App() {
               }
             });
           });
-          
+
           userId = response;
         } catch (error) {
-          console.log("❌ [Web Site] Extension mesajlaşma hatası:", error.message);
+          console.log(
+            "❌ [Web Site] Extension mesajlaşma hatası:",
+            error.message
+          );
         }
       }
 
-      // 2. Extension yoksa localStorage'dan oku (backup)
-      if (!userId) {
-        const backupUserId = localStorage.getItem("extension_user_id");
-        if (backupUserId) {
-          console.log("🔄 [Web Site] Fallback: localStorage'dan UUID okundu:", backupUserId);
-          userId = backupUserId;
+              // 2. Extension yoksa localStorage'dan oku (backup)
+        if (!userId) {
+          const backupUserId = localStorage.getItem("tum_listem_user_id");
+          if (backupUserId) {
+            console.log(
+              "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
+              backupUserId
+            );
+            userId = backupUserId;
+          }
         }
-      }
 
       // 3. Hiç UUID yoksa yeni oluştur
       if (!userId) {
         userId = generateUUID();
         console.log("👤 [Web Site] Yeni kullanıcı ID oluşturuldu:", userId);
-        
+
         // Extension varsa oraya da yaz
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        if (
+          typeof chrome !== "undefined" &&
+          chrome.runtime &&
+          chrome.runtime.id
+        ) {
           try {
             await new Promise((resolve, reject) => {
-              chrome.runtime.sendMessage({ 
-                action: "setUserId", 
-                userId: userId 
-              }, (response) => {
-                if (chrome.runtime.lastError) {
-                  console.log("❌ [Web Site] Extension mesaj hatası:", chrome.runtime.lastError);
-                  reject(new Error("Extension bulunamadı"));
-                  return;
+              chrome.runtime.sendMessage(
+                {
+                  action: "setUserId",
+                  userId: userId,
+                },
+                (response) => {
+                  if (chrome.runtime.lastError) {
+                    console.log(
+                      "❌ [Web Site] Extension mesaj hatası:",
+                      chrome.runtime.lastError
+                    );
+                    reject(new Error("Extension bulunamadı"));
+                    return;
+                  }
+
+                  if (response && response.success) {
+                    console.log(
+                      "✅ [Web Site] UUID extension'a yazıldı:",
+                      userId
+                    );
+                    resolve(true);
+                  } else {
+                    console.log("❌ [Web Site] UUID extension'a yazılamadı");
+                    reject(new Error("UUID kaydedilemedi"));
+                  }
                 }
-                
-                if (response && response.success) {
-                  console.log("✅ [Web Site] UUID extension'a yazıldı:", userId);
-                  resolve(true);
-                } else {
-                  console.log("❌ [Web Site] UUID extension'a yazılamadı");
-                  reject(new Error("UUID kaydedilemedi"));
-                }
-              });
+              );
             });
           } catch (error) {
-            console.log("❌ [Web Site] Extension'a yazma hatası:", error.message);
+            console.log(
+              "❌ [Web Site] Extension'a yazma hatası:",
+              error.message
+            );
           }
         }
-        
+
         // localStorage'a da yaz (backup)
-        localStorage.setItem("extension_user_id", userId);
-        console.log("✅ [Web Site] UUID localStorage'a yazıldı (backup):", userId);
+        localStorage.setItem("tum_listem_user_id", userId);
+        console.log(
+          "✅ [Web Site] UUID localStorage'a yazıldı (backup):",
+          userId
+        );
       }
 
       setCurrentUserId(userId);

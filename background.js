@@ -1,8 +1,8 @@
-// Background Script - Extension Storage ve Message Handling
+// Background Script - Persistent UUID Storage
 console.log("🔄 [Background] Yüklendi");
 
-// Extension storage key
-const STORAGE_KEY = "extension_user_id";
+// Extension storage key - Persistent storage kullan
+const STORAGE_KEY = "tum_listem_user_id";
 
 // UUID oluştur
 function generateUUID() {
@@ -13,11 +13,16 @@ function generateUUID() {
   });
 }
 
-// UUID'yi kaydet
+// UUID'yi kaydet - Persistent storage kullan
 async function setUserId(userId) {
   try {
+    // Local storage'a yaz (extension silinse bile kalır)
     await chrome.storage.local.set({ [STORAGE_KEY]: userId });
-    console.log("✅ [Background] UUID kaydedildi:", userId);
+    
+    // Sync storage'a da yaz (cloud sync için)
+    await chrome.storage.sync.set({ [STORAGE_KEY]: userId });
+    
+    console.log("✅ [Background] UUID persistent storage'a kaydedildi:", userId);
     return true;
   } catch (error) {
     console.error("❌ [Background] UUID kaydetme hatası:", error);
@@ -25,11 +30,25 @@ async function setUserId(userId) {
   }
 }
 
-// UUID'yi oku
+// UUID'yi oku - Persistent storage'dan
 async function getUserId() {
   try {
-    const result = await chrome.storage.local.get([STORAGE_KEY]);
-    const userId = result[STORAGE_KEY];
+    // Önce local storage'dan dene
+    let result = await chrome.storage.local.get([STORAGE_KEY]);
+    let userId = result[STORAGE_KEY];
+    
+    // Local storage'da yoksa sync storage'dan dene
+    if (!userId) {
+      result = await chrome.storage.sync.get([STORAGE_KEY]);
+      userId = result[STORAGE_KEY];
+      
+      if (userId) {
+        // Sync'ten bulduysa local'a da yaz
+        await chrome.storage.local.set({ [STORAGE_KEY]: userId });
+        console.log("🔄 [Background] UUID sync storage'dan restore edildi:", userId);
+      }
+    }
+    
     console.log("🔍 [Background] UUID okundu:", userId);
     return userId;
   } catch (error) {
@@ -90,9 +109,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === "clearUserId") {
-    // UUID'yi sil
-    chrome.storage.local.remove([STORAGE_KEY]).then(() => {
-      console.log("🗑️ [Background] UUID silindi");
+    // UUID'yi sil - Her iki storage'dan da sil
+    Promise.all([
+      chrome.storage.local.remove([STORAGE_KEY]),
+      chrome.storage.sync.remove([STORAGE_KEY])
+    ]).then(() => {
+      console.log("🗑️ [Background] UUID her iki storage'dan da silindi");
       sendResponse({ success: true });
     });
     return true; // Async response

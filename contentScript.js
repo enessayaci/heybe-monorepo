@@ -1,4 +1,4 @@
-// Content Script - Extension ve Web Sitesi arasında köprü
+// Content Script - Persistent UUID Bridge
 console.log("🌐 [Content Script] Yüklendi");
 
 // UUID'yi extension'dan al ve web sitesine gönder
