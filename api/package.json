@@ -2,6 +2,7 @@
   "name": "my-list-sepet-api",
   "version": "1.0.0",
   "description": "Serverless API for Tüm Listem Extension",
+  "type": "module",
   "main": "add-product.js",
   "dependencies": {
     "bcryptjs": "^3.0.2",

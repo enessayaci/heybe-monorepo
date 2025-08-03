@@ -4,10 +4,10 @@ const { Pool } = pkg;
 
 // PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
+  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/mylist',
+  ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false
-  }
+  } : false
 });
 
 // Test database connection

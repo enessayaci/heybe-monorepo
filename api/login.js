@@ -8,8 +8,19 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check if DATABASE_URL is set
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ DATABASE_URL environment variable not set');
+      return res.status(500).json({ error: 'Database configuration error' });
+    }
+
     // Initialize database if needed
-    await initDatabase();
+    try {
+      await initDatabase();
+    } catch (dbError) {
+      console.error('❌ Database initialization error:', dbError);
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
 
     const { email, password, guest_user_id } = req.body;
 

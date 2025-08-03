@@ -8,8 +8,19 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check if DATABASE_URL is set
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ DATABASE_URL environment variable not set');
+      return res.status(500).json({ error: 'Database configuration error' });
+    }
+
     // Initialize database if needed
-    await initDatabase();
+    try {
+      await initDatabase();
+    } catch (dbError) {
+      console.error('❌ Database initialization error:', dbError);
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
 
     const { email, password, name, guest_user_id } = req.body;
 
@@ -33,10 +44,16 @@ export default async function handler(req, res) {
     }
 
     // Check if email already exists
-    const existingUser = await executeQuery(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
+    let existingUser;
+    try {
+      existingUser = await executeQuery(
+        'SELECT * FROM users WHERE email = $1',
+        [email]
+      );
+    } catch (dbError) {
+      console.error('❌ Database query error:', dbError);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
 
     if (existingUser.rows.length > 0) {
       return res.status(409).json({ error: "Bu email adresi zaten kayıtlı" });
@@ -50,12 +67,18 @@ export default async function handler(req, res) {
     const uuid = email;
 
     // Insert new user into database
-    const newUser = await executeQuery(
-      `INSERT INTO users (uuid, email, password_hash, name, role) 
-       VALUES ($1, $2, $3, $4, $5) 
-       RETURNING uuid, email, name, role`,
-      [uuid, email, hashedPassword, userName, 'user']
-    );
+    let newUser;
+    try {
+      newUser = await executeQuery(
+        `INSERT INTO users (uuid, email, password_hash, name, role) 
+         VALUES ($1, $2, $3, $4, $5) 
+         RETURNING uuid, email, name, role`,
+        [uuid, email, hashedPassword, userName, 'user']
+      );
+    } catch (dbError) {
+      console.error('❌ Database insert error:', dbError);
+      return res.status(500).json({ error: 'User creation failed' });
+    }
 
     // Transfer guest products to permanent user if guest_user_id provided
     if (guest_user_id && guest_user_id !== uuid) {
