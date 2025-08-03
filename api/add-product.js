@@ -28,9 +28,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, price, image_url, product_url, site, user_id } = req.body;
+    const { name, price, image_url, url, site, user_id } = req.body;
 
-    if (!name || !product_url || !site || !user_id) {
+    if (!name || !url || !site || !user_id) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -46,9 +46,25 @@ export default async function handler(req, res) {
     console.log("📝 [Tüm Listem] Site adı kısaltıldı:", truncatedSite);
     console.log("👤 [Tüm Listem] Kullanıcı ID:", user_id);
 
+    // Check if user exists, if not create a guest user
+    const userCheck = await pool.query(
+      "SELECT uuid FROM users WHERE uuid = $1",
+      [user_id]
+    );
+
+    if (userCheck.rows.length === 0) {
+      // Create a guest user automatically
+      await pool.query(
+        `INSERT INTO users (uuid, email, password_hash, name, role) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [user_id, `${user_id}@guest.com`, "guest", "Guest User", "user"]
+      );
+      console.log("✅ Guest user created automatically:", user_id);
+    }
+
     // Veritabanına kaydet
     const query = `
-      INSERT INTO products (name, price, image_url, product_url, site, user_id, created_at)
+      INSERT INTO products (name, price, image_url, url, site, user_id, created_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING *
     `;
@@ -57,7 +73,7 @@ export default async function handler(req, res) {
       truncatedName,
       price || "",
       image_url || "",
-      product_url,
+      url,
       truncatedSite,
       user_id,
     ];
