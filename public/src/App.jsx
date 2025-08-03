@@ -702,7 +702,11 @@ function App() {
         }
 
         // localStorage'a da yaz (sadece extension yoksa)
-        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+        if (
+          typeof chrome === "undefined" ||
+          !chrome.runtime ||
+          !chrome.runtime.id
+        ) {
           localStorage.setItem("tum_listem_user_id", newUUID);
           console.log(
             "✅ [Web Site] Guest UUID localStorage'a yazıldı (extension yok):",
