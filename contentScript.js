@@ -213,32 +213,97 @@ async function addProductToMyList(productInfo) {
       }
       console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
 
-      // Eğer kayıt işlemi devam ediyorsa ürünü beklet
+      // Eğer kayıt/giriş işlemi devam ediyorsa ürünü beklet
       if (isRegistrationInProgress) {
         console.log(
-          "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor..."
+          "⏳ [Content Script] Kayıt/Giriş işlemi devam ediyor, ürün bekletiliyor..."
         );
-        showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+        showSuccessMessage("İşlem tamamlandıktan sonra ürün eklenecek!");
         return true;
       }
 
       // Kayıt işlemi yoksa ürünü şimdi ekle
-      console.log("🔄 [Content Script] Ürün şimdi ekleniyor...");
+      console.log(
+        "🔄 [Content Script] Guest kullanıcı için ürün şimdi ekleniyor..."
+      );
       pendingProductInfo = null;
+
+      // Guest kullanıcı için ürünü doğrudan ekle
+      try {
+        const result = await apiRequest("POST", "add-product", {
+          ...productInfo,
+          user_id: uuidData.uuid,
+        });
+
+        console.log("📡 [Content Script] Guest API response:", result);
+
+        if (result && result.success) {
+          console.log(
+            "✅ [Content Script] Guest kullanıcı için ürün başarıyla eklendi:",
+            result
+          );
+          showSuccessMessage("Ürün Tüm Listeme eklendi!");
+
+          // Buton durumunu güncelle
+          const addButton = document.getElementById("tum-listem-ekle-btn");
+          if (addButton) {
+            addButton.disabled = true;
+            addButton.style.background = "#10b981"; // Yeşil renk
+            addButton.querySelector("span").textContent = "Ürün Eklendi";
+            addButton.querySelector("svg").innerHTML = `
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            `;
+          }
+          return true;
+        } else {
+          console.log(
+            "❌ [Content Script] Guest kullanıcı için ürün ekleme hatası:",
+            result
+          );
+          showErrorMessage("Ürün eklenirken hata oluştu!");
+          return false;
+        }
+      } catch (error) {
+        console.error(
+          "❌ [Content Script] Guest kullanıcı için ürün ekleme exception:",
+          error
+        );
+        showErrorMessage("Ürün eklenirken hata oluştu!");
+        return false;
+      }
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
-    const result = await apiRequest("POST", "add-product", {
-      ...productInfo,
-      user_id: uuidData.uuid,
-    });
+    try {
+      const result = await apiRequest("POST", "add-product", {
+        ...productInfo,
+        user_id: uuidData.uuid,
+      });
 
-    if (result) {
-      console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
-      showSuccessMessage("Ürün Tüm Listeme eklendi!");
-      return true;
-    } else {
-      console.log("❌ [Content Script] Ürün ekleme hatası:", result);
+      console.log("📡 [Content Script] API response:", result);
+
+      if (result && result.success) {
+        console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
+        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+
+        // Buton durumunu güncelle
+        const addButton = document.getElementById("tum-listem-ekle-btn");
+        if (addButton) {
+          addButton.disabled = true;
+          addButton.style.background = "#10b981"; // Yeşil renk
+          addButton.querySelector("span").textContent = "Ürün Eklendi";
+          addButton.querySelector("svg").innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          `;
+        }
+        return true;
+      } else {
+        console.log("❌ [Content Script] Ürün ekleme hatası:", result);
+        showErrorMessage("Ürün eklenirken hata oluştu!");
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ [Content Script] Ürün ekleme exception:", error);
       showErrorMessage("Ürün eklenirken hata oluştu!");
       return false;
     }
@@ -310,7 +375,9 @@ async function addPendingProduct() {
 async function addPendingProductWithUUID(uuid) {
   console.log(
     "🔍 [Content Script] addPendingProductWithUUID çağrıldı, pendingProductInfo:",
-    pendingProductInfo
+    pendingProductInfo,
+    "UUID:",
+    uuid
   );
 
   if (pendingProductInfo) {
@@ -323,30 +390,40 @@ async function addPendingProductWithUUID(uuid) {
     const productInfo = pendingProductInfo;
     pendingProductInfo = null;
 
-    const result = await apiRequest("POST", "add-product", {
-      ...productInfo,
-      user_id: uuid,
-    });
+    try {
+      const result = await apiRequest("POST", "add-product", {
+        ...productInfo,
+        user_id: uuid,
+      });
 
-    if (result) {
-      console.log(
-        "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
-        result
-      );
-      showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      console.log("📡 [Content Script] API response:", result);
 
-      // Buton durumunu güncelle
-      const addButton = document.getElementById("tum-listem-ekle-btn");
-      if (addButton) {
-        addButton.disabled = true;
-        addButton.style.background = "#10b981"; // Yeşil renk
-        addButton.querySelector("span").textContent = "Ürün Eklendi";
-        addButton.querySelector("svg").innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        `;
+      if (result && result.success) {
+        console.log(
+          "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
+          result
+        );
+        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+
+        // Buton durumunu güncelle
+        const addButton = document.getElementById("tum-listem-ekle-btn");
+        if (addButton) {
+          addButton.disabled = true;
+          addButton.style.background = "#10b981"; // Yeşil renk
+          addButton.querySelector("span").textContent = "Ürün Eklendi";
+          addButton.querySelector("svg").innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          `;
+        }
+      } else {
+        console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+        showErrorMessage("Ürün eklenirken hata oluştu!");
       }
-    } else {
-      console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+    } catch (error) {
+      console.error(
+        "❌ [Content Script] Bekleyen ürün ekleme exception:",
+        error
+      );
       showErrorMessage("Ürün eklenirken hata oluştu!");
     }
   } else {
@@ -756,6 +833,11 @@ function showLoginOrRegisterForm() {
 
           document.body.removeChild(popup);
           showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
+
+          // Login işlemi tamamlandı, bekleyen ürünü ekle
+          isRegistrationInProgress = false;
+          await addPendingProductWithUUID(result.uuid);
+
           resolve(true);
         } else {
           errorMessage.textContent = result.error || "Giriş başarısız";
@@ -763,6 +845,7 @@ function showLoginOrRegisterForm() {
           loginButton.textContent = "Giriş Yap";
           loginButton.disabled = false;
           registerButton.disabled = false;
+          isRegistrationInProgress = false;
         }
       } catch (error) {
         console.error("❌ [Content Script] Login hatası:", error);
@@ -771,6 +854,7 @@ function showLoginOrRegisterForm() {
         loginButton.textContent = "Giriş Yap";
         loginButton.disabled = false;
         registerButton.disabled = false;
+        isRegistrationInProgress = false;
       }
     };
 

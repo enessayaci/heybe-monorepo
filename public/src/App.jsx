@@ -266,6 +266,14 @@ function App() {
         currentUserId
       );
       fetchProducts();
+    } else {
+      // currentUserId yoksa extension kontrolü yap
+      const hasExtension =
+        typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
+      if (!hasExtension) {
+        console.log("❌ [useEffect] Extension kurulu değil");
+        setStatus("no-extension");
+      }
     }
   }, [currentUserId]);
 
@@ -431,9 +439,24 @@ function App() {
   const fetchProducts = async () => {
     console.log("🚀 [fetchProducts] Başladı");
 
-    // Eğer userId yoksa bekle
+    // Eğer userId yoksa extension kontrolü yap
     if (!currentUserId) {
-      console.log("⏳ [fetchProducts] userId yok, bekleniyor...");
+      console.log(
+        "⏳ [fetchProducts] userId yok, extension kontrol ediliyor..."
+      );
+
+      // Extension kurulu mu kontrol et
+      const hasExtension =
+        typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
+
+      if (!hasExtension) {
+        console.log("❌ [fetchProducts] Extension kurulu değil");
+        setStatus("no-extension");
+        return;
+      }
+
+      // Extension var ama UUID yoksa bekle
+      console.log("⏳ [fetchProducts] Extension var, UUID bekleniyor...");
       return;
     }
 
@@ -674,17 +697,25 @@ function App() {
         }
       }
 
-      // 3. Hiç UUID yoksa yeni oluştur (sadece ilk açılışta!)
+      // 3. Hiç UUID yoksa extension kontrolü yap
       if (!uuidData || !uuidData.uuid) {
+        // Extension kurulu mu kontrol et
+        const hasExtension =
+          typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
+
+        if (!hasExtension) {
+          console.log(
+            "❌ [Web Site] Extension kurulu değil, UUID oluşturulamıyor"
+          );
+          setIsGettingUserId(false);
+          return null; // Extension yoksa null döndür
+        }
+
         const newUUID = generateUUID();
         console.log("👤 [Web Site] Yeni Guest UUID oluşturuldu:", newUUID);
 
         // Extension varsa oraya da yaz
-        if (
-          typeof chrome !== "undefined" &&
-          chrome.runtime &&
-          chrome.runtime.id
-        ) {
+        if (hasExtension) {
           try {
             await new Promise((resolve, reject) => {
               chrome.runtime.sendMessage(
@@ -726,11 +757,7 @@ function App() {
         }
 
         // localStorage'a da yaz (sadece extension yoksa)
-        if (
-          typeof chrome === "undefined" ||
-          !chrome.runtime ||
-          !chrome.runtime.id
-        ) {
+        if (!hasExtension) {
           localStorage.setItem("tum_listem_user_id", newUUID);
           console.log(
             "✅ [Web Site] Guest UUID localStorage'a yazıldı (extension yok):",
@@ -1216,6 +1243,41 @@ function App() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
               <p className="text-gray-500 mt-2">Ürünler yükleniyor...</p>
             </div>
+          ) : status === "no-extension" ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Eklenti Henüz Kurulmadı
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Ürünlerinizi görmek için önce Chrome eklentisini kurmanız
+                gerekiyor.
+              </p>
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("install")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
+              >
+                Kurulum Talimatlarına Git
+              </button>
+            </div>
           ) : status === "error" ? (
             <div className="text-center py-8">
               <p className="text-red-500">❌ {error}</p>
@@ -1294,7 +1356,7 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
                             "_blank"
                           )
                         }
@@ -1353,7 +1415,7 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
                             "_blank"
                           )
                         }
@@ -1414,7 +1476,7 @@ function App() {
                       <button
                         onClick={() =>
                           window.open(
-                            "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                            "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
                             "_blank"
                           )
                         }
