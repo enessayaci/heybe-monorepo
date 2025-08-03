@@ -200,11 +200,11 @@ async function addProductToMyList(productInfo) {
       console.log(
         "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
       );
-      
+
       // Ürün ekleme işlemini beklet
       pendingProductInfo = productInfo;
       console.log("⏸️ [Content Script] Ürün bekletiliyor:", productInfo);
-      
+
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
         console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
@@ -212,14 +212,16 @@ async function addProductToMyList(productInfo) {
         return false;
       }
       console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
-      
+
       // Eğer kayıt işlemi devam ediyorsa ürünü beklet
       if (isRegistrationInProgress) {
-        console.log("⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...");
+        console.log(
+          "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor..."
+        );
         showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
         return true;
       }
-      
+
       // Kayıt işlemi yoksa ürünü şimdi ekle
       console.log("🔄 [Content Script] Ürün şimdi ekleniyor...");
       pendingProductInfo = null;
