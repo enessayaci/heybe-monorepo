@@ -46,20 +46,21 @@ export default async function handler(req, res) {
     console.log("📝 [Tüm Listem] Site adı kısaltıldı:", truncatedSite);
     console.log("👤 [Tüm Listem] Kullanıcı ID:", user_id);
 
-    // Check if user exists, if not create a guest user
-    const userCheck = await pool.query(
-      "SELECT uuid FROM users WHERE uuid = $1",
-      [user_id]
-    );
-
-    if (userCheck.rows.length === 0) {
-      // Create a guest user automatically
-      await pool.query(
-        `INSERT INTO users (uuid, email, password_hash, name, role) 
-         VALUES ($1, $2, $3, $4, $5)`,
-        [user_id, `${user_id}@guest.com`, "guest", "Guest User", "user"]
+    // For guest users, we don't need to create them in users table
+    // Just check if it's a guest user (contains UUID format or is not an email)
+    const isGuestUser = !user_id.includes('@') || user_id.includes('-');
+    
+    if (!isGuestUser) {
+      // Only check for permanent users (emails)
+      const userCheck = await pool.query(
+        "SELECT uuid FROM users WHERE uuid = $1",
+        [user_id]
       );
-      console.log("✅ Guest user created automatically:", user_id);
+
+      if (userCheck.rows.length === 0) {
+        console.log("❌ User not found:", user_id);
+        return res.status(400).json({ error: "User not found" });
+      }
     }
 
     // Veritabanına kaydet

@@ -60,6 +60,22 @@ app.post("/api/add-product", async (req, res) => {
       });
     }
 
+    // Check if user exists, if not create a guest user
+    const userCheck = await pool.query(
+      "SELECT uuid FROM users WHERE uuid = $1",
+      [user_id]
+    );
+
+    if (userCheck.rows.length === 0) {
+      // Create a guest user automatically
+      await pool.query(
+        `INSERT INTO users (uuid, email, password_hash, name, role) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [user_id, `${user_id}@guest.com`, "guest", "Guest User", "user"]
+      );
+      console.log("✅ Guest user created automatically:", user_id);
+    }
+
     const query = `
       INSERT INTO products (name, price, image_url, url, site, user_id)
       VALUES ($1, $2, $3, $4, $5, $6)
@@ -311,8 +327,7 @@ async function initDatabase() {
         site VARCHAR(255) NOT NULL,
         url TEXT NOT NULL,
         image_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(uuid) ON DELETE CASCADE
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 

@@ -58,11 +58,24 @@ export default async function handler(req, res) {
     // Transfer guest products to permanent user if guest_user_id provided
     if (guest_user_id && guest_user_id !== user.uuid) {
       try {
-        const transferResult = await pool.query(
-          'UPDATE products SET user_id = $1 WHERE user_id = $2 RETURNING id',
-          [user.uuid, guest_user_id]
+        console.log(`🔄 Starting product transfer from ${guest_user_id} to ${user.uuid}`);
+        
+        // First check if there are products to transfer
+        const checkProducts = await pool.query(
+          "SELECT COUNT(*) as count FROM products WHERE user_id = $1",
+          [guest_user_id]
         );
-        console.log(`✅ Transferred ${transferResult.rowCount} products from ${guest_user_id} to ${user.uuid}`);
+        console.log(`📊 Found ${checkProducts.rows[0].count} products to transfer`);
+        
+        if (checkProducts.rows[0].count > 0) {
+          const transferResult = await pool.query(
+            'UPDATE products SET user_id = $1 WHERE user_id = $2 RETURNING id',
+            [user.uuid, guest_user_id]
+          );
+          console.log(`✅ Transferred ${transferResult.rowCount} products from ${guest_user_id} to ${user.uuid}`);
+        } else {
+          console.log(`ℹ️ No products found for guest_user_id: ${guest_user_id}`);
+        }
       } catch (transferError) {
         console.error('❌ Product transfer error:', transferError);
       }
