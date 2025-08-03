@@ -8,6 +8,7 @@
     "48": "images/extension_48.png"
   },
   "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
+  "host_permissions": ["https://my-list-pi.vercel.app/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "tum-listem@extension.js"
@@ -26,5 +27,11 @@
   "action": {
     "default_title": "Tüm Listem Extension",
     "default_icon": "images/extension_48.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

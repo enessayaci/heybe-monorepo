@@ -6,6 +6,13 @@ const GUEST_UUID_KEY = "tum_listem_guest_uuid";
 const PERMANENT_UUID_KEY = "tum_listem_permanent_uuid";
 const USER_LOGIN_STATUS = "tum_listem_login_status";
 
+// CORS headers for API requests
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 // UUID oluştur
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -151,14 +158,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "apiRequest") {
     const { method, endpoint, data } = request;
     
+    console.log(`🌐 [Background] API isteği gönderiliyor: ${method} /api/${endpoint}`);
+    
     fetch(`https://my-list-pi.vercel.app/api/${endpoint}`, {
       method: method || "GET",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...CORS_HEADERS
       },
       body: data ? JSON.stringify(data) : undefined,
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log(`📡 [Background] API response status:`, response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
     .then(result => {
       console.log(`✅ [Background] API ${endpoint} başarılı:`, result);
       sendResponse({ success: true, data: result });
