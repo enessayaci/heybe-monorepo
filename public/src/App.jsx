@@ -23,7 +23,7 @@ function App() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
-  const API_BASE = "https://my-list-pi.vercel.app/api";
+  const API_BASE = "https://my-heybe.vercel.app/api";
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
   const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
@@ -370,14 +370,14 @@ function App() {
       "og:description": `${product.name} ürünü ${product.site} sitesinde ${
         product.price || "fiyat belirtilmemiş"
       } fiyatla satılıyor.`,
-      "og:image": product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+      "og:image": product.image_url || "https://my-heybe.vercel.app/logo.svg",
       "og:url": window.location.href,
       "og:type": "product",
       "og:site_name": "Heybe",
       "twitter:title": `${product.name} - Heybe`,
       "twitter:description": `${product.name} ürünü ${product.site} sitesinde satılıyor.`,
       "twitter:image":
-        product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+        product.image_url || "https://my-heybe.vercel.app/logo.svg",
       "twitter:card": "summary_large_image",
     };
 

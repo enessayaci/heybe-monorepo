@@ -25,7 +25,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
-  const API_BASE = "https://my-list-pi.vercel.app/api";
+  const API_BASE = "https://my-heybe.vercel.app/api";
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
   const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
@@ -385,14 +385,14 @@ function App() {
       "og:description": `${product.name} ürünü ${product.site} sitesinde ${
         product.price || "fiyat belirtilmemiş"
       } fiyatla satılıyor.`,
-      "og:image": product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+      "og:image": product.image_url || "https://my-heybe.vercel.app/logo.svg",
       "og:url": window.location.href,
       "og:type": "product",
       "og:site_name": "Tüm Listem",
       "twitter:title": `${product.name} - Tüm Listem`,
       "twitter:description": `${product.name} ürünü ${product.site} sitesinde satılıyor.`,
       "twitter:image":
-        product.image_url || "https://my-list-pi.vercel.app/logo.svg",
+        product.image_url || "https://my-heybe.vercel.app/logo.svg",
       "twitter:card": "summary_large_image",
     };
 
@@ -825,7 +825,7 @@ function App() {
                   try {
                     const guestUserId = localStorage.getItem("guest_uuid");
                     const response = await fetch(
-                      "https://my-list-pi.vercel.app/api/login",
+                      "https://my-heybe.vercel.app/api/login",
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -951,7 +951,7 @@ function App() {
                   try {
                     const guestUserId = localStorage.getItem("guest_uuid");
                     const response = await fetch(
-                      "https://my-list-pi.vercel.app/api/register",
+                      "https://my-heybe.vercel.app/api/register",
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

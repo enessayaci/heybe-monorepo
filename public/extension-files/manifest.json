@@ -8,7 +8,7 @@
     "48": "images/logo.png"
   },
   "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
-  "host_permissions": ["https://my-list-pi.vercel.app/*"],
+  "host_permissions": ["https://my-heybe.vercel.app/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "tum-listem@extension.js"
