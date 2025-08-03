@@ -4,28 +4,37 @@ console.log("🌐 [Content Script] Yüklendi");
 // API helper function (CORS bypass için background script kullanır)
 async function apiRequest(method, endpoint, data = null) {
   return new Promise((resolve, reject) => {
-    console.log(`🌐 [Content Script] API isteği gönderiliyor: ${method} ${endpoint}`, data);
-    
-    chrome.runtime.sendMessage({
-      action: "apiRequest",
-      method: method,
-      endpoint: endpoint,
-      data: data
-    }, response => {
-      console.log(`📡 [Content Script] API response:`, response);
-      
-      if (chrome.runtime.lastError) {
-        console.error("❌ [Content Script] Runtime error:", chrome.runtime.lastError);
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
+    console.log(
+      `🌐 [Content Script] API isteği gönderiliyor: ${method} ${endpoint}`,
+      data
+    );
+
+    chrome.runtime.sendMessage(
+      {
+        action: "apiRequest",
+        method: method,
+        endpoint: endpoint,
+        data: data,
+      },
+      (response) => {
+        console.log(`📡 [Content Script] API response:`, response);
+
+        if (chrome.runtime.lastError) {
+          console.error(
+            "❌ [Content Script] Runtime error:",
+            chrome.runtime.lastError
+          );
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        if (response && response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response?.error || "API isteği başarısız"));
+        }
       }
-      
-      if (response && response.success) {
-        resolve(response.data);
-      } else {
-        reject(new Error(response?.error || "API isteği başarısız"));
-      }
-    });
+    );
   });
 }
 
@@ -33,17 +42,23 @@ async function apiRequest(method, endpoint, data = null) {
 async function sendActiveUUIDToWebSite() {
   try {
     console.log("🔍 [Content Script] Extension'dan aktif UUID alınıyor...");
-    
+
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
         if (chrome.runtime.lastError) {
-          console.log("❌ [Content Script] Extension mesaj hatası:", chrome.runtime.lastError);
+          console.log(
+            "❌ [Content Script] Extension mesaj hatası:",
+            chrome.runtime.lastError
+          );
           reject(new Error("Extension bulunamadı"));
           return;
         }
-        
+
         if (response && response.uuid) {
-          console.log("✅ [Content Script] Extension'dan aktif UUID alındı:", response);
+          console.log(
+            "✅ [Content Script] Extension'dan aktif UUID alındı:",
+            response
+          );
           resolve(response);
         } else {
           console.log("❌ [Content Script] Extension'dan UUID alınamadı");
@@ -51,10 +66,9 @@ async function sendActiveUUIDToWebSite() {
         }
       });
     });
-    
+
     // Web sitesine UUID'yi gönder
     sendActiveUUIDToPage(response);
-    
   } catch (error) {
     console.log("❌ [Content Script] UUID alma hatası:", error.message);
   }
@@ -63,56 +77,74 @@ async function sendActiveUUIDToWebSite() {
 // Web sitesine aktif UUID'yi gönder
 function sendActiveUUIDToPage(uuidData) {
   try {
-    console.log("📤 [Content Script] Aktif UUID web sitesine gönderiliyor:", uuidData);
-    
+    console.log(
+      "📤 [Content Script] Aktif UUID web sitesine gönderiliyor:",
+      uuidData
+    );
+
     // Web sitesine event gönder
     window.dispatchEvent(
       new CustomEvent("extensionActiveUUIDSet", {
-        detail: { 
+        detail: {
           uuid: uuidData.uuid,
-          type: uuidData.type
-        }
+          type: uuidData.type,
+        },
       })
     );
-    
+
     // Global variable'a da yaz (backup)
     window.EXTENSION_ACTIVE_UUID = uuidData.uuid;
     window.EXTENSION_UUID_TYPE = uuidData.type;
     window.EXTENSION_UUID_TIMESTAMP = Date.now();
-    
-    console.log("✅ [Content Script] Aktif UUID web sitesine gönderildi:", uuidData);
+
+    console.log(
+      "✅ [Content Script] Aktif UUID web sitesine gönderildi:",
+      uuidData
+    );
   } catch (error) {
     console.error("❌ [Content Script] Web sitesine gönderme hatası:", error);
   }
 }
 
 // Web sitesinden gelen UUID'yi extension'a gönder
-async function sendUUIDToExtension(uuid, type = 'guest') {
+async function sendUUIDToExtension(uuid, type = "guest") {
   try {
-    console.log("📤 [Content Script] UUID extension'a gönderiliyor:", { uuid, type });
-    
-    const action = type === 'permanent' ? 'setPermanentUUID' : 'setGuestUUID';
-    const response = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ 
-        action: action, 
-        uuid: uuid 
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.log("❌ [Content Script] Extension mesaj hatası:", chrome.runtime.lastError);
-          reject(new Error("Extension bulunamadı"));
-          return;
-        }
-        
-        if (response && response.success) {
-          console.log("✅ [Content Script] UUID extension'a gönderildi:", { uuid, type });
-          resolve(true);
-        } else {
-          console.log("❌ [Content Script] UUID extension'a gönderilemedi");
-          reject(new Error("UUID kaydedilemedi"));
-        }
-      });
+    console.log("📤 [Content Script] UUID extension'a gönderiliyor:", {
+      uuid,
+      type,
     });
-    
+
+    const action = type === "permanent" ? "setPermanentUUID" : "setGuestUUID";
+    const response = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action: action,
+          uuid: uuid,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(
+              "❌ [Content Script] Extension mesaj hatası:",
+              chrome.runtime.lastError
+            );
+            reject(new Error("Extension bulunamadı"));
+            return;
+          }
+
+          if (response && response.success) {
+            console.log("✅ [Content Script] UUID extension'a gönderildi:", {
+              uuid,
+              type,
+            });
+            resolve(true);
+          } else {
+            console.log("❌ [Content Script] UUID extension'a gönderilemedi");
+            reject(new Error("UUID kaydedilemedi"));
+          }
+        }
+      );
+    });
+
     return response;
   } catch (error) {
     console.error("❌ [Content Script] Extension'a gönderme hatası:", error);
@@ -124,16 +156,19 @@ async function sendUUIDToExtension(uuid, type = 'guest') {
 async function addProductToMyList(productInfo) {
   try {
     console.log("🛒 [Content Script] Ürün ekleme başlatılıyor:", productInfo);
-    
+
     // Önce aktif UUID'yi al
     const uuidData = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
         if (chrome.runtime.lastError) {
-          console.log("❌ [Content Script] Extension mesaj hatası:", chrome.runtime.lastError);
+          console.log(
+            "❌ [Content Script] Extension mesaj hatası:",
+            chrome.runtime.lastError
+          );
           reject(new Error("Extension bulunamadı"));
           return;
         }
-        
+
         if (response && response.uuid) {
           console.log("✅ [Content Script] Aktif UUID alındı:", response);
           resolve(response);
@@ -143,22 +178,22 @@ async function addProductToMyList(productInfo) {
         }
       });
     });
-    
+
     // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
-    if (uuidData.type === 'guest') {
+    if (uuidData.type === "guest") {
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
         console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
         return false;
       }
     }
-    
+
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
     const result = await apiRequest("POST", "add-product", {
       ...productInfo,
       user_id: uuidData.uuid,
     });
-    
+
     if (result) {
       console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
       showSuccessMessage("Ürün Tüm Listeme eklendi!");
@@ -168,7 +203,6 @@ async function addProductToMyList(productInfo) {
       showErrorMessage("Ürün eklenirken hata oluştu!");
       return false;
     }
-    
   } catch (error) {
     console.error("❌ [Content Script] Ürün ekleme hatası:", error);
     showErrorMessage("Ürün eklenirken hata oluştu!");
@@ -176,12 +210,12 @@ async function addProductToMyList(productInfo) {
   }
 }
 
-            // Guest kullanıcılar için uyarı popup'ı
-            function showGuestWarningPopup() {
-              return new Promise((resolve) => {
-                // Popup container oluştur
-                const popup = document.createElement("div");
-                popup.style.cssText = `
+// Guest kullanıcılar için uyarı popup'ı
+function showGuestWarningPopup() {
+  return new Promise((resolve) => {
+    // Popup container oluştur
+    const popup = document.createElement("div");
+    popup.style.cssText = `
                   position: fixed;
                   top: 0;
                   left: 0;
@@ -195,9 +229,9 @@ async function addProductToMyList(productInfo) {
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 `;
 
-                // Popup content
-                const content = document.createElement("div");
-                content.style.cssText = `
+    // Popup content
+    const content = document.createElement("div");
+    content.style.cssText = `
                   background: white;
                   border-radius: 12px;
                   padding: 24px;
@@ -207,9 +241,9 @@ async function addProductToMyList(productInfo) {
                   text-align: center;
                 `;
 
-                // Icon
-                const icon = document.createElement("div");
-                icon.style.cssText = `
+    // Icon
+    const icon = document.createElement("div");
+    icon.style.cssText = `
                   width: 48px;
                   height: 48px;
                   background: #fef3c7;
@@ -219,42 +253,43 @@ async function addProductToMyList(productInfo) {
                   justify-content: center;
                   margin: 0 auto 16px;
                 `;
-                icon.innerHTML = `
+    icon.innerHTML = `
                   <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 `;
 
-                // Title
-                const title = document.createElement("h3");
-                title.style.cssText = `
+    // Title
+    const title = document.createElement("h3");
+    title.style.cssText = `
                   font-size: 18px;
                   font-weight: 600;
                   color: #1f2937;
                   margin: 0 0 12px;
                 `;
-                title.textContent = "Misafir Kullanıcı";
+    title.textContent = "Misafir Kullanıcı";
 
-                // Message
-                const message = document.createElement("p");
-                message.style.cssText = `
+    // Message
+    const message = document.createElement("p");
+    message.style.cssText = `
                   font-size: 14px;
                   color: #6b7280;
                   margin: 0 0 24px;
                   line-height: 1.5;
                 `;
-                message.textContent = "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
+    message.textContent =
+      "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
 
-                // Buttons container
-                const buttonsContainer = document.createElement("div");
-                buttonsContainer.style.cssText = `
+    // Buttons container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.cssText = `
                   display: flex;
                   gap: 12px;
                 `;
 
-                // Login button
-                const loginButton = document.createElement("button");
-                loginButton.style.cssText = `
+    // Login button
+    const loginButton = document.createElement("button");
+    loginButton.style.cssText = `
                   flex: 1;
                   background: #2563eb;
                   color: white;
@@ -266,19 +301,19 @@ async function addProductToMyList(productInfo) {
                   cursor: pointer;
                   transition: background 0.2s;
                 `;
-                loginButton.textContent = "Giriş Yap";
-                loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
-                loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
-                loginButton.onclick = () => {
-                  document.body.removeChild(popup);
-                  showLoginOrRegisterForm().then((result) => {
-                    resolve(result);
-                  });
-                };
+    loginButton.textContent = "Giriş Yap";
+    loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
+    loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
+    loginButton.onclick = () => {
+      document.body.removeChild(popup);
+      showLoginOrRegisterForm().then((result) => {
+        resolve(result);
+      });
+    };
 
-                // Continue as guest button
-                const guestButton = document.createElement("button");
-                guestButton.style.cssText = `
+    // Continue as guest button
+    const guestButton = document.createElement("button");
+    guestButton.style.cssText = `
                   flex: 1;
                   background: #f3f4f6;
                   color: #374151;
@@ -290,17 +325,17 @@ async function addProductToMyList(productInfo) {
                   cursor: pointer;
                   transition: background 0.2s;
                 `;
-                guestButton.textContent = "Misafir Devam Et";
-                guestButton.onmouseover = () => guestButton.style.background = "#e5e7eb";
-                guestButton.onmouseout = () => guestButton.style.background = "#f3f4f6";
-                guestButton.onclick = () => {
-                  document.body.removeChild(popup);
-                  resolve(true);
-                };
+    guestButton.textContent = "Misafir Devam Et";
+    guestButton.onmouseover = () => (guestButton.style.background = "#e5e7eb");
+    guestButton.onmouseout = () => (guestButton.style.background = "#f3f4f6");
+    guestButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(true);
+    };
 
-                // Cancel button
-                const cancelButton = document.createElement("button");
-                cancelButton.style.cssText = `
+    // Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.style.cssText = `
                   width: 100%;
                   background: transparent;
                   color: #6b7280;
@@ -312,36 +347,38 @@ async function addProductToMyList(productInfo) {
                   margin-top: 12px;
                   transition: background 0.2s;
                 `;
-                cancelButton.textContent = "İptal";
-                cancelButton.onmouseover = () => cancelButton.style.background = "#f9fafb";
-                cancelButton.onmouseout = () => cancelButton.style.background = "transparent";
-                cancelButton.onclick = () => {
-                  document.body.removeChild(popup);
-                  resolve(false);
-                };
+    cancelButton.textContent = "İptal";
+    cancelButton.onmouseover = () =>
+      (cancelButton.style.background = "#f9fafb");
+    cancelButton.onmouseout = () =>
+      (cancelButton.style.background = "transparent");
+    cancelButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(false);
+    };
 
-                // Assemble popup
-                content.appendChild(icon);
-                content.appendChild(title);
-                content.appendChild(message);
-                buttonsContainer.appendChild(loginButton);
-                buttonsContainer.appendChild(guestButton);
-                content.appendChild(buttonsContainer);
-                content.appendChild(cancelButton);
-                popup.appendChild(content);
+    // Assemble popup
+    content.appendChild(icon);
+    content.appendChild(title);
+    content.appendChild(message);
+    buttonsContainer.appendChild(loginButton);
+    buttonsContainer.appendChild(guestButton);
+    content.appendChild(buttonsContainer);
+    content.appendChild(cancelButton);
+    popup.appendChild(content);
 
-                // Add to page
-                document.body.appendChild(popup);
+    // Add to page
+    document.body.appendChild(popup);
 
-                // Close on outside click
-                popup.onclick = (e) => {
-                  if (e.target === popup) {
-                    document.body.removeChild(popup);
-                    resolve(false);
-                  }
-                };
-              });
-            }
+    // Close on outside click
+    popup.onclick = (e) => {
+      if (e.target === popup) {
+        document.body.removeChild(popup);
+        resolve(false);
+      }
+    };
+  });
+}
 
 // Login veya Register form popup'ı
 function showLoginOrRegisterForm() {
@@ -393,8 +430,6 @@ function showLoginOrRegisterForm() {
       gap: 16px;
     `;
 
-
-
     // Email input
     const emailLabel = document.createElement("label");
     emailLabel.style.cssText = `
@@ -417,8 +452,8 @@ function showLoginOrRegisterForm() {
       outline: none;
     `;
     emailInput.placeholder = "ornek@email.com";
-    emailInput.onfocus = () => emailInput.style.borderColor = "#2563eb";
-    emailInput.onblur = () => emailInput.style.borderColor = "#d1d5db";
+    emailInput.onfocus = () => (emailInput.style.borderColor = "#2563eb");
+    emailInput.onblur = () => (emailInput.style.borderColor = "#d1d5db");
 
     // Password input
     const passwordLabel = document.createElement("label");
@@ -442,8 +477,8 @@ function showLoginOrRegisterForm() {
       outline: none;
     `;
     passwordInput.placeholder = "Şifrenizi girin";
-    passwordInput.onfocus = () => passwordInput.style.borderColor = "#2563eb";
-    passwordInput.onblur = () => passwordInput.style.borderColor = "#d1d5db";
+    passwordInput.onfocus = () => (passwordInput.style.borderColor = "#2563eb");
+    passwordInput.onblur = () => (passwordInput.style.borderColor = "#d1d5db");
 
     // Error message
     const errorMessage = document.createElement("div");
@@ -479,8 +514,8 @@ function showLoginOrRegisterForm() {
       transition: background 0.2s;
     `;
     loginButton.textContent = "Giriş Yap";
-    loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
-    loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
+    loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
+    loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
 
     // Register button
     const registerButton = document.createElement("button");
@@ -498,8 +533,10 @@ function showLoginOrRegisterForm() {
       transition: background 0.2s;
     `;
     registerButton.textContent = "Kayıt Ol";
-    registerButton.onmouseover = () => registerButton.style.background = "#047857";
-    registerButton.onmouseout = () => registerButton.style.background = "#059669";
+    registerButton.onmouseover = () =>
+      (registerButton.style.background = "#047857");
+    registerButton.onmouseout = () =>
+      (registerButton.style.background = "#059669");
 
     // Cancel button
     const cancelButton = document.createElement("button");
@@ -518,8 +555,9 @@ function showLoginOrRegisterForm() {
       margin-top: 12px;
     `;
     cancelButton.textContent = "İptal";
-    cancelButton.onmouseover = () => cancelButton.style.background = "#e5e7eb";
-    cancelButton.onmouseout = () => cancelButton.style.background = "#f3f4f6";
+    cancelButton.onmouseover = () =>
+      (cancelButton.style.background = "#e5e7eb");
+    cancelButton.onmouseout = () => (cancelButton.style.background = "#f3f4f6");
     cancelButton.onclick = () => {
       document.body.removeChild(popup);
       resolve(false);
@@ -545,7 +583,7 @@ function showLoginOrRegisterForm() {
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(['guest_uuid'], (result) => {
+          chrome.storage.local.get(["guest_uuid"], (result) => {
             resolve(result.guest_uuid);
           });
         });
@@ -554,14 +592,17 @@ function showLoginOrRegisterForm() {
         const result = await apiRequest("POST", "login", {
           email: email,
           password: password,
-          guest_user_id: guestUUID || null
+          guest_user_id: guestUUID || null,
         });
 
         if (result && result.uuid) {
           // Permanent UUID'yi extension'a set et
-          await sendUUIDToExtension(result.uuid, 'permanent');
-          console.log("✅ [Content Script] Login başarılı, permanent UUID set edildi:", result.uuid);
-          
+          await sendUUIDToExtension(result.uuid, "permanent");
+          console.log(
+            "✅ [Content Script] Login başarılı, permanent UUID set edildi:",
+            result.uuid
+          );
+
           document.body.removeChild(popup);
           showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
           resolve(true);
@@ -572,7 +613,6 @@ function showLoginOrRegisterForm() {
           loginButton.disabled = false;
           registerButton.disabled = false;
         }
-
       } catch (error) {
         console.error("❌ [Content Script] Login hatası:", error);
         errorMessage.textContent = "Bağlantı hatası";
@@ -609,7 +649,7 @@ function showLoginOrRegisterForm() {
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(['guest_uuid'], (result) => {
+          chrome.storage.local.get(["guest_uuid"], (result) => {
             resolve(result.guest_uuid);
           });
         });
@@ -618,14 +658,17 @@ function showLoginOrRegisterForm() {
         const result = await apiRequest("POST", "register", {
           email: email,
           password: password,
-          guest_user_id: guestUUID || null
+          guest_user_id: guestUUID || null,
         });
 
         if (result && result.uuid) {
           // Permanent UUID'yi extension'a set et
-          await sendUUIDToExtension(result.uuid, 'permanent');
-          console.log("✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:", result.uuid);
-          
+          await sendUUIDToExtension(result.uuid, "permanent");
+          console.log(
+            "✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:",
+            result.uuid
+          );
+
           document.body.removeChild(popup);
           showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
           resolve(true);
@@ -636,7 +679,6 @@ function showLoginOrRegisterForm() {
           registerButton.textContent = "Kayıt Ol";
           registerButton.disabled = false;
         }
-
       } catch (error) {
         console.error("❌ [Content Script] Kayıt hatası:", error);
         errorMessage.textContent = "Bağlantı hatası";
@@ -697,7 +739,7 @@ function showSuccessMessage(message) {
     animation: slideIn 0.3s ease-out;
   `;
   notification.textContent = message;
-  
+
   // CSS animation
   const style = document.createElement("style");
   style.textContent = `
@@ -707,9 +749,9 @@ function showSuccessMessage(message) {
     }
   `;
   document.head.appendChild(style);
-  
+
   document.body.appendChild(notification);
-  
+
   // Remove after 3 seconds
   setTimeout(() => {
     if (document.body.contains(notification)) {
@@ -736,9 +778,9 @@ function showErrorMessage(message) {
     animation: slideIn 0.3s ease-out;
   `;
   notification.textContent = message;
-  
+
   document.body.appendChild(notification);
-  
+
   // Remove after 3 seconds
   setTimeout(() => {
     if (document.body.contains(notification)) {
@@ -751,51 +793,75 @@ function showErrorMessage(message) {
 window.addEventListener("message", (event) => {
   // Sadece aynı origin'den gelen mesajları kabul et
   if (event.source !== window) return;
-  
+
   if (event.data.type === "SET_GUEST_UUID") {
-    console.log("📨 [Content Script] Web sitesinden Guest UUID mesajı alındı:", event.data.uuid);
-    sendUUIDToExtension(event.data.uuid, 'guest');
+    console.log(
+      "📨 [Content Script] Web sitesinden Guest UUID mesajı alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "guest");
   }
-  
+
   if (event.data.type === "SET_PERMANENT_UUID") {
-    console.log("📨 [Content Script] Web sitesinden Permanent UUID mesajı alındı:", event.data.uuid);
-    sendUUIDToExtension(event.data.uuid, 'permanent');
+    console.log(
+      "📨 [Content Script] Web sitesinden Permanent UUID mesajı alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "permanent");
   }
-  
+
   if (event.data.type === "GET_ACTIVE_UUID") {
     console.log("📨 [Content Script] Web sitesinden aktif UUID isteği alındı");
     sendActiveUUIDToWebSite();
   }
-  
+
   if (event.data.type === "ADD_PRODUCT") {
-    console.log("📨 [Content Script] Web sitesinden ürün ekleme isteği alındı:", event.data.product);
+    console.log(
+      "📨 [Content Script] Web sitesinden ürün ekleme isteği alındı:",
+      event.data.product
+    );
     addProductToMyList(event.data.product);
   }
-  
-  if (event.data.type === "SEND_PERMANENT_UUID" && event.data.source === "web-site") {
-    console.log("📨 [Content Script] Web sitesinden permanent UUID alındı:", event.data.uuid);
-    sendUUIDToExtension(event.data.uuid, 'permanent');
+
+  if (
+    event.data.type === "SEND_PERMANENT_UUID" &&
+    event.data.source === "web-site"
+  ) {
+    console.log(
+      "📨 [Content Script] Web sitesinden permanent UUID alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "permanent");
   }
 });
 
 // Background script'ten gelen mesajları dinle
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "guestUUIDChanged") {
-    console.log("📨 [Content Script] Background'dan Guest UUID değişikliği:", request.uuid);
-    sendActiveUUIDToPage({ uuid: request.uuid, type: 'guest' });
+    console.log(
+      "📨 [Content Script] Background'dan Guest UUID değişikliği:",
+      request.uuid
+    );
+    sendActiveUUIDToPage({ uuid: request.uuid, type: "guest" });
   }
-  
+
   if (request.action === "permanentUUIDChanged") {
-    console.log("📨 [Content Script] Background'dan Permanent UUID değişikliği:", request.uuid);
-    sendActiveUUIDToPage({ uuid: request.uuid, type: 'permanent' });
+    console.log(
+      "📨 [Content Script] Background'dan Permanent UUID değişikliği:",
+      request.uuid
+    );
+    sendActiveUUIDToPage({ uuid: request.uuid, type: "permanent" });
   }
-  
+
   if (request.action === "loginStatusChanged") {
-    console.log("📨 [Content Script] Background'dan login status değişikliği:", request.isLoggedIn);
+    console.log(
+      "📨 [Content Script] Background'dan login status değişikliği:",
+      request.isLoggedIn
+    );
     // Web sitesine login status değişikliğini bildir
     window.dispatchEvent(
       new CustomEvent("extensionLoginStatusChanged", {
-        detail: { isLoggedIn: request.isLoggedIn }
+        detail: { isLoggedIn: request.isLoggedIn },
       })
     );
   }
@@ -815,11 +881,11 @@ function getProductInfo() {
     });
 
     // Ürün adı
-    let productName = 
-      metaTags["og:title"] || 
-      metaTags["twitter:title"] || 
-      metaTags.title || 
-      document.title || 
+    let productName =
+      metaTags["og:title"] ||
+      metaTags["twitter:title"] ||
+      metaTags.title ||
+      document.title ||
       "Ürün";
 
     // Fiyat
@@ -829,16 +895,19 @@ function getProductInfo() {
       '[class*="fiyat"]',
       '[class*="cost"]',
       '[class*="amount"]',
-      'span',
-      'div',
-      'p'
+      "span",
+      "div",
+      "p",
     ];
 
     for (const selector of priceSelectors) {
       const elements = document.querySelectorAll(selector);
       for (const element of elements) {
         const text = element.textContent.trim();
-        if (text.match(/[\d.,]+\s*(₺|TL|\$|€)/) || text.match(/(₺|TL|\$|€)\s*[\d.,]+/)) {
+        if (
+          text.match(/[\d.,]+\s*(₺|TL|\$|€)/) ||
+          text.match(/(₺|TL|\$|€)\s*[\d.,]+/)
+        ) {
           price = text.replace(/[^\d.,]/g, "").trim();
           break;
         }
@@ -847,17 +916,19 @@ function getProductInfo() {
     }
 
     // Resim
-    let imageUrl = 
-      metaTags["og:image"] || 
-      metaTags["twitter:image"] || 
-      metaTags.image || 
-      "";
+    let imageUrl =
+      metaTags["og:image"] || metaTags["twitter:image"] || metaTags.image || "";
 
     if (!imageUrl) {
       const images = document.querySelectorAll("img");
       for (const img of images) {
         const src = img.src || img.getAttribute("data-src");
-        if (src && src.length > 100 && !src.includes("logo") && !src.includes("icon")) {
+        if (
+          src &&
+          src.length > 100 &&
+          !src.includes("logo") &&
+          !src.includes("icon")
+        ) {
           imageUrl = src;
           break;
         }
@@ -868,8 +939,8 @@ function getProductInfo() {
       name: productName,
       price: price,
       image_url: imageUrl,
-      product_url: window.location.href,
-      site: window.location.hostname
+      url: window.location.href,
+      site: window.location.hostname,
     };
   } catch (error) {
     console.error("❌ [Content Script] Ürün bilgisi çekme hatası:", error);
@@ -877,8 +948,8 @@ function getProductInfo() {
       name: "Ürün",
       price: "",
       image_url: "",
-      product_url: window.location.href,
-      site: window.location.hostname
+      url: window.location.href,
+      site: window.location.hostname,
     };
   }
 }
@@ -891,9 +962,9 @@ function createAddToListButton() {
   }
 
   // Ana sayfa kontrolü - ana sayfada buton gösterme
-  const isHomePage = 
-    window.location.pathname === "/" || 
-    window.location.pathname === "/home" || 
+  const isHomePage =
+    window.location.pathname === "/" ||
+    window.location.pathname === "/home" ||
     window.location.pathname === "/anasayfa" ||
     document.title.toLowerCase().includes("ana sayfa") ||
     document.title.toLowerCase().includes("homepage");
@@ -903,10 +974,19 @@ function createAddToListButton() {
   }
 
   // İlgili buton var mı kontrol et
-  const relevantButtons = Array.from(document.querySelectorAll("button, a, input[type='button'], div[role='button']"));
-  const hasRelevantButton = relevantButtons.some(btn => {
+  const relevantButtons = Array.from(
+    document.querySelectorAll(
+      "button, a, input[type='button'], div[role='button']"
+    )
+  );
+  const hasRelevantButton = relevantButtons.some((btn) => {
     const text = (btn.innerText || btn.value || "").toLowerCase();
-    return text.includes("sepete ekle") || text.includes("add to cart") || text.includes("buy") || text.includes("satın al");
+    return (
+      text.includes("sepete ekle") ||
+      text.includes("add to cart") ||
+      text.includes("buy") ||
+      text.includes("satın al")
+    );
   });
 
   if (!hasRelevantButton) {
@@ -942,7 +1022,7 @@ function createAddToListButton() {
       <span>Tüm Listeme Ekle</span>
     </div>
   `;
-  
+
   addButton.style.cssText = `
     background: #2563eb;
     color: white;
@@ -969,7 +1049,7 @@ function createAddToListButton() {
       <span>Listeyi Gör</span>
     </div>
   `;
-  
+
   viewButton.style.cssText = `
     background: #f59e0b;
     color: white;
@@ -989,7 +1069,7 @@ function createAddToListButton() {
   buttonContainer.addEventListener("mouseenter", () => {
     buttonContainer.style.marginRight = "0px";
   });
-  
+
   buttonContainer.addEventListener("mouseleave", () => {
     buttonContainer.style.marginRight = "-200px";
   });
@@ -1000,20 +1080,19 @@ function createAddToListButton() {
       // Buton durumunu güncelle
       addButton.disabled = true;
       addButton.querySelector("span").textContent = "Ekleniyor...";
-      
+
       // Ürün bilgilerini al
       const productInfo = getProductInfo();
       console.log("🛒 [Content Script] Ürün bilgileri:", productInfo);
-      
+
       // Ürün ekleme fonksiyonunu çağır
       const success = await addProductToMyList(productInfo);
-      
+
       if (success) {
         console.log("✅ [Content Script] Ürün başarıyla eklendi");
       } else {
         console.log("❌ [Content Script] Ürün eklenemedi");
       }
-      
     } catch (error) {
       console.error("❌ [Content Script] Ürün ekleme hatası:", error);
       showErrorMessage("Ürün eklenirken hata oluştu!");
@@ -1035,20 +1114,26 @@ function createAddToListButton() {
 
   // Sayfaya ekle
   document.body.appendChild(buttonContainer);
-  console.log("✅ [Content Script] 'Tüm Listeme Ekle' ve 'Listeyi Gör' butonları eklendi");
+  console.log(
+    "✅ [Content Script] 'Tüm Listeme Ekle' ve 'Listeyi Gör' butonları eklendi"
+  );
 }
 
 // Sayfa yüklendiğinde aktif UUID'yi gönder ve buton ekle
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 [Content Script] Sayfa yüklendi, aktif UUID gönderiliyor...");
+    console.log(
+      "🚀 [Content Script] Sayfa yüklendi, aktif UUID gönderiliyor..."
+    );
     setTimeout(() => {
       sendActiveUUIDToWebSite();
       createAddToListButton();
     }, 1000); // 1 saniye bekle
   });
 } else {
-  console.log("🚀 [Content Script] Sayfa zaten yüklü, aktif UUID gönderiliyor...");
+  console.log(
+    "🚀 [Content Script] Sayfa zaten yüklü, aktif UUID gönderiliyor..."
+  );
   setTimeout(() => {
     sendActiveUUIDToWebSite();
     createAddToListButton();
@@ -1056,12 +1141,15 @@ if (document.readyState === "loading") {
 }
 
 // Web sitesine helper fonksiyonları ekle
-window.postMessage({
-  type: "EXTENSION_READY",
-  data: {
-    hasExtension: true,
-    extensionId: chrome.runtime.id
-  }
-}, "*");
+window.postMessage(
+  {
+    type: "EXTENSION_READY",
+    data: {
+      hasExtension: true,
+      extensionId: chrome.runtime.id,
+    },
+  },
+  "*"
+);
 
 console.log("🌐 [Content Script] Hazır");

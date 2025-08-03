@@ -52,21 +52,21 @@ app.get("/api/get-products", async (req, res) => {
 // POST /api/add-product
 app.post("/api/add-product", async (req, res) => {
   try {
-    const { name, price, image_url, product_url, site } = req.body;
+    const { name, price, image_url, url, site, user_id } = req.body;
 
-    if (!name || !product_url || !site) {
+    if (!name || !url || !site || !user_id) {
       return res.status(400).json({
-        error: "Missing required fields: name, product_url, site",
+        error: "Missing required fields: name, url, site, user_id",
       });
     }
 
     const query = `
-      INSERT INTO products (name, price, image_url, product_url, site)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, name, price, image_url, product_url, site, created_at
+      INSERT INTO products (name, price, image_url, url, site, user_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, name, price, image_url, url, site, user_id, created_at
     `;
 
-    const values = [name, price || null, image_url || null, product_url, site];
+    const values = [name, price || null, image_url || null, url, site, user_id];
 
     const result = await pool.query(query, values);
     const newProduct = result.rows[0];
@@ -281,9 +281,15 @@ app.get("/api/health", (req, res) => {
 // Initialize database tables
 async function initDatabase() {
   try {
+    // Drop existing tables if they exist
+    await pool.query("DROP TABLE IF EXISTS products CASCADE");
+    await pool.query("DROP TABLE IF EXISTS users CASCADE");
+
+    console.log("🗑️ Existing tables dropped");
+
     // Create users table
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         uuid VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -297,7 +303,7 @@ async function initDatabase() {
 
     // Create products table
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS products (
+      CREATE TABLE products (
         id SERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         name TEXT NOT NULL,
@@ -311,18 +317,10 @@ async function initDatabase() {
     `);
 
     // Create indexes
-    await pool.query(
-      "CREATE INDEX IF NOT EXISTS idx_users_uuid ON users(uuid)"
-    );
-    await pool.query(
-      "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"
-    );
-    await pool.query(
-      "CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)"
-    );
-    await pool.query(
-      "CREATE INDEX IF NOT EXISTS idx_products_user_id ON products(user_id)"
-    );
+    await pool.query("CREATE INDEX idx_users_uuid ON users(uuid)");
+    await pool.query("CREATE INDEX idx_users_email ON users(email)");
+    await pool.query("CREATE INDEX idx_users_role ON users(role)");
+    await pool.query("CREATE INDEX idx_products_user_id ON products(user_id)");
 
     console.log("✅ Database tables initialized");
   } catch (error) {
