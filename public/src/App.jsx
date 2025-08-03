@@ -103,55 +103,62 @@ function App() {
     })();
 
     // Extension'dan UUID event'ini dinle
-    const handleExtensionUUID = (event) => {
+    const handleExtensionUserId = (event) => {
       console.log(
-        "📨 [Web Site] extensionUUIDWritten event alındı:",
-        event.detail.uuid
+        "📨 [Web Site] extensionUserIdSet event alındı:",
+        event.detail.userId
       );
 
       // Eğer aynı UUID zaten set edilmişse tekrar işlem yapma
-      if (currentUserId === event.detail.uuid) {
+      if (currentUserId === event.detail.userId) {
         console.log("⚠️ [Event] Aynı UUID zaten set edilmiş, işlem yapılmıyor");
         return;
       }
 
-      setCurrentUserId(event.detail.uuid);
-      console.log("✅ [Event] UUID set edildi:", event.detail.uuid);
+      setCurrentUserId(event.detail.userId);
+      console.log("✅ [Event] UUID set edildi:", event.detail.userId);
     };
 
-    window.addEventListener("extensionUUIDWritten", handleExtensionUUID);
+    window.addEventListener("extensionUserIdSet", handleExtensionUserId);
 
     // Basit: UUID hazır olduğunda ürünleri çek
     console.log("🚀 [Basit] Sayfa yüklendi, UUID kontrol ediliyor...");
-    
-    // ExtensionSharedDBReady event'ini bekle
-    const waitForExtensionSharedDB = () => {
+
+    // Extension hazır olmasını bekle
+    const waitForExtension = () => {
       return new Promise((resolve) => {
-        if (window.ExtensionSharedDB) {
-          console.log("✅ [Basit] ExtensionSharedDB zaten mevcut");
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+          console.log("✅ [Basit] Extension zaten mevcut");
           resolve();
           return;
         }
 
-        console.log("⏳ [Basit] ExtensionSharedDBReady event'i bekleniyor...");
-        const handleReady = () => {
-          console.log("✅ [Basit] ExtensionSharedDBReady event'i alındı");
-          window.removeEventListener("ExtensionSharedDBReady", handleReady);
-          resolve();
+        console.log("⏳ [Basit] Extension hazır olması bekleniyor...");
+        
+        // Extension hazır olmasını kontrol et
+        const checkExtension = () => {
+          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+            console.log("✅ [Basit] Extension hazır oldu");
+            resolve();
+            return;
+          }
+          
+          // 3 saniye daha bekle
+          setTimeout(checkExtension, 1000);
         };
-        window.addEventListener("ExtensionSharedDBReady", handleReady);
+        
+        checkExtension();
 
         // Timeout: 5 saniye sonra devam et
         setTimeout(() => {
-          console.log("⚠️ [Basit] ExtensionSharedDBReady timeout, devam ediliyor");
-          window.removeEventListener("ExtensionSharedDBReady", handleReady);
+          console.log("⚠️ [Basit] Extension timeout, devam ediliyor");
           resolve();
         }, 5000);
       });
     };
 
-    // ExtensionSharedDB hazır olduğunda UUID kontrol et
-    waitForExtensionSharedDB().then(async () => {
+    // Extension hazır olduğunda UUID kontrol et
+    waitForExtension().then(async () => {
       try {
         const userId = await getUserId();
         console.log("🚀 [Basit] getUserId() sonucu:", userId);
@@ -167,7 +174,7 @@ function App() {
     });
 
     return () => {
-      window.removeEventListener("extensionUUIDWritten", handleExtensionUUID);
+      window.removeEventListener("extensionUserIdSet", handleExtensionUserId);
     };
   }, []);
 
@@ -197,25 +204,57 @@ function App() {
     }
   };
 
-  // IndexedDB Debug fonksiyonu
-  const handleIndexedDBDebug = async () => {
-    console.log("🔍 [IndexedDB Debug] Başlatılıyor...");
-    console.log(
-      "🔍 [IndexedDB Debug] ExtensionSharedDB:",
-      window.ExtensionSharedDB
-    );
+  // Storage Debug fonksiyonu
+  const handleStorageDebug = async () => {
+    console.log("🔍 [Storage Debug] Başlatılıyor...");
+    console.log("🔍 [Storage Debug] Chrome API:", typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
 
-    if (window.ExtensionSharedDB) {
-      try {
-        const allData = await window.ExtensionSharedDB.debugListAll();
-        console.log("🔍 [IndexedDB Debug] Tüm veriler:", allData);
-        alert("IndexedDB Debug: " + JSON.stringify(allData, null, 2));
-      } catch (error) {
-        console.error("🔍 [IndexedDB Debug] Hata:", error);
-        alert("IndexedDB Debug Hatası: " + error.message);
+    try {
+      // Extension'dan storage bilgisi al
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        const response = await new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.log("❌ [Storage Debug] Extension mesaj hatası:", chrome.runtime.lastError);
+              reject(new Error("Extension bulunamadı"));
+              return;
+            }
+            
+            console.log("🔍 [Storage Debug] Extension'dan UUID:", response?.userId);
+            resolve(response?.userId);
+          });
+        });
+        
+        // localStorage'dan da oku
+        const localUserId = localStorage.getItem("extension_user_id");
+        console.log("🔍 [Storage Debug] localStorage UUID:", localUserId);
+        
+        const debugInfo = {
+          extension: response,
+          localStorage: localUserId,
+          currentUserId: currentUserId,
+          hasExtension: true,
+          extensionId: chrome.runtime.id
+        };
+        
+        console.log("🔍 [Storage Debug] Tüm bilgiler:", debugInfo);
+        alert("Storage Debug: " + JSON.stringify(debugInfo, null, 2));
+      } else {
+        // Extension yok, sadece localStorage kontrol et
+        const localUserId = localStorage.getItem("extension_user_id");
+        const debugInfo = {
+          extension: null,
+          localStorage: localUserId,
+          currentUserId: currentUserId,
+          hasExtension: false
+        };
+        
+        console.log("🔍 [Storage Debug] Extension yok, localStorage:", debugInfo);
+        alert("Storage Debug (Extension yok): " + JSON.stringify(debugInfo, null, 2));
       }
-    } else {
-      alert("ExtensionSharedDB yok!");
+    } catch (error) {
+      console.error("🔍 [Storage Debug] Hata:", error);
+      alert("Storage Debug Hatası: " + error.message);
     }
   };
 
@@ -409,7 +448,7 @@ function App() {
     );
   }
 
-  // Kullanıcı ID'sini al veya oluştur - IndexedDB Shared Storage
+  // Kullanıcı ID'sini al veya oluştur - Chrome Extension Storage API
   async function getUserId() {
     // Eğer zaten çalışıyorsa bekle
     if (isGettingUserId) {
@@ -424,58 +463,81 @@ function App() {
     setIsGettingUserId(true);
 
     try {
-      // ExtensionSharedDBReady event'ini bekle (max 3 saniye)
-      if (!window.ExtensionSharedDB) {
-        console.log(
-          "⏳ [getUserId] ExtensionSharedDBReady event'i bekleniyor..."
-        );
-        await new Promise((resolve) => {
-          const handleReady = () => {
-            console.log("✅ [getUserId] ExtensionSharedDBReady event'i alındı");
-            window.removeEventListener("ExtensionSharedDBReady", handleReady);
-            resolve();
-          };
-          window.addEventListener("ExtensionSharedDBReady", handleReady);
-
-          // Timeout: 3 saniye sonra devam et
-          setTimeout(() => {
-            console.log(
-              "⚠️ [getUserId] ExtensionSharedDBReady timeout, devam ediliyor"
-            );
-            window.removeEventListener("ExtensionSharedDBReady", handleReady);
-            resolve();
-          }, 3000);
-        });
-      }
-
       let userId = null;
 
-      // IndexedDB'den UUID'yi oku
-      if (window.ExtensionSharedDB) {
-        console.log("🔍 [Web Site] IndexedDB helper mevcut, UUID okunuyor...");
-        userId = await window.ExtensionSharedDB.getUUID();
-        console.log("🔍 [Web Site] IndexedDB'den okunan UUID:", userId);
-
-        if (userId) {
-          console.log("✅ [Web Site] UUID IndexedDB'den alındı:", userId);
-          setCurrentUserId(userId);
-          setIsGettingUserId(false);
-          return userId;
-        } else {
-          console.log("❌ [Web Site] IndexedDB'den UUID okunamadı (null)");
+      // 1. Extension'dan UUID'yi al (Chrome Storage API)
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        console.log("🔍 [Web Site] Extension mevcut, UUID isteniyor...");
+        try {
+          const response = await new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
+              if (chrome.runtime.lastError) {
+                console.log("❌ [Web Site] Extension mesaj hatası:", chrome.runtime.lastError);
+                reject(new Error("Extension bulunamadı"));
+                return;
+              }
+              
+              if (response && response.userId) {
+                console.log("✅ [Web Site] Extension'dan UUID alındı:", response.userId);
+                resolve(response.userId);
+              } else {
+                console.log("❌ [Web Site] Extension'dan UUID alınamadı");
+                reject(new Error("UUID bulunamadı"));
+              }
+            });
+          });
+          
+          userId = response;
+        } catch (error) {
+          console.log("❌ [Web Site] Extension mesajlaşma hatası:", error.message);
         }
-      } else {
-        console.log("⚠️ [Web Site] IndexedDB helper yüklenmemiş");
       }
 
-      // Hiç UUID yok, yeni oluştur
-      userId = generateUUID();
-      console.log("👤 [Tüm Listem] Yeni kullanıcı ID oluşturuldu:", userId);
+      // 2. Extension yoksa localStorage'dan oku (backup)
+      if (!userId) {
+        const backupUserId = localStorage.getItem("extension_user_id");
+        if (backupUserId) {
+          console.log("🔄 [Web Site] Fallback: localStorage'dan UUID okundu:", backupUserId);
+          userId = backupUserId;
+        }
+      }
 
-      // IndexedDB'ye yaz (shared storage)
-      if (window.ExtensionSharedDB) {
-        await window.ExtensionSharedDB.setUUID(userId);
-        console.log("✅ [Web Site] Yeni UUID IndexedDB'ye yazıldı:", userId);
+      // 3. Hiç UUID yoksa yeni oluştur
+      if (!userId) {
+        userId = generateUUID();
+        console.log("👤 [Web Site] Yeni kullanıcı ID oluşturuldu:", userId);
+        
+        // Extension varsa oraya da yaz
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+          try {
+            await new Promise((resolve, reject) => {
+              chrome.runtime.sendMessage({ 
+                action: "setUserId", 
+                userId: userId 
+              }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.log("❌ [Web Site] Extension mesaj hatası:", chrome.runtime.lastError);
+                  reject(new Error("Extension bulunamadı"));
+                  return;
+                }
+                
+                if (response && response.success) {
+                  console.log("✅ [Web Site] UUID extension'a yazıldı:", userId);
+                  resolve(true);
+                } else {
+                  console.log("❌ [Web Site] UUID extension'a yazılamadı");
+                  reject(new Error("UUID kaydedilemedi"));
+                }
+              });
+            });
+          } catch (error) {
+            console.log("❌ [Web Site] Extension'a yazma hatası:", error.message);
+          }
+        }
+        
+        // localStorage'a da yaz (backup)
+        localStorage.setItem("extension_user_id", userId);
+        console.log("✅ [Web Site] UUID localStorage'a yazıldı (backup):", userId);
       }
 
       setCurrentUserId(userId);
@@ -953,10 +1015,10 @@ function App() {
                       Test
                     </button>
                     <button
-                      onClick={handleIndexedDBDebug}
+                      onClick={handleStorageDebug}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
                     >
-                      IndexedDB Debug
+                      Storage Debug
                     </button>
                   </div>
                 </div>

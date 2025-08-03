@@ -1,106 +1,132 @@
-// Universal Background script for Tüm Listem Extension
-// Browser API Detection
-const browserAPI = (() => {
-  if (typeof chrome !== "undefined" && chrome.runtime) {
-    return chrome;
-  } else if (typeof browser !== "undefined" && browser.runtime) {
-    return browser;
-  } else {
-    return null;
-  }
-})();
+// Background Script - Extension Storage ve Message Handling
+console.log("🔄 [Background] Yüklendi");
 
-if (browserAPI) {
-  // Extension yüklendiğinde
-  browserAPI.runtime.onInstalled.addListener(() => {
-    const browserName = browserAPI === chrome ? "Chrome/Edge" : "Firefox";
-    console.log(`🚀 [Tüm Listem] Extension yüklendi! (${browserName})`);
+// Extension storage key
+const STORAGE_KEY = "extension_user_id";
+
+// UUID oluştur
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
   });
+}
 
-  // Content script'ten gelen mesajları dinle
-  browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "getUserId") {
-      // Backup sistemi ile UUID'yi al
-      browserAPI.storage.local.get(
-        ["tum_listem_user_id", "tum_listem_backup_uuid"],
-        (result) => {
-          let foundUUID = result.tum_listem_user_id;
-          const backupUUID = result.tum_listem_backup_uuid;
-
-          console.log("🔍 [Background] UUID Kontrolü:");
-          console.log("  Ana UUID:", foundUUID);
-          console.log("  Backup UUID:", backupUUID);
-
-          // Ana UUID yoksa backup'tan dene
-          if (!foundUUID && backupUUID) {
-            console.log(
-              "🔄 [Background] Ana UUID yok, backup UUID kullanılıyor:",
-              backupUUID
-            );
-            foundUUID = backupUUID;
-
-            // Backup'ı ana UUID'ye restore et
-            browserAPI.storage.local.set(
-              { tum_listem_user_id: foundUUID },
-              () => {
-                console.log("✅ [Background] Backup UUID restore edildi");
-              }
-            );
-          }
-
-          // Ana UUID var ama backup yoksa backup oluştur
-          if (foundUUID && !backupUUID) {
-            console.log("💾 [Background] Backup UUID oluşturuluyor:", foundUUID);
-            browserAPI.storage.local.set({ tum_listem_backup_uuid: foundUUID });
-          }
-
-          // Ana UUID ve backup farklıysa, backup'ı kullan (eski verileri korumak için)
-          if (foundUUID && backupUUID && foundUUID !== backupUUID) {
-            console.log("⚠️ [Background] UUID uyumsuzluğu tespit edildi!");
-            console.log("  Ana UUID:", foundUUID);
-            console.log("  Backup UUID:", backupUUID);
-            console.log("🔄 [Background] Backup UUID kullanılıyor (eski verileri korumak için):", backupUUID);
-            foundUUID = backupUUID;
-            // Backup'ı ana UUID'ye restore et
-            browserAPI.storage.local.set(
-              { tum_listem_user_id: foundUUID },
-              () => {
-                console.log("✅ [Background] Backup UUID ana UUID olarak restore edildi");
-              }
-            );
-          }
-
-          console.log("👤 [Background] UUID döndürülüyor:", foundUUID);
-          sendResponse({ userId: foundUUID });
-        }
-      );
-      return true; // Async response için
-    }
-
-    if (request.action === "setUserId") {
-      browserAPI.storage.local.set(
-        { tum_listem_user_id: request.userId },
-        () => {
-          // Backup'ı da güncelle
-          browserAPI.storage.local.set({ tum_listem_backup_uuid: request.userId });
-          console.log("💾 [Background] UUID ve backup güncellendi:", request.userId);
-          sendResponse({ success: true });
-        }
-      );
-      return true; // Async response için
-    }
-  });
-
-  // Extension icon'a tıklandığında
-  if (browserAPI.action) {
-    // Manifest V3 (Chrome)
-    browserAPI.action.onClicked.addListener((tab) => {
-      browserAPI.tabs.sendMessage(tab.id, { action: "showProductInfo" });
-    });
-  } else if (browserAPI.browserAction) {
-    // Manifest V2 (Firefox)
-    browserAPI.browserAction.onClicked.addListener((tab) => {
-      browserAPI.tabs.sendMessage(tab.id, { action: "showProductInfo" });
-    });
+// UUID'yi kaydet
+async function setUserId(userId) {
+  try {
+    await chrome.storage.local.set({ [STORAGE_KEY]: userId });
+    console.log("✅ [Background] UUID kaydedildi:", userId);
+    return true;
+  } catch (error) {
+    console.error("❌ [Background] UUID kaydetme hatası:", error);
+    return false;
   }
 }
+
+// UUID'yi oku
+async function getUserId() {
+  try {
+    const result = await chrome.storage.local.get([STORAGE_KEY]);
+    const userId = result[STORAGE_KEY];
+    console.log("🔍 [Background] UUID okundu:", userId);
+    return userId;
+  } catch (error) {
+    console.error("❌ [Background] UUID okuma hatası:", error);
+    return null;
+  }
+}
+
+// UUID'yi oluştur veya mevcut olanı kullan
+async function ensureUserId() {
+  try {
+    let userId = await getUserId();
+    
+    if (!userId) {
+      userId = generateUUID();
+      await setUserId(userId);
+      console.log("👤 [Background] Yeni UUID oluşturuldu:", userId);
+    } else {
+      console.log("👤 [Background] Mevcut UUID kullanılıyor:", userId);
+    }
+    
+    return userId;
+  } catch (error) {
+    console.error("❌ [Background] UUID oluşturma hatası:", error);
+    return null;
+  }
+}
+
+// Message listener
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("📨 [Background] Mesaj alındı:", request);
+  
+  if (request.action === "getUserId") {
+    // UUID'yi oku ve gönder
+    getUserId().then(userId => {
+      console.log("📤 [Background] UUID gönderiliyor:", userId);
+      sendResponse({ userId: userId });
+    });
+    return true; // Async response
+  }
+  
+  if (request.action === "setUserId") {
+    // UUID'yi kaydet
+    setUserId(request.userId).then(success => {
+      console.log("📤 [Background] UUID kaydetme sonucu:", success);
+      sendResponse({ success: success });
+    });
+    return true; // Async response
+  }
+  
+  if (request.action === "ensureUserId") {
+    // UUID'yi oluştur veya mevcut olanı kullan
+    ensureUserId().then(userId => {
+      console.log("📤 [Background] UUID hazır:", userId);
+      sendResponse({ userId: userId });
+    });
+    return true; // Async response
+  }
+  
+  if (request.action === "clearUserId") {
+    // UUID'yi sil
+    chrome.storage.local.remove([STORAGE_KEY]).then(() => {
+      console.log("🗑️ [Background] UUID silindi");
+      sendResponse({ success: true });
+    });
+    return true; // Async response
+  }
+});
+
+// Extension yüklendiğinde UUID oluştur
+chrome.runtime.onInstalled.addListener(async () => {
+  console.log("🚀 [Background] Extension yüklendi, UUID kontrol ediliyor...");
+  const userId = await ensureUserId();
+  console.log("✅ [Background] Extension hazır, UUID:", userId);
+});
+
+// Storage değişikliklerini dinle
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes[STORAGE_KEY]) {
+    const newValue = changes[STORAGE_KEY].newValue;
+    const oldValue = changes[STORAGE_KEY].oldValue;
+    console.log("🔄 [Background] UUID değişti:", { old: oldValue, new: newValue });
+    
+    // Tüm tab'lara bildir
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach(tab => {
+        try {
+          chrome.tabs.sendMessage(tab.id, {
+            action: "userIdChanged",
+            userId: newValue
+          });
+        } catch (error) {
+          // Tab'da content script yok, hata verme
+        }
+      });
+    });
+  }
+});
+
+console.log("🔄 [Background] Hazır");
