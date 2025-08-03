@@ -317,7 +317,7 @@ async function initDatabase() {
       )
     `);
 
-    // Create products table
+    // Create products table WITHOUT foreign key constraint
     await pool.query(`
       CREATE TABLE products (
         id SERIAL PRIMARY KEY,
@@ -337,7 +337,7 @@ async function initDatabase() {
     await pool.query("CREATE INDEX idx_users_role ON users(role)");
     await pool.query("CREATE INDEX idx_products_user_id ON products(user_id)");
 
-    console.log("✅ Database tables initialized");
+    console.log("✅ Database tables initialized (NO FOREIGN KEY CONSTRAINT)");
   } catch (error) {
     console.error("❌ Database initialization error:", error);
     throw error;
