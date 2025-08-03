@@ -241,6 +241,8 @@ async function addPendingProduct() {
     });
 
     if (uuidData && uuidData.uuid) {
+      console.log("🆕 [Content Script] Yeni permanent UUID ile ürün ekleniyor:", uuidData.uuid);
+      
       const result = await apiRequest("POST", "add-product", {
         ...productInfo,
         user_id: uuidData.uuid,
@@ -253,6 +255,9 @@ async function addPendingProduct() {
         console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
         showErrorMessage("Ürün eklenirken hata oluştu!");
       }
+    } else {
+      console.log("❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi");
+      showErrorMessage("UUID bulunamadı, ürün eklenemedi!");
     }
   }
 }
