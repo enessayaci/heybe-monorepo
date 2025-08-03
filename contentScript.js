@@ -672,6 +672,43 @@ function showLoginOrRegisterForm() {
           document.body.removeChild(popup);
           showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
           resolve(true);
+        } else if (result && result.error && result.error.includes("409")) {
+          // Kullanıcı zaten kayıtlı, login dene
+          console.log("🔄 [Content Script] Kullanıcı zaten kayıtlı, login deneniyor...");
+          
+          try {
+            const loginResult = await apiRequest("POST", "login", {
+              email: email,
+              password: password,
+              guest_user_id: guestUUID || null,
+            });
+
+            if (loginResult && loginResult.uuid) {
+              // Permanent UUID'yi extension'a set et
+              await sendUUIDToExtension(loginResult.uuid, "permanent");
+              console.log(
+                "✅ [Content Script] Login başarılı, permanent UUID set edildi:",
+                loginResult.uuid
+              );
+
+              document.body.removeChild(popup);
+              showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
+              resolve(true);
+            } else {
+              errorMessage.textContent = "Email veya şifre hatalı";
+              errorMessage.style.display = "block";
+              loginButton.disabled = false;
+              registerButton.textContent = "Kayıt Ol";
+              registerButton.disabled = false;
+            }
+          } catch (loginError) {
+            console.error("❌ [Content Script] Login hatası:", loginError);
+            errorMessage.textContent = "Email veya şifre hatalı";
+            errorMessage.style.display = "block";
+            loginButton.disabled = false;
+            registerButton.textContent = "Kayıt Ol";
+            registerButton.disabled = false;
+          }
         } else {
           errorMessage.textContent = result.error || "Kayıt başarısız";
           errorMessage.style.display = "block";
