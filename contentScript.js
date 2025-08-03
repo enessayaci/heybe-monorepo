@@ -334,6 +334,17 @@ async function addPendingProductWithUUID(uuid) {
         result
       );
       showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      
+      // Buton durumunu güncelle
+      const addButton = document.getElementById("tum-listem-ekle-btn");
+      if (addButton) {
+        addButton.disabled = true;
+        addButton.style.background = "#10b981"; // Yeşil renk
+        addButton.querySelector("span").textContent = "Ürün Eklendi";
+        addButton.querySelector("svg").innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        `;
+      }
     } else {
       console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
       showErrorMessage("Ürün eklenirken hata oluştu!");
@@ -1291,14 +1302,23 @@ function createAddToListButton() {
 
       if (success) {
         console.log("✅ [Content Script] Ürün başarıyla eklendi");
+        // Ürün başarıyla eklendiyse buton durumunu güncelle
+        addButton.disabled = true;
+        addButton.style.background = "#10b981"; // Yeşil renk
+        addButton.querySelector("span").textContent = "Ürün Eklendi";
+        addButton.querySelector("svg").innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        `;
       } else {
         console.log("❌ [Content Script] Ürün eklenemedi");
+        // Hata durumunda buton durumunu geri al
+        addButton.disabled = false;
+        addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
       }
     } catch (error) {
       console.error("❌ [Content Script] Ürün ekleme hatası:", error);
       showErrorMessage("Ürün eklenirken hata oluştu!");
-    } finally {
-      // Buton durumunu geri al
+      // Hata durumunda buton durumunu geri al
       addButton.disabled = false;
       addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
     }
