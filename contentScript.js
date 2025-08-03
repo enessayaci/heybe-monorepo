@@ -766,6 +766,9 @@ function showLoginOrRegisterForm() {
       registerButton.disabled = true;
       errorMessage.style.display = "none";
 
+      // Giriş işlemi başladı - ürün eklemeyi beklet
+      isRegistrationInProgress = true;
+
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
