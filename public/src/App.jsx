@@ -809,7 +809,10 @@ function App() {
                 try {
                   // Extension'dan gelen UUID'yi kullan
                   if (window.EXTENSION_ACTIVE_UUID) {
-                    console.log("✅ [Web Site] Extension UUID kullanılıyor:", window.EXTENSION_ACTIVE_UUID);
+                    console.log(
+                      "✅ [Web Site] Extension UUID kullanılıyor:",
+                      window.EXTENSION_ACTIVE_UUID
+                    );
                     setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
                     setUuidType("permanent");
                     setIsLoggedIn(true);
@@ -818,27 +821,33 @@ function App() {
                   }
 
                   // Extension yoksa normal API çağrısı
-                  const response = await fetch(
-                    "https://my-list-pi.vercel.app/api/login",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ email, password }),
-                    }
-                  );
-
-                  const result = await response.json();
-
-                  if (response.ok && result.uuid) {
-                    setCurrentUserId(result.uuid);
-                    setUuidType("permanent");
-                    setIsLoggedIn(true);
-                    setShowLoginForm(false);
-                    console.log("✅ [Web Site] Login başarılı:", result.uuid);
-                  } else {
-                    alert(
-                      "Giriş başarısız: " + (result.error || "Bilinmeyen hata")
+                  try {
+                    const response = await fetch(
+                      "https://my-list-pi.vercel.app/api/login",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, password }),
+                      }
                     );
+
+                    const result = await response.json();
+
+                    if (response.ok && result.uuid) {
+                      setCurrentUserId(result.uuid);
+                      setUuidType("permanent");
+                      setIsLoggedIn(true);
+                      setShowLoginForm(false);
+                      console.log("✅ [Web Site] Login başarılı:", result.uuid);
+                    } else {
+                      alert(
+                        "Giriş başarısız: " +
+                          (result.error || "Bilinmeyen hata")
+                      );
+                    }
+                  } catch (fetchError) {
+                    console.error("❌ [Web Site] Fetch hatası:", fetchError);
+                    alert("Bağlantı hatası");
                   }
                 } catch (error) {
                   console.error("❌ [Web Site] Login hatası:", error);
@@ -921,7 +930,10 @@ function App() {
                 try {
                   // Extension'dan gelen UUID'yi kullan
                   if (window.EXTENSION_ACTIVE_UUID) {
-                    console.log("✅ [Web Site] Extension UUID kullanılıyor:", window.EXTENSION_ACTIVE_UUID);
+                    console.log(
+                      "✅ [Web Site] Extension UUID kullanılıyor:",
+                      window.EXTENSION_ACTIVE_UUID
+                    );
                     setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
                     setUuidType("permanent");
                     setIsLoggedIn(true);
@@ -930,27 +942,33 @@ function App() {
                   }
 
                   // Extension yoksa normal API çağrısı
-                  const response = await fetch(
-                    "https://my-list-pi.vercel.app/api/register",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name, email, password }),
-                    }
-                  );
-
-                  const result = await response.json();
-
-                  if (response.ok && result.uuid) {
-                    setCurrentUserId(result.uuid);
-                    setUuidType("permanent");
-                    setIsLoggedIn(true);
-                    setShowRegisterForm(false);
-                    console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
-                  } else {
-                    alert(
-                      "Kayıt başarısız: " + (result.error || "Bilinmeyen hata")
+                  try {
+                    const response = await fetch(
+                      "https://my-list-pi.vercel.app/api/register",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, email, password }),
+                      }
                     );
+
+                    const result = await response.json();
+
+                    if (response.ok && result.uuid) {
+                      setCurrentUserId(result.uuid);
+                      setUuidType("permanent");
+                      setIsLoggedIn(true);
+                      setShowRegisterForm(false);
+                      console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
+                    } else {
+                      alert(
+                        "Kayıt başarısız: " +
+                          (result.error || "Bilinmeyen hata")
+                      );
+                    }
+                  } catch (fetchError) {
+                    console.error("❌ [Web Site] Fetch hatası:", fetchError);
+                    alert("Bağlantı hatası");
                   }
                 } catch (error) {
                   console.error("❌ [Web Site] Kayıt hatası:", error);
@@ -1092,25 +1110,17 @@ function App() {
                   </div>
                 )}
               </div>
-              <div className="text-sm text-gray-500">
-                Son güncelleme: {new Date().toLocaleTimeString()}
+              <div className="text-sm text-gray-500 flex items-center gap-4">
+                <span>Son güncelleme: {new Date().toLocaleTimeString()}</span>
+                <span>•</span>
+                <span>{status === "error" ? "N/A" : stats.totalProducts} ürün</span>
+                <span>•</span>
+                <span>{status === "error" ? "N/A" : stats.uniqueSites} farklı site</span>
               </div>
             </div>
           </div>
 
-          {/* Stats - Her durumda göster */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <StatsCard
-              title="Toplam Ürün"
-              value={status === "error" ? "N/A" : stats.totalProducts}
-              icon="📦"
-            />
-            <StatsCard
-              title="Farklı Site"
-              value={status === "error" ? "N/A" : stats.uniqueSites}
-              icon="🌐"
-            />
-          </div>
+
 
           {/* Uyarı Mesajı */}
           {showWarning && (

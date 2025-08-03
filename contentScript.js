@@ -1003,6 +1003,61 @@ function createAddToListButton() {
   // Sayfaya ekle
   document.body.appendChild(button);
   console.log("✅ [Content Script] 'Tüm Listeme Ekle' butonu eklendi");
+
+  // "Listeyi Gör" butonu ekle
+  const viewListButton = document.createElement("button");
+  viewListButton.id = "tum-listem-gor-btn";
+  viewListButton.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span>Listeyi Gör</span>
+    </div>
+  `;
+  
+  viewListButton.style.cssText = `
+    position: fixed;
+    top: calc(50% + 60px);
+    right: 0;
+    transform: translateY(-50%);
+    background: #059669;
+    color: white;
+    padding: 0 20px 0 10px;
+    border: none;
+    border-radius: 20px 0 0 20px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 99999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    height: 36px;
+    width: 140px;
+    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: -104px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  // Hover efektleri
+  viewListButton.addEventListener("mouseenter", () => {
+    viewListButton.style.marginRight = "0px";
+  });
+  
+  viewListButton.addEventListener("mouseleave", () => {
+    viewListButton.style.marginRight = "-104px";
+  });
+
+  // Tıklama olayı - web sitesine yönlendir
+  viewListButton.addEventListener("click", () => {
+    window.open("https://my-list-pi.vercel.app", "_blank");
+  });
+
+  // Sayfaya ekle
+  document.body.appendChild(viewListButton);
+  console.log("✅ [Content Script] 'Listeyi Gör' butonu eklendi");
 }
 
 // Sayfa yüklendiğinde aktif UUID'yi gönder ve buton ekle
