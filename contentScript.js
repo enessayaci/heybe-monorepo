@@ -251,6 +251,13 @@ function showGuestWarningPopup() {
     loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
     loginButton.onclick = () => {
       document.body.removeChild(popup);
+      
+      // Web sitesine permanent UUID isteği gönder
+      window.postMessage({
+        type: "REQUEST_PERMANENT_UUID",
+        source: "extension"
+      }, "*");
+      
       // Web sitesine yönlendir
       window.open("https://my-list-pi.vercel.app/login", "_blank");
       resolve(false);
@@ -414,6 +421,11 @@ window.addEventListener("message", (event) => {
   if (event.data.type === "ADD_PRODUCT") {
     console.log("📨 [Content Script] Web sitesinden ürün ekleme isteği alındı:", event.data.product);
     addProductToMyList(event.data.product);
+  }
+  
+  if (event.data.type === "SEND_PERMANENT_UUID" && event.data.source === "web-site") {
+    console.log("📨 [Content Script] Web sitesinden permanent UUID alındı:", event.data.uuid);
+    sendUUIDToExtension(event.data.uuid, 'permanent');
   }
 });
 

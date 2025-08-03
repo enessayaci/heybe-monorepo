@@ -131,7 +131,7 @@ function App() {
       console.log("✅ [Event] Aktif UUID set edildi:", { uuid, type });
     };
 
-    // Extension'dan login status event'ini dinle
+        // Extension'dan login status event'ini dinle
     const handleExtensionLoginStatus = (event) => {
       console.log(
         "📨 [Web Site] extensionLoginStatusChanged event alındı:",
@@ -139,10 +139,31 @@ function App() {
       );
 
       setIsLoggedIn(event.detail.isLoggedIn);
-
+      
       // Giriş yapıldıysa guest uyarısını kapat
       if (event.detail.isLoggedIn) {
         setShowGuestWarning(false);
+      }
+    };
+
+    // Extension'dan permanent UUID isteği dinle
+    const handleExtensionPermanentUUIDRequest = (event) => {
+      console.log(
+        "📨 [Web Site] Extension'dan permanent UUID isteği alındı"
+      );
+
+      // Eğer kullanıcı giriş yapmışsa permanent UUID'yi extension'a gönder
+      if (isLoggedIn && currentUserId && uuidType === 'permanent') {
+        console.log("✅ [Web Site] Permanent UUID extension'a gönderiliyor:", currentUserId);
+        
+        // Extension'a permanent UUID'yi gönder
+        window.postMessage({
+          type: "SEND_PERMANENT_UUID",
+          uuid: currentUserId,
+          source: "web-site"
+        }, "*");
+      } else {
+        console.log("⚠️ [Web Site] Kullanıcı giriş yapmamış, permanent UUID yok");
       }
     };
 
@@ -153,6 +174,10 @@ function App() {
     window.addEventListener(
       "extensionLoginStatusChanged",
       handleExtensionLoginStatus
+    );
+    window.addEventListener(
+      "message",
+      handleExtensionPermanentUUIDRequest
     );
 
     // Basit: UUID hazır olduğunda ürünleri çek
@@ -223,6 +248,10 @@ function App() {
       window.removeEventListener(
         "extensionLoginStatusChanged",
         handleExtensionLoginStatus
+      );
+      window.removeEventListener(
+        "message",
+        handleExtensionPermanentUUIDRequest
       );
     };
   }, []);
