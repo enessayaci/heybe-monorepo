@@ -543,32 +543,21 @@ function showLoginOrRegisterForm() {
       errorMessage.style.display = "none";
 
       try {
+        // Misafir UUID'yi al
+        const guestUUID = await new Promise((resolve) => {
+          chrome.storage.local.get(['guest_uuid'], (result) => {
+            resolve(result.guest_uuid);
+          });
+        });
+
         // Background script üzerinden API'ye giriş isteği gönder (CORS bypass)
         const result = await apiRequest("POST", "login", {
           email: email,
           password: password,
+          guest_user_id: guestUUID || null
         });
 
         if (result && result.uuid) {
-          // Misafir ürünlerini kalıcı kullanıcıya aktar
-          try {
-            const guestUUID = await new Promise((resolve) => {
-              chrome.storage.local.get(['guest_uuid'], (result) => {
-                resolve(result.guest_uuid);
-              });
-            });
-            
-            if (guestUUID && guestUUID !== result.uuid) {
-              console.log("🔄 [Content Script] Misafir ürünleri aktarılıyor...");
-              await apiRequest("POST", "transfer-products", {
-                guest_user_id: guestUUID,
-                permanent_user_id: result.uuid
-              });
-            }
-          } catch (transferError) {
-            console.error("❌ [Content Script] Ürün aktarma hatası:", transferError);
-          }
-
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Login başarılı, permanent UUID set edildi:", result.uuid);
@@ -618,32 +607,21 @@ function showLoginOrRegisterForm() {
       errorMessage.style.display = "none";
 
       try {
+        // Misafir UUID'yi al
+        const guestUUID = await new Promise((resolve) => {
+          chrome.storage.local.get(['guest_uuid'], (result) => {
+            resolve(result.guest_uuid);
+          });
+        });
+
         // Background script üzerinden API'ye kayıt isteği gönder (CORS bypass)
         const result = await apiRequest("POST", "register", {
           email: email,
           password: password,
+          guest_user_id: guestUUID || null
         });
 
         if (result && result.uuid) {
-          // Misafir ürünlerini kalıcı kullanıcıya aktar
-          try {
-            const guestUUID = await new Promise((resolve) => {
-              chrome.storage.local.get(['guest_uuid'], (result) => {
-                resolve(result.guest_uuid);
-              });
-            });
-            
-            if (guestUUID && guestUUID !== result.uuid) {
-              console.log("🔄 [Content Script] Misafir ürünleri aktarılıyor...");
-              await apiRequest("POST", "transfer-products", {
-                guest_user_id: guestUUID,
-                permanent_user_id: result.uuid
-              });
-            }
-          } catch (transferError) {
-            console.error("❌ [Content Script] Ürün aktarma hatası:", transferError);
-          }
-
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:", result.uuid);
@@ -935,10 +913,28 @@ function createAddToListButton() {
     return;
   }
 
-  // Buton oluştur
-  const button = document.createElement("button");
-  button.id = "tum-listem-ekle-btn";
-  button.innerHTML = `
+  // Ana buton container'ı oluştur
+  const buttonContainer = document.createElement("div");
+  buttonContainer.id = "tum-listem-buttons";
+  buttonContainer.style.cssText = `
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    z-index: 99999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 24px 0 0 24px;
+    overflow: hidden;
+    margin-right: -200px;
+    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  // Sol taraf - "Tüm Listeme Ekle" butonu
+  const addButton = document.createElement("button");
+  addButton.id = "tum-listem-ekle-btn";
+  addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13" />
@@ -947,46 +943,63 @@ function createAddToListButton() {
     </div>
   `;
   
-  button.style.cssText = `
-    position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
+  addButton.style.cssText = `
     background: #2563eb;
     color: white;
     padding: 0 24px 0 12px;
     border: none;
-    border-radius: 24px 0 0 24px;
     font-size: 16px;
     cursor: pointer;
-    z-index: 99999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     height: 48px;
     width: 200px;
-    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-right: -168px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: background 0.2s;
+  `;
+
+  // Sağ taraf - "Listeyi Gör" butonu (sarı)
+  const viewButton = document.createElement("button");
+  viewButton.id = "tum-listem-gor-btn";
+  viewButton.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span>Listeyi Gör</span>
+    </div>
+  `;
+  
+  viewButton.style.cssText = `
+    background: #f59e0b;
+    color: white;
+    padding: 0 16px 0 8px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    height: 48px;
+    width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
   `;
 
   // Hover efektleri
-  button.addEventListener("mouseenter", () => {
-    button.style.marginRight = "0px";
+  buttonContainer.addEventListener("mouseenter", () => {
+    buttonContainer.style.marginRight = "0px";
   });
   
-  button.addEventListener("mouseleave", () => {
-    button.style.marginRight = "-168px";
+  buttonContainer.addEventListener("mouseleave", () => {
+    buttonContainer.style.marginRight = "-200px";
   });
 
-  // Tıklama olayı
-  button.addEventListener("click", async () => {
+  // "Tüm Listeme Ekle" tıklama olayı
+  addButton.addEventListener("click", async () => {
     try {
       // Buton durumunu güncelle
-      button.disabled = true;
-      button.querySelector("span").textContent = "Ekleniyor...";
+      addButton.disabled = true;
+      addButton.querySelector("span").textContent = "Ekleniyor...";
       
       // Ürün bilgilerini al
       const productInfo = getProductInfo();
@@ -1006,69 +1019,23 @@ function createAddToListButton() {
       showErrorMessage("Ürün eklenirken hata oluştu!");
     } finally {
       // Buton durumunu geri al
-      button.disabled = false;
-      button.querySelector("span").textContent = "Tüm Listeme Ekle";
+      addButton.disabled = false;
+      addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
     }
   });
 
-  // Sayfaya ekle
-  document.body.appendChild(button);
-  console.log("✅ [Content Script] 'Tüm Listeme Ekle' butonu eklendi");
-
-  // "Listeyi Gör" butonu ekle
-  const viewListButton = document.createElement("button");
-  viewListButton.id = "tum-listem-gor-btn";
-  viewListButton.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 6px;">
-      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <span>Listeyi Gör</span>
-    </div>
-  `;
-  
-  viewListButton.style.cssText = `
-    position: fixed;
-    top: calc(50% + 60px);
-    right: 0;
-    transform: translateY(-50%);
-    background: #059669;
-    color: white;
-    padding: 0 20px 0 10px;
-    border: none;
-    border-radius: 20px 0 0 20px;
-    font-size: 14px;
-    cursor: pointer;
-    z-index: 99999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    height: 36px;
-    width: 140px;
-    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-right: -104px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  `;
-
-  // Hover efektleri
-  viewListButton.addEventListener("mouseenter", () => {
-    viewListButton.style.marginRight = "0px";
-  });
-  
-  viewListButton.addEventListener("mouseleave", () => {
-    viewListButton.style.marginRight = "-104px";
-  });
-
-  // Tıklama olayı - web sitesine yönlendir
-  viewListButton.addEventListener("click", () => {
+  // "Listeyi Gör" tıklama olayı
+  viewButton.addEventListener("click", () => {
     window.open("https://my-list-pi.vercel.app", "_blank");
   });
 
+  // Butonları container'a ekle
+  buttonContainer.appendChild(addButton);
+  buttonContainer.appendChild(viewButton);
+
   // Sayfaya ekle
-  document.body.appendChild(viewListButton);
-  console.log("✅ [Content Script] 'Listeyi Gör' butonu eklendi");
+  document.body.appendChild(buttonContainer);
+  console.log("✅ [Content Script] 'Tüm Listeme Ekle' ve 'Listeyi Gör' butonları eklendi");
 }
 
 // Sayfa yüklendiğinde aktif UUID'yi gönder ve buton ekle

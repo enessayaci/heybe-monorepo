@@ -28,7 +28,6 @@ function App() {
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
   const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
-  const TRANSFER_PRODUCTS_ENDPOINT = `${API_BASE}/transfer-products`;
 
   // Sidebar toggle handler
   const handleSidebarToggle = (collapsed) => {
@@ -64,34 +63,7 @@ function App() {
     setSearchTimeout(newTimeout);
   };
 
-  // Misafir ürünlerini kalıcı kullanıcıya aktarma fonksiyonu
-  const transferGuestProductsToPermanent = async (guestUserId, permanentUserId) => {
-    try {
-      console.log(`🔄 [Web Site] Misafir ürünleri aktarılıyor: ${guestUserId} -> ${permanentUserId}`);
-      
-      const response = await fetch(TRANSFER_PRODUCTS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guest_user_id: guestUserId,
-          permanent_user_id: permanentUserId
-        }),
-      });
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        console.log(`✅ [Web Site] ${result.transferred_count} ürün başarıyla aktarıldı`);
-        return true;
-      } else {
-        console.error("❌ [Web Site] Ürün aktarma hatası:", result.error);
-        return false;
-      }
-    } catch (error) {
-      console.error("❌ [Web Site] Ürün aktarma network hatası:", error);
-      return false;
-    }
-  };
 
   // Debug fonksiyonu
   const handleDebug = () => {
@@ -852,25 +824,23 @@ function App() {
 
                   // Extension yoksa normal API çağrısı
                   try {
+                    const guestUserId = localStorage.getItem("guest_uuid");
                     const response = await fetch(
                       "https://my-list-pi.vercel.app/api/login",
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email, password }),
+                        body: JSON.stringify({ 
+                          email, 
+                          password,
+                          guest_user_id: guestUserId || null
+                        }),
                       }
                     );
 
                     const result = await response.json();
 
                     if (response.ok && result.uuid) {
-                      // Misafir ürünlerini kalıcı kullanıcıya aktar
-                      const guestUserId = localStorage.getItem("guest_uuid");
-                      if (guestUserId && guestUserId !== result.uuid) {
-                        console.log("🔄 [Web Site] Misafir ürünleri aktarılıyor...");
-                        await transferGuestProductsToPermanent(guestUserId, result.uuid);
-                      }
-
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
                       setIsLoggedIn(true);
@@ -979,25 +949,23 @@ function App() {
 
                   // Extension yoksa normal API çağrısı
                   try {
+                    const guestUserId = localStorage.getItem("guest_uuid");
                     const response = await fetch(
                       "https://my-list-pi.vercel.app/api/register",
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email, password }),
+                        body: JSON.stringify({ 
+                          email, 
+                          password,
+                          guest_user_id: guestUserId || null
+                        }),
                       }
                     );
 
                     const result = await response.json();
 
                     if (response.ok && result.uuid) {
-                      // Misafir ürünlerini kalıcı kullanıcıya aktar
-                      const guestUserId = localStorage.getItem("guest_uuid");
-                      if (guestUserId && guestUserId !== result.uuid) {
-                        console.log("🔄 [Web Site] Misafir ürünleri aktarılıyor...");
-                        await transferGuestProductsToPermanent(guestUserId, result.uuid);
-                      }
-
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
                       setIsLoggedIn(true);
