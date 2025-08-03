@@ -1,6 +1,14 @@
 // Login API endpoint
 import bcrypt from 'bcryptjs';
-import { executeQuery, initDatabase } from './db.js';
+import pkg from "pg";
+const { Pool } = pkg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -14,13 +22,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Database configuration error' });
     }
 
-    // Initialize database if needed
-    try {
-      await initDatabase();
-    } catch (dbError) {
-      console.error('❌ Database initialization error:', dbError);
-      return res.status(500).json({ error: 'Database connection failed' });
-    }
+
 
     const { email, password, guest_user_id } = req.body;
 
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
     }
 
     // Find user in database
-    const userResult = await executeQuery(
+    const userResult = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
     );
@@ -56,11 +58,11 @@ export default async function handler(req, res) {
     // Transfer guest products to permanent user if guest_user_id provided
     if (guest_user_id && guest_user_id !== user.uuid) {
       try {
-        await executeQuery(
-          'UPDATE products SET user_id = $1 WHERE user_id = $2',
+        const transferResult = await pool.query(
+          'UPDATE products SET user_id = $1 WHERE user_id = $2 RETURNING id',
           [user.uuid, guest_user_id]
         );
-        console.log(`✅ Transferred products from ${guest_user_id} to ${user.uuid}`);
+        console.log(`✅ Transferred ${transferResult.rowCount} products from ${guest_user_id} to ${user.uuid}`);
       } catch (transferError) {
         console.error('❌ Product transfer error:', transferError);
       }
