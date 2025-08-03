@@ -532,17 +532,17 @@ function App() {
         }
       }
 
-              // 2. Extension yoksa localStorage'dan oku (backup)
-        if (!userId) {
-          const backupUserId = localStorage.getItem("tum_listem_user_id");
-          if (backupUserId) {
-            console.log(
-              "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
-              backupUserId
-            );
-            userId = backupUserId;
-          }
+      // 2. Extension yoksa localStorage'dan oku (backup)
+      if (!userId) {
+        const backupUserId = localStorage.getItem("tum_listem_user_id");
+        if (backupUserId) {
+          console.log(
+            "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
+            backupUserId
+          );
+          userId = backupUserId;
         }
+      }
 
       // 3. Hiç UUID yoksa yeni oluştur
       if (!userId) {
