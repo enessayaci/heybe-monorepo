@@ -19,6 +19,7 @@ function App() {
   const [uuidType, setUuidType] = useState(null); // 'guest' veya 'permanent'
   const [userRole, setUserRole] = useState("user"); // 'user' veya 'admin'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -512,6 +513,7 @@ function App() {
     }
 
     try {
+      setIsClearingAll(true);
       console.log(
         "🗑️ [handleClearAll] Kullanıcının tüm ürünleri siliniyor:",
         currentUserId
@@ -527,26 +529,31 @@ function App() {
         return;
       }
 
-      for (const product of userProducts) {
-        await fetch(DELETE_PRODUCT_ENDPOINT, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: product.id,
-            user_id: currentUserId,
-          }),
-        });
+      // Tek bir API çağrısı ile tüm ürünleri sil
+      const response = await fetch("/api/clear-all", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: currentUserId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
+      const result = await response.json();
       console.log(
-        `✅ ${userProducts.length} ürün silindi (kullanıcı: ${currentUserId})`
+        `✅ ${result.deletedCount} ürün silindi (kullanıcı: ${currentUserId})`
       );
       fetchProducts();
     } catch (error) {
       console.error("❌ Toplu silme hatası:", error);
       setError("Toplu silme hatası: " + error.message);
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -1324,6 +1331,18 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      {(isClearingAll || isDeleting) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-700 font-medium">
+              {isClearingAll ? "Tüm ürünler siliniyor..." : "Ürün siliniyor..."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

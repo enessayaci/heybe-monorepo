@@ -222,55 +222,13 @@ async function addProductToMyList(productInfo) {
         return true;
       }
 
-      // Kayıt işlemi yoksa ürünü şimdi ekle
+      // Guest kullanıcı için ürünü beklet - sadece yeni UUID ile eklenecek
       console.log(
-        "🔄 [Content Script] Guest kullanıcı için ürün şimdi ekleniyor..."
+        "⏳ [Content Script] Guest kullanıcı için ürün bekletiliyor..."
       );
-      pendingProductInfo = null;
-
-      // Guest kullanıcı için ürünü doğrudan ekle
-      try {
-        const result = await apiRequest("POST", "add-product", {
-          ...productInfo,
-          user_id: uuidData.uuid,
-        });
-
-        console.log("📡 [Content Script] Guest API response:", result);
-
-        if (result && result.success) {
-          console.log(
-            "✅ [Content Script] Guest kullanıcı için ürün başarıyla eklendi:",
-            result
-          );
-          showSuccessMessage("Ürün Heybeye eklendi!");
-
-          // Buton durumunu güncelle
-          const addButton = document.getElementById("tum-listem-ekle-btn");
-          if (addButton) {
-            addButton.disabled = true;
-            addButton.style.background = "#10b981"; // Yeşil renk
-            addButton.querySelector("span").textContent = "Ürün Eklendi";
-            addButton.querySelector("svg").innerHTML = `
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            `;
-          }
-          return true;
-        } else {
-          console.log(
-            "❌ [Content Script] Guest kullanıcı için ürün ekleme hatası:",
-            result
-          );
-          showErrorMessage("Ürün eklenirken hata oluştu!");
-          return false;
-        }
-      } catch (error) {
-        console.error(
-          "❌ [Content Script] Guest kullanıcı için ürün ekleme exception:",
-          error
-        );
-        showErrorMessage("Ürün eklenirken hata oluştu!");
-        return false;
-      }
+      pendingProductInfo = productInfo;
+      showSuccessMessage("Ürün kayıt/giriş sonrası eklenecek!");
+      return true;
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
