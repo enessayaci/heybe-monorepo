@@ -23,22 +23,30 @@ const pool = new Pool({
 // GET /api/get-products
 app.get("/api/get-products", async (req, res) => {
   try {
-    const query = `
-      SELECT id, name, price, image_url, product_url, site, created_at, updated_at
+    const { user_id } = req.query;
+    
+    let query = `
+      SELECT id, name, price, image_url, url, site, user_id, created_at
       FROM products
-      ORDER BY created_at DESC
     `;
+    
+    let values = [];
+    
+    if (user_id) {
+      query += ` WHERE user_id = $1`;
+      values.push(user_id);
+    }
+    
+    query += ` ORDER BY created_at DESC`;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, values);
     const products = result.rows;
 
     console.log("✅ Ürünler başarıyla getirildi:", products.length);
 
     res.json({
       success: true,
-      message: "Ürünler başarıyla getirildi",
       products: products,
-      count: products.length,
     });
   } catch (error) {
     console.error("❌ Veritabanı hatası:", error);
