@@ -167,7 +167,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       data
     );
 
-    fetch(`http://localhost:3000/api/${endpoint}`, {
+    fetch(`https://my-list-pi.vercel.app/api/${endpoint}`, {
       method: method || "GET",
       headers: {
         "Content-Type": "application/json",
