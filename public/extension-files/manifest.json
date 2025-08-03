@@ -2,13 +2,13 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "1.0.0",
-  "name": "Tüm Listem Extension",
-  "description": "Farklı sitelerdeki ürünleri tek sepette topla.",
+  "name": "Heybe Extension",
+  "description": "Farklı sitelerdeki ürünleri Heybe'de topla.",
   "icons": {
-    "48": "images/extension_48.png"
+    "48": "images/logo.png"
   },
   "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
-  "host_permissions": ["https://my-list-pi.vercel.app/*"],
+  "host_permissions": ["https://my-heybe.vercel.app/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "tum-listem@extension.js"
@@ -25,8 +25,8 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Tüm Listem Extension",
-    "default_icon": "images/extension_48.png"
+    "default_title": "Heybe Extension",
+    "default_icon": "images/logo.png"
   },
   "web_accessible_resources": [
     {
