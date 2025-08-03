@@ -1340,7 +1340,7 @@ function createAddToListButton() {
 
   // "Listeyi Gör" tıklama olayı
   viewButton.addEventListener("click", () => {
-            window.open("https://my-heybe.vercel.app", "_blank");
+    window.open("https://my-heybe.vercel.app", "_blank");
   });
 
   // Butonları container'a ekle
