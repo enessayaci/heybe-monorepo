@@ -780,7 +780,7 @@ function showLoginOrRegisterForm() {
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
 
-          resolve(true);
+          return true;
         } else if (result && result.error && result.error.includes("409")) {
           // Kullanıcı zaten kayıtlı, login dene
           console.log(
@@ -811,7 +811,7 @@ function showLoginOrRegisterForm() {
               isRegistrationInProgress = false;
               await addPendingProductWithUUID(loginResult.uuid);
 
-              resolve(true);
+              return true;
             } else {
               errorMessage.textContent = "Email veya şifre hatalı";
               errorMessage.style.display = "block";
@@ -819,6 +819,7 @@ function showLoginOrRegisterForm() {
               registerButton.textContent = "Kayıt Ol";
               registerButton.disabled = false;
               isRegistrationInProgress = false;
+              return false;
             }
           } catch (loginError) {
             console.error("❌ [Content Script] Login hatası:", loginError);
@@ -828,6 +829,7 @@ function showLoginOrRegisterForm() {
             registerButton.textContent = "Kayıt Ol";
             registerButton.disabled = false;
             isRegistrationInProgress = false;
+            return false;
           }
         } else {
           errorMessage.textContent = result.error || "Kayıt başarısız";
@@ -836,6 +838,7 @@ function showLoginOrRegisterForm() {
           registerButton.textContent = "Kayıt Ol";
           registerButton.disabled = false;
           isRegistrationInProgress = false;
+          return false;
         }
       } catch (error) {
         console.error("❌ [Content Script] Kayıt hatası:", error);
@@ -845,6 +848,7 @@ function showLoginOrRegisterForm() {
         registerButton.textContent = "Kayıt Ol";
         registerButton.disabled = false;
         isRegistrationInProgress = false;
+        return false;
       }
     };
 
