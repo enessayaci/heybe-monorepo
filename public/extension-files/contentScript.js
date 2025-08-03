@@ -1,278 +1,1379 @@
-// Tüm sitelerde çalışan content script
-(function () {
-  // Butonun id'si
-  const BUTTON_ID = "my-list-sepet-btn";
-  let buttonAdded = false;
+// Content Script - Persistent UUID Bridge
+console.log("🌐 [Content Script] Yüklendi");
 
-  // API endpoint (Vercel + Neon DB)
-  const API_ENDPOINT = "https://my-list-pi.vercel.app/api/add-product";
-
-  function getLargestImage() {
-    const images = Array.from(document.images).filter(
-      (img) => img.naturalWidth && img.naturalHeight
+// API helper function (CORS bypass için background script kullanır)
+async function apiRequest(method, endpoint, data = null) {
+  return new Promise((resolve, reject) => {
+    console.log(
+      `🌐 [Content Script] API isteği gönderiliyor: ${method} ${endpoint}`,
+      data
     );
-    if (!images.length) return "";
-    images.sort(
-      (a, b) =>
-        b.naturalWidth * b.naturalHeight - a.naturalWidth * a.naturalHeight
+
+    chrome.runtime.sendMessage(
+      {
+        action: "apiRequest",
+        method: method,
+        endpoint: endpoint,
+        data: data,
+      },
+      (response) => {
+        console.log(`📡 [Content Script] API response:`, response);
+
+        if (chrome.runtime.lastError) {
+          console.error(
+            "❌ [Content Script] Runtime error:",
+            chrome.runtime.lastError
+          );
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        if (response && response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response?.error || "API isteği başarısız"));
+        }
+      }
     );
-    return images[0].src;
-  }
+  });
+}
 
-  function getLargestHeading() {
-    const headings = Array.from(document.querySelectorAll("h1, h2, h3"));
-    if (!headings.length) return document.title || "";
-    headings.sort((a, b) => b.textContent.length - a.textContent.length);
-    return headings[0].textContent.trim();
-  }
+// Aktif UUID'yi extension'dan al ve web sitesine gönder
+async function sendActiveUUIDToWebSite() {
+  try {
+    console.log("🔍 [Content Script] Extension'dan aktif UUID alınıyor...");
 
-  function getFirstPriceText() {
-    const priceRegex = /([₺$€£]\s?\d+[.,]?\d*)/;
-    const treeWalker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT
+    const response = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log(
+            "❌ [Content Script] Extension mesaj hatası:",
+            chrome.runtime.lastError
+          );
+          reject(new Error("Extension bulunamadı"));
+          return;
+        }
+
+        if (response && response.uuid) {
+          console.log(
+            "✅ [Content Script] Extension'dan aktif UUID alındı:",
+            response
+          );
+          resolve(response);
+        } else {
+          console.log("❌ [Content Script] Extension'dan UUID alınamadı");
+          reject(new Error("UUID bulunamadı"));
+        }
+      });
+    });
+
+    // Web sitesine UUID'yi gönder
+    sendActiveUUIDToPage(response);
+  } catch (error) {
+    console.log("❌ [Content Script] UUID alma hatası:", error.message);
+  }
+}
+
+// Web sitesine aktif UUID'yi gönder
+function sendActiveUUIDToPage(uuidData) {
+  try {
+    console.log(
+      "📤 [Content Script] Aktif UUID web sitesine gönderiliyor:",
+      uuidData
     );
-    let node;
-    while ((node = treeWalker.nextNode())) {
-      if (priceRegex.test(node.textContent)) {
-        return node.textContent.match(priceRegex)[0];
-      }
-    }
-    return "";
-  }
 
-  function getClosestHeadingToElement(element) {
-    if (!element) return "";
-    // Parent ve yakınındaki başlıkları ara
-    let parent = element.parentElement;
-    for (let i = 0; i < 3 && parent; i++) {
-      const heading = parent.querySelector("h1, h2, h3, strong, b, span");
-      if (heading && heading.textContent.trim().length > 3) {
-        return heading.textContent.trim();
-      }
-      parent = parent.parentElement;
-    }
-    // Kardeşlerinde başlık ara
-    let sibling = element.previousElementSibling;
-    while (sibling) {
-      if (
-        /h1|h2|h3|strong|b|span/i.test(sibling.tagName) &&
-        sibling.textContent.trim().length > 3
-      ) {
-        return sibling.textContent.trim();
-      }
-      sibling = sibling.previousElementSibling;
-    }
-    sibling = element.nextElementSibling;
-    while (sibling) {
-      if (
-        /h1|h2|h3|strong|b|span/i.test(sibling.tagName) &&
-        sibling.textContent.trim().length > 3
-      ) {
-        return sibling.textContent.trim();
-      }
-      sibling = sibling.nextElementSibling;
-    }
-    return "";
-  }
+    // Web sitesine event gönder
+    window.dispatchEvent(
+      new CustomEvent("extensionActiveUUIDSet", {
+        detail: {
+          uuid: uuidData.uuid,
+          type: uuidData.type,
+        },
+      })
+    );
 
-  function getProductName() {
-    // 1. Görsele ve fiyata yakın başlık
-    const image = document.querySelector("img");
-    const priceText = getFirstPriceText();
-    let priceEl = null;
-    if (priceText) {
-      const walker = document.createTreeWalker(
-        document.body,
-        NodeFilter.SHOW_TEXT
+    // Global variable'a da yaz (backup)
+    window.EXTENSION_ACTIVE_UUID = uuidData.uuid;
+    window.EXTENSION_UUID_TYPE = uuidData.type;
+    window.EXTENSION_UUID_TIMESTAMP = Date.now();
+
+    console.log(
+      "✅ [Content Script] Aktif UUID web sitesine gönderildi:",
+      uuidData
+    );
+  } catch (error) {
+    console.error("❌ [Content Script] Web sitesine gönderme hatası:", error);
+  }
+}
+
+// Web sitesinden gelen UUID'yi extension'a gönder
+async function sendUUIDToExtension(uuid, type = "guest") {
+  try {
+    console.log("📤 [Content Script] UUID extension'a gönderiliyor:", {
+      uuid,
+      type,
+    });
+
+    const action = type === "permanent" ? "setPermanentUUID" : "setGuestUUID";
+    const response = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action: action,
+          uuid: uuid,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(
+              "❌ [Content Script] Extension mesaj hatası:",
+              chrome.runtime.lastError
+            );
+            reject(new Error("Extension bulunamadı"));
+            return;
+          }
+
+          if (response && response.success) {
+            console.log("✅ [Content Script] UUID extension'a gönderildi:", {
+              uuid,
+              type,
+            });
+            resolve(true);
+          } else {
+            console.log("❌ [Content Script] UUID extension'a gönderilemedi");
+            reject(new Error("UUID kaydedilemedi"));
+          }
+        }
       );
-      let node;
-      while ((node = walker.nextNode())) {
-        if (node.textContent.includes(priceText)) {
-          priceEl = node.parentElement;
+    });
+
+    return response;
+  } catch (error) {
+    console.error("❌ [Content Script] Extension'a gönderme hatası:", error);
+    return false;
+  }
+}
+
+// Global değişkenler
+let isRegistrationInProgress = false;
+let pendingProductInfo = null;
+
+// Ürün ekleme fonksiyonu - Guest/Permanent UUID kontrolü ile
+async function addProductToMyList(productInfo) {
+  try {
+    console.log("🛒 [Content Script] Ürün ekleme başlatılıyor:", productInfo);
+
+    // Eğer kayıt işlemi devam ediyorsa ürün bilgisini sakla ve bekle
+    if (isRegistrationInProgress) {
+      console.log(
+        "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...",
+        "isRegistrationInProgress:",
+        isRegistrationInProgress
+      );
+      pendingProductInfo = productInfo;
+      showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+      return true;
+    }
+
+    // Önce aktif UUID'yi al
+    const uuidData = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log(
+            "❌ [Content Script] Extension mesaj hatası:",
+            chrome.runtime.lastError
+          );
+          reject(new Error("Extension bulunamadı"));
+          return;
+        }
+
+        if (response && response.uuid) {
+          console.log("✅ [Content Script] Aktif UUID alındı:", response);
+          resolve(response);
+        } else {
+          console.log("❌ [Content Script] UUID bulunamadı");
+          reject(new Error("UUID bulunamadı"));
+        }
+      });
+    });
+
+    // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
+    if (uuidData.type === "guest") {
+      console.log(
+        "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
+      );
+
+      // Ürün ekleme işlemini beklet
+      pendingProductInfo = productInfo;
+      console.log("⏸️ [Content Script] Ürün bekletiliyor:", productInfo);
+
+      const shouldContinue = await showGuestWarningPopup();
+      if (!shouldContinue) {
+        console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
+        pendingProductInfo = null;
+        return false;
+      }
+      console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
+
+      // Eğer kayıt işlemi devam ediyorsa ürünü beklet
+      if (isRegistrationInProgress) {
+        console.log(
+          "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor..."
+        );
+        showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+        return true;
+      }
+
+      // Kayıt işlemi yoksa ürünü şimdi ekle
+      console.log("🔄 [Content Script] Ürün şimdi ekleniyor...");
+      pendingProductInfo = null;
+    }
+
+    // Background script üzerinden API'ye ürün ekle (CORS bypass)
+    const result = await apiRequest("POST", "add-product", {
+      ...productInfo,
+      user_id: uuidData.uuid,
+    });
+
+    if (result) {
+      console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
+      showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      return true;
+    } else {
+      console.log("❌ [Content Script] Ürün ekleme hatası:", result);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
+      return false;
+    }
+  } catch (error) {
+    console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+    showErrorMessage("Ürün eklenirken hata oluştu!");
+    return false;
+  }
+}
+
+// Bekleyen ürünü ekle (kayıt sonrası çağrılır)
+async function addPendingProduct() {
+  if (pendingProductInfo) {
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün ekleniyor:",
+      pendingProductInfo
+    );
+    const productInfo = pendingProductInfo;
+    pendingProductInfo = null;
+
+    // Yeni permanent UUID ile ürün ekle
+    const uuidData = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error("Extension bulunamadı"));
+          return;
+        }
+        resolve(response);
+      });
+    });
+
+    // Kayıt sonrası yeni permanent UUID'yi kullan
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün için UUID kontrolü:",
+      uuidData
+    );
+
+    if (uuidData && uuidData.uuid) {
+      console.log(
+        "🆕 [Content Script] Yeni permanent UUID ile ürün ekleniyor:",
+        uuidData.uuid
+      );
+
+      const result = await apiRequest("POST", "add-product", {
+        ...productInfo,
+        user_id: uuidData.uuid,
+      });
+
+      if (result) {
+        console.log(
+          "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
+          result
+        );
+        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      } else {
+        console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+        showErrorMessage("Ürün eklenirken hata oluştu!");
+      }
+    } else {
+      console.log(
+        "❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi"
+      );
+      showErrorMessage("UUID bulunamadı, ürün eklenemedi!");
+    }
+  }
+}
+
+// Bekleyen ürünü belirli UUID ile ekle (kayıt sonrası çağrılır)
+async function addPendingProductWithUUID(uuid) {
+  console.log(
+    "🔍 [Content Script] addPendingProductWithUUID çağrıldı, pendingProductInfo:",
+    pendingProductInfo
+  );
+
+  if (pendingProductInfo) {
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:",
+      pendingProductInfo,
+      "UUID:",
+      uuid
+    );
+    const productInfo = pendingProductInfo;
+    pendingProductInfo = null;
+
+    const result = await apiRequest("POST", "add-product", {
+      ...productInfo,
+      user_id: uuid,
+    });
+
+    if (result) {
+      console.log(
+        "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
+        result
+      );
+      showSuccessMessage("Ürün Tüm Listeme eklendi!");
+
+      // Buton durumunu güncelle
+      const addButton = document.getElementById("tum-listem-ekle-btn");
+      if (addButton) {
+        addButton.disabled = true;
+        addButton.style.background = "#10b981"; // Yeşil renk
+        addButton.querySelector("span").textContent = "Ürün Eklendi";
+        addButton.querySelector("svg").innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        `;
+      }
+    } else {
+      console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
+    }
+  } else {
+    console.log(
+      "❌ [Content Script] Bekleyen ürün bulunamadı, pendingProductInfo boş"
+    );
+  }
+}
+
+// Guest kullanıcılar için uyarı popup'ı
+function showGuestWarningPopup() {
+  return new Promise((resolve) => {
+    // Popup container oluştur
+    const popup = document.createElement("div");
+    popup.style.cssText = `
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: rgba(0, 0, 0, 0.5);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: 999999;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                `;
+
+    // Popup content
+    const content = document.createElement("div");
+    content.style.cssText = `
+                  background: white;
+                  border-radius: 12px;
+                  padding: 24px;
+                  max-width: 400px;
+                  margin: 20px;
+                  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                  text-align: center;
+                `;
+
+    // Icon
+    const icon = document.createElement("div");
+    icon.style.cssText = `
+                  width: 48px;
+                  height: 48px;
+                  background: #fef3c7;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin: 0 auto 16px;
+                `;
+    icon.innerHTML = `
+                  <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                `;
+
+    // Title
+    const title = document.createElement("h3");
+    title.style.cssText = `
+                  font-size: 18px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin: 0 0 12px;
+                `;
+    title.textContent = "Misafir Kullanıcı";
+
+    // Message
+    const message = document.createElement("p");
+    message.style.cssText = `
+                  font-size: 14px;
+                  color: #6b7280;
+                  margin: 0 0 24px;
+                  line-height: 1.5;
+                `;
+    message.textContent =
+      "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
+
+    // Buttons container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.cssText = `
+                  display: flex;
+                  gap: 12px;
+                `;
+
+    // Login button
+    const loginButton = document.createElement("button");
+    loginButton.style.cssText = `
+                  flex: 1;
+                  background: #2563eb;
+                  color: white;
+                  border: none;
+                  padding: 12px 16px;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                `;
+    loginButton.textContent = "Giriş Yap";
+    loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
+    loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
+    loginButton.onclick = () => {
+      document.body.removeChild(popup);
+      // Kayıt işlemi başladığını işaretle
+      isRegistrationInProgress = true;
+      console.log(
+        "🔐 [Content Script] Giriş Yap butonuna tıklandı, isRegistrationInProgress = true"
+      );
+      showLoginOrRegisterForm().then((result) => {
+        resolve(result);
+      });
+    };
+
+    // Continue as guest button
+    const guestButton = document.createElement("button");
+    guestButton.style.cssText = `
+                  flex: 1;
+                  background: #f3f4f6;
+                  color: #374151;
+                  border: none;
+                  padding: 12px 16px;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                `;
+    guestButton.textContent = "Misafir Devam Et";
+    guestButton.onmouseover = () => (guestButton.style.background = "#e5e7eb");
+    guestButton.onmouseout = () => (guestButton.style.background = "#f3f4f6");
+    guestButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(true);
+    };
+
+    // Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.style.cssText = `
+                  width: 100%;
+                  background: transparent;
+                  color: #6b7280;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  cursor: pointer;
+                  margin-top: 12px;
+                  transition: background 0.2s;
+                `;
+    cancelButton.textContent = "İptal";
+    cancelButton.onmouseover = () =>
+      (cancelButton.style.background = "#f9fafb");
+    cancelButton.onmouseout = () =>
+      (cancelButton.style.background = "transparent");
+    cancelButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(false);
+    };
+
+    // Assemble popup
+    content.appendChild(icon);
+    content.appendChild(title);
+    content.appendChild(message);
+    buttonsContainer.appendChild(loginButton);
+    buttonsContainer.appendChild(guestButton);
+    content.appendChild(buttonsContainer);
+    content.appendChild(cancelButton);
+    popup.appendChild(content);
+
+    // Add to page
+    document.body.appendChild(popup);
+
+    // Close on outside click
+    popup.onclick = (e) => {
+      if (e.target === popup) {
+        document.body.removeChild(popup);
+        resolve(false);
+      }
+    };
+  });
+}
+
+// Login veya Register form popup'ı
+function showLoginOrRegisterForm() {
+  return new Promise((resolve) => {
+    // Popup container oluştur
+    const popup = document.createElement("div");
+    popup.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    // Popup content
+    const content = document.createElement("div");
+    content.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 400px;
+      margin: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+    `;
+
+    // Title
+    const title = document.createElement("h3");
+    title.style.cssText = `
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 24px;
+      text-align: center;
+    `;
+    title.textContent = "Giriş Yap / Kayıt Ol";
+
+    // Form
+    const form = document.createElement("form");
+    form.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    `;
+
+    // Email input
+    const emailLabel = document.createElement("label");
+    emailLabel.style.cssText = `
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    `;
+    emailLabel.textContent = "E-posta";
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.required = true;
+    emailInput.style.cssText = `
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    `;
+    emailInput.placeholder = "ornek@email.com";
+    emailInput.onfocus = () => (emailInput.style.borderColor = "#2563eb");
+    emailInput.onblur = () => (emailInput.style.borderColor = "#d1d5db");
+
+    // Password input
+    const passwordLabel = document.createElement("label");
+    passwordLabel.style.cssText = `
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    `;
+    passwordLabel.textContent = "Şifre";
+
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "password";
+    passwordInput.required = true;
+    passwordInput.style.cssText = `
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    `;
+    passwordInput.placeholder = "Şifrenizi girin";
+    passwordInput.onfocus = () => (passwordInput.style.borderColor = "#2563eb");
+    passwordInput.onblur = () => (passwordInput.style.borderColor = "#d1d5db");
+
+    // Error message
+    const errorMessage = document.createElement("div");
+    errorMessage.style.cssText = `
+      color: #dc2626;
+      font-size: 14px;
+      text-align: center;
+      min-height: 20px;
+      display: none;
+    `;
+
+    // Buttons container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    `;
+
+    // Login button
+    const loginButton = document.createElement("button");
+    loginButton.type = "button";
+    loginButton.style.cssText = `
+      flex: 1;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    loginButton.textContent = "Giriş Yap";
+    loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
+    loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
+
+    // Register button
+    const registerButton = document.createElement("button");
+    registerButton.type = "button";
+    registerButton.style.cssText = `
+      flex: 1;
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    registerButton.textContent = "Kayıt Ol";
+    registerButton.onmouseover = () =>
+      (registerButton.style.background = "#047857");
+    registerButton.onmouseout = () =>
+      (registerButton.style.background = "#059669");
+
+    // Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.style.cssText = `
+      width: 100%;
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 12px;
+    `;
+    cancelButton.textContent = "İptal";
+    cancelButton.onmouseover = () =>
+      (cancelButton.style.background = "#e5e7eb");
+    cancelButton.onmouseout = () => (cancelButton.style.background = "#f3f4f6");
+    cancelButton.onclick = () => {
+      document.body.removeChild(popup);
+      resolve(false);
+    };
+
+    // Login button click handler
+    loginButton.onclick = async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        errorMessage.textContent = "Lütfen email ve şifre girin";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      // Loading state
+      loginButton.textContent = "Giriş yapılıyor...";
+      loginButton.disabled = true;
+      registerButton.disabled = true;
+      errorMessage.style.display = "none";
+
+      try {
+        // Misafir UUID'yi al
+        const guestUUID = await new Promise((resolve) => {
+          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
+            resolve(result.tum_listem_guest_uuid);
+          });
+        });
+
+        // Background script üzerinden API'ye giriş isteği gönder (CORS bypass)
+        const result = await apiRequest("POST", "login", {
+          email: email,
+          password: password,
+          guest_user_id: guestUUID || null,
+        });
+
+        if (result && result.uuid) {
+          // Permanent UUID'yi extension'a set et
+          await sendUUIDToExtension(result.uuid, "permanent");
+          console.log(
+            "✅ [Content Script] Login başarılı, permanent UUID set edildi:",
+            result.uuid
+          );
+
+          document.body.removeChild(popup);
+          showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
+          resolve(true);
+        } else {
+          errorMessage.textContent = result.error || "Giriş başarısız";
+          errorMessage.style.display = "block";
+          loginButton.textContent = "Giriş Yap";
+          loginButton.disabled = false;
+          registerButton.disabled = false;
+        }
+      } catch (error) {
+        console.error("❌ [Content Script] Login hatası:", error);
+        errorMessage.textContent = "Bağlantı hatası";
+        errorMessage.style.display = "block";
+        loginButton.textContent = "Giriş Yap";
+        loginButton.disabled = false;
+        registerButton.disabled = false;
+      }
+    };
+
+    // Register button click handler
+    registerButton.onclick = async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        errorMessage.textContent = "Lütfen email ve şifre girin";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      if (password.length < 6) {
+        errorMessage.textContent = "Şifre en az 6 karakter olmalı";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      // Loading state
+      loginButton.disabled = true;
+      registerButton.textContent = "Kayıt yapılıyor...";
+      registerButton.disabled = true;
+      errorMessage.style.display = "none";
+
+      // Kayıt işlemi zaten başladı (showGuestWarningPopup'ta set edildi)
+
+      try {
+        // Misafir UUID'yi al
+        const guestUUID = await new Promise((resolve) => {
+          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
+            resolve(result.tum_listem_guest_uuid);
+          });
+        });
+
+        // Background script üzerinden API'ye kayıt isteği gönder (CORS bypass)
+        const result = await apiRequest("POST", "register", {
+          email: email,
+          password: password,
+          guest_user_id: guestUUID || null,
+        });
+
+        if (result && result.uuid) {
+          // Permanent UUID'yi extension'a set et
+          await sendUUIDToExtension(result.uuid, "permanent");
+          console.log(
+            "✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:",
+            result.uuid
+          );
+
+          document.body.removeChild(popup);
+          showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
+
+          // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
+          isRegistrationInProgress = false;
+          await addPendingProductWithUUID(result.uuid);
+
+          return true;
+        } else if (result && result.error && result.error.includes("409")) {
+          // Kullanıcı zaten kayıtlı, login dene
+          console.log(
+            "🔄 [Content Script] Kullanıcı zaten kayıtlı, login deneniyor..."
+          );
+
+          try {
+            const loginResult = await apiRequest("POST", "login", {
+              email: email,
+              password: password,
+              guest_user_id: guestUUID || null,
+            });
+
+            if (loginResult && loginResult.uuid) {
+              // Permanent UUID'yi extension'a set et
+              await sendUUIDToExtension(loginResult.uuid, "permanent");
+              console.log(
+                "✅ [Content Script] Login başarılı, permanent UUID set edildi:",
+                loginResult.uuid
+              );
+
+              document.body.removeChild(popup);
+              showSuccessMessage(
+                "Giriş başarılı! Artık kalıcı kullanıcısınız."
+              );
+
+              // Login işlemi tamamlandı, bekleyen ürünü ekle
+              isRegistrationInProgress = false;
+              await addPendingProductWithUUID(loginResult.uuid);
+
+              return true;
+            } else {
+              errorMessage.textContent = "Email veya şifre hatalı";
+              errorMessage.style.display = "block";
+              loginButton.disabled = false;
+              registerButton.textContent = "Kayıt Ol";
+              registerButton.disabled = false;
+              isRegistrationInProgress = false;
+              return false;
+            }
+          } catch (loginError) {
+            console.error("❌ [Content Script] Login hatası:", loginError);
+            errorMessage.textContent = "Email veya şifre hatalı";
+            errorMessage.style.display = "block";
+            loginButton.disabled = false;
+            registerButton.textContent = "Kayıt Ol";
+            registerButton.disabled = false;
+            isRegistrationInProgress = false;
+            return false;
+          }
+        } else {
+          errorMessage.textContent = result.error || "Kayıt başarısız";
+          errorMessage.style.display = "block";
+          loginButton.disabled = false;
+          registerButton.textContent = "Kayıt Ol";
+          registerButton.disabled = false;
+          isRegistrationInProgress = false;
+          return false;
+        }
+      } catch (error) {
+        console.error("❌ [Content Script] Kayıt hatası:", error);
+        errorMessage.textContent = "Bağlantı hatası";
+        errorMessage.style.display = "block";
+        loginButton.disabled = false;
+        registerButton.textContent = "Kayıt Ol";
+        registerButton.disabled = false;
+        isRegistrationInProgress = false;
+        return false;
+      }
+    };
+
+    // Assemble form
+    form.appendChild(emailLabel);
+    form.appendChild(emailInput);
+    form.appendChild(passwordLabel);
+    form.appendChild(passwordInput);
+    form.appendChild(errorMessage);
+    buttonsContainer.appendChild(loginButton);
+    buttonsContainer.appendChild(registerButton);
+    form.appendChild(buttonsContainer);
+    form.appendChild(cancelButton);
+
+    // Assemble popup
+    content.appendChild(title);
+    content.appendChild(form);
+    popup.appendChild(content);
+
+    // Add to page
+    document.body.appendChild(popup);
+
+    // Focus email input
+    emailInput.focus();
+
+    // Close on outside click
+    popup.onclick = (e) => {
+      if (e.target === popup) {
+        document.body.removeChild(popup);
+        resolve(false);
+      }
+    };
+  });
+}
+
+// Başarı mesajı göster
+function showSuccessMessage(message) {
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.textContent = message;
+
+  // CSS animation
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.body.appendChild(notification);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 3000);
+}
+
+// Hata mesajı göster
+function showErrorMessage(message) {
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ef4444;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.textContent = message;
+
+  document.body.appendChild(notification);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      document.body.removeChild(notification);
+    }
+  }, 3000);
+}
+
+// Web sitesinden gelen mesajları dinle
+window.addEventListener("message", (event) => {
+  // Sadece aynı origin'den gelen mesajları kabul et
+  if (event.source !== window) return;
+
+  if (event.data.type === "SET_GUEST_UUID") {
+    console.log(
+      "📨 [Content Script] Web sitesinden Guest UUID mesajı alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "guest");
+  }
+
+  if (event.data.type === "SET_PERMANENT_UUID") {
+    console.log(
+      "📨 [Content Script] Web sitesinden Permanent UUID mesajı alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "permanent");
+  }
+
+  if (event.data.type === "GET_ACTIVE_UUID") {
+    console.log("📨 [Content Script] Web sitesinden aktif UUID isteği alındı");
+    sendActiveUUIDToWebSite();
+  }
+
+  if (event.data.type === "ADD_PRODUCT") {
+    console.log(
+      "📨 [Content Script] Web sitesinden ürün ekleme isteği alındı:",
+      event.data.product
+    );
+    addProductToMyList(event.data.product);
+  }
+
+  if (
+    event.data.type === "SEND_PERMANENT_UUID" &&
+    event.data.source === "web-site"
+  ) {
+    console.log(
+      "📨 [Content Script] Web sitesinden permanent UUID alındı:",
+      event.data.uuid
+    );
+    sendUUIDToExtension(event.data.uuid, "permanent");
+  }
+});
+
+// Background script'ten gelen mesajları dinle
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "guestUUIDChanged") {
+    console.log(
+      "📨 [Content Script] Background'dan Guest UUID değişikliği:",
+      request.uuid
+    );
+    sendActiveUUIDToPage({ uuid: request.uuid, type: "guest" });
+  }
+
+  if (request.action === "permanentUUIDChanged") {
+    console.log(
+      "📨 [Content Script] Background'dan Permanent UUID değişikliği:",
+      request.uuid
+    );
+    sendActiveUUIDToPage({ uuid: request.uuid, type: "permanent" });
+  }
+
+  if (request.action === "loginStatusChanged") {
+    console.log(
+      "📨 [Content Script] Background'dan login status değişikliği:",
+      request.isLoggedIn
+    );
+    // Web sitesine login status değişikliğini bildir
+    window.dispatchEvent(
+      new CustomEvent("extensionLoginStatusChanged", {
+        detail: { isLoggedIn: request.isLoggedIn },
+      })
+    );
+  }
+});
+
+// Ürün bilgilerini çek
+function getProductInfo() {
+  try {
+    // Meta tag'lerden bilgi çek
+    const metaTags = {};
+    document.querySelectorAll("meta").forEach((meta) => {
+      const name = meta.getAttribute("name") || meta.getAttribute("property");
+      const content = meta.getAttribute("content");
+      if (name && content) {
+        metaTags[name.toLowerCase()] = content;
+      }
+    });
+
+    // Ürün adı
+    let productName =
+      metaTags["og:title"] ||
+      metaTags["twitter:title"] ||
+      metaTags.title ||
+      document.title ||
+      "Ürün";
+
+    // Fiyat
+    let price = "";
+    const priceSelectors = [
+      '[class*="price"]',
+      '[class*="fiyat"]',
+      '[class*="cost"]',
+      '[class*="amount"]',
+      "span",
+      "div",
+      "p",
+    ];
+
+    for (const selector of priceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const element of elements) {
+        const text = element.textContent.trim();
+        if (
+          text.match(/[\d.,]+\s*(₺|TL|\$|€)/) ||
+          text.match(/(₺|TL|\$|€)\s*[\d.,]+/)
+        ) {
+          price = text.replace(/[^\d.,]/g, "").trim();
+          break;
+        }
+      }
+      if (price) break;
+    }
+
+    // Resim
+    let imageUrl =
+      metaTags["og:image"] || metaTags["twitter:image"] || metaTags.image || "";
+
+    if (!imageUrl) {
+      const images = document.querySelectorAll("img");
+      for (const img of images) {
+        const src = img.src || img.getAttribute("data-src");
+        if (
+          src &&
+          src.length > 100 &&
+          !src.includes("logo") &&
+          !src.includes("icon")
+        ) {
+          imageUrl = src;
           break;
         }
       }
     }
-    let name =
-      getClosestHeadingToElement(image) || getClosestHeadingToElement(priceEl);
-    if (name && name.length > 3) return name;
-    // 2. h1[itemprop='name']
-    let el = document.querySelector('h1[itemprop="name"]');
-    if (el && el.textContent.trim().length > 3) return el.textContent.trim();
-    // 3. h1
-    el = document.querySelector("h1");
-    if (el && el.textContent.trim().length > 3) return el.textContent.trim();
-    // 4. meta[property="og:title"]
-    el = document.querySelector('meta[property="og:title"]');
-    if (el && el.content && el.content.trim().length > 3)
-      return el.content.trim();
-    // 5. document.title
-    if (document.title && document.title.trim().length > 3)
-      return document.title.trim();
-    // 6. En uzun başlık
-    return getLargestHeading();
+
+    return {
+      name: productName,
+      price: price,
+      image_url: imageUrl,
+      url: window.location.href,
+      site: window.location.hostname,
+    };
+  } catch (error) {
+    console.error("❌ [Content Script] Ürün bilgisi çekme hatası:", error);
+    return {
+      name: "Ürün",
+      price: "",
+      image_url: "",
+      url: window.location.href,
+      site: window.location.hostname,
+    };
+  }
+}
+
+// "Tüm Listeme Ekle" butonunu oluştur ve ekle
+function createAddToListButton() {
+  // Eğer buton zaten varsa ekleme
+  if (document.getElementById("tum-listem-ekle-btn")) {
+    return;
   }
 
-  function getProductInfo() {
-    let name = getProductName();
-    // Ürün adı filtreleme koşullarını gevşet
-    if (
-      /ürün|fiyat|sepete|ekle|alışveriş|basket|cart|add/i.test(name) &&
-      name.length < 10
-    ) {
-      name = "";
-    }
-    const price = getFirstPriceText();
-    let image = getLargestImage();
-    const url = window.location.href;
-    const site = window.location.hostname;
+  // Ana sayfa kontrolü - ana sayfada buton gösterme
+  const isHomePage =
+    window.location.pathname === "/" ||
+    window.location.pathname === "/home" ||
+    window.location.pathname === "/anasayfa" ||
+    document.title.toLowerCase().includes("ana sayfa") ||
+    document.title.toLowerCase().includes("homepage");
 
-    // Eğer görsel yoksa boş string olarak bırak
-    return { name, price, image, url, site };
+  if (isHomePage) {
+    return;
   }
 
-  async function saveProductToAPI(productInfo) {
+  // İlgili buton var mı kontrol et
+  const relevantButtons = Array.from(
+    document.querySelectorAll(
+      "button, a, input[type='button'], div[role='button']"
+    )
+  );
+  const hasRelevantButton = relevantButtons.some((btn) => {
+    const text = (btn.innerText || btn.value || "").toLowerCase();
+    return (
+      text.includes("sepete ekle") ||
+      text.includes("add to cart") ||
+      text.includes("buy") ||
+      text.includes("satın al")
+    );
+  });
+
+  if (!hasRelevantButton) {
+    return;
+  }
+
+  // Ana buton container'ı oluştur
+  const buttonContainer = document.createElement("div");
+  buttonContainer.id = "tum-listem-buttons";
+  buttonContainer.style.cssText = `
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    z-index: 99999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 24px 0 0 24px;
+    overflow: hidden;
+    margin-right: -280px;
+    transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  // Sol taraf - "Tüm Listeme Ekle" butonu
+  const addButton = document.createElement("button");
+  addButton.id = "tum-listem-ekle-btn";
+  addButton.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+      </svg>
+      <span>Tüm Listeme Ekle</span>
+    </div>
+  `;
+
+  addButton.style.cssText = `
+    background: #2563eb;
+    color: white;
+    padding: 0 24px 0 12px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    height: 48px;
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: background 0.2s;
+    white-space: nowrap;
+  `;
+
+  // Sağ taraf - "Listeyi Gör" butonu (sarı)
+  const viewButton = document.createElement("button");
+  viewButton.id = "tum-listem-gor-btn";
+  viewButton.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span>Listeyi Gör</span>
+    </div>
+  `;
+
+  viewButton.style.cssText = `
+    background: #f59e0b;
+    color: white;
+    padding: 0 16px 0 8px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    height: 48px;
+    width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    white-space: nowrap;
+  `;
+
+  // Hover efektleri
+  buttonContainer.addEventListener("mouseenter", () => {
+    buttonContainer.style.marginRight = "0px";
+  });
+
+  buttonContainer.addEventListener("mouseleave", () => {
+    buttonContainer.style.marginRight = "-280px";
+  });
+
+  // "Tüm Listeme Ekle" tıklama olayı
+  addButton.addEventListener("click", async () => {
     try {
-      console.log(
-        "🚀 [Tüm Listem] API'ye ürün gönderiliyor:",
-        productInfo.name
-      );
+      // Buton durumunu güncelle
+      addButton.disabled = true;
+      addButton.querySelector("span").textContent = "Ekleniyor...";
 
-      const response = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: productInfo.name,
-          price: productInfo.price,
-          image_url: productInfo.image,
-          product_url: productInfo.url,
-          site: productInfo.site,
-        }),
-      });
+      // Ürün bilgilerini al
+      const productInfo = getProductInfo();
+      console.log("🛒 [Content Script] Ürün bilgileri:", productInfo);
 
-      const result = await response.json();
+      // Ürün ekleme fonksiyonunu çağır
+      const success = await addProductToMyList(productInfo);
 
-      if (response.ok) {
-        console.log(
-          "✅ [Tüm Listem] Ürün API'ye kaydedildi:",
-          result.product.name
-        );
-        return { success: true, data: result };
+      if (success) {
+        console.log("✅ [Content Script] Ürün başarıyla eklendi");
+        // Ürün başarıyla eklendiyse buton durumunu güncelle
+        addButton.disabled = true;
+        addButton.style.background = "#10b981"; // Yeşil renk
+        addButton.querySelector("span").textContent = "Ürün Eklendi";
+        addButton.querySelector("svg").innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        `;
       } else {
-        console.error("❌ API hatası:", result);
-        return { success: false, error: result.error };
+        console.log("❌ [Content Script] Ürün eklenemedi");
+        // Hata durumunda buton durumunu geri al
+        addButton.disabled = false;
+        addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
       }
     } catch (error) {
-      console.error("❌ Network hatası:", error);
-      return { success: false, error: error.message };
+      console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
+      // Hata durumunda buton durumunu geri al
+      addButton.disabled = false;
+      addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
     }
-  }
+  });
 
-  function showConfirmation(success = true, message = null) {
-    const div = document.createElement("div");
-    div.textContent = success
-      ? message || "Ürün My List Sepetine eklendi!"
-      : message || "Ürün eklenirken hata oluştu!";
-    div.setAttribute(
-      "style",
-      `position:fixed;top:20px;right:20px;background:${
-        success ? "#16a34a" : "#dc2626"
-      };color:white;padding:12px 20px;border-radius:8px;z-index:99999;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.15);`
+  // "Listeyi Gör" tıklama olayı
+  viewButton.addEventListener("click", () => {
+    window.open("https://my-list-pi.vercel.app", "_blank");
+  });
+
+  // Butonları container'a ekle
+  buttonContainer.appendChild(addButton);
+  buttonContainer.appendChild(viewButton);
+
+  // Sayfaya ekle
+  document.body.appendChild(buttonContainer);
+  console.log(
+    "✅ [Content Script] 'Tüm Listeme Ekle' ve 'Listeyi Gör' butonları eklendi"
+  );
+}
+
+// Sayfa yüklendiğinde aktif UUID'yi gönder ve buton ekle
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log(
+      "🚀 [Content Script] Sayfa yüklendi, aktif UUID gönderiliyor..."
     );
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 3000);
-  }
+    setTimeout(() => {
+      sendActiveUUIDToWebSite();
+      createAddToListButton();
+    }, 1000); // 1 saniye bekle
+  });
+} else {
+  console.log(
+    "🚀 [Content Script] Sayfa zaten yüklü, aktif UUID gönderiliyor..."
+  );
+  setTimeout(() => {
+    sendActiveUUIDToWebSite();
+    createAddToListButton();
+  }, 1000); // 1 saniye bekle
+}
 
-  function addButton() {
-    if (buttonAdded || document.getElementById(BUTTON_ID)) return;
+// Web sitesine helper fonksiyonları ekle
+window.postMessage(
+  {
+    type: "EXTENSION_READY",
+    data: {
+      hasExtension: true,
+      extensionId: chrome.runtime.id,
+    },
+  },
+  "*"
+);
 
-    // Sayfa yeterince yüklendi mi kontrol et
-    if (document.body && document.body.children.length > 0) {
-      const btn = document.createElement("button");
-      btn.id = BUTTON_ID;
-      btn.textContent = "My List Sepetime Ekle";
-      btn.setAttribute("tabindex", "0");
-      btn.setAttribute("aria-label", "My List Sepetime Ekle");
-      btn.setAttribute("type", "button");
-      btn.setAttribute(
-        "style",
-        "position:fixed;top:32px;right:32px;background:#2563eb;color:white;padding:12px 24px;border:none;border-radius:8px;font-size:18px;cursor:pointer;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.15);"
-      );
-
-      btn.addEventListener("click", async function handleClick() {
-        // Butonu devre dışı bırak
-        btn.disabled = true;
-        btn.textContent = "Ekleniyor...";
-
-        const product = getProductInfo();
-        console.log("🔍 [Tüm Listem] Ürün tespit edildi:", product.name);
-
-        // Koşulları gevşet - sadece URL olsa bile ekle
-        if (product.url) {
-          const result = await saveProductToAPI(product);
-
-          if (result.success) {
-            showConfirmation(true, "Ürün başarıyla eklendi!");
-          } else {
-            showConfirmation(false, `Hata: ${result.error}`);
-          }
-        } else {
-          showConfirmation(false, "Ürün bilgileri yetersiz!");
-        }
-
-        // Butonu tekrar aktif et
-        btn.disabled = false;
-        btn.textContent = "My List Sepetime Ekle";
-      });
-
-      document.body.appendChild(btn);
-      buttonAdded = true;
-      console.log("✅ [Tüm Listem] Buton eklendi");
-    }
-  }
-
-  // Birden fazla yöntemle buton eklemeyi dene
-  function tryAddButton() {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", addButton);
-    } else {
-      addButton();
-    }
-  }
-
-  // İlk deneme
-  tryAddButton();
-
-  // Kısa aralıklarla tekrar dene
-  setTimeout(tryAddButton, 500);
-  setTimeout(tryAddButton, 1000);
-  setTimeout(tryAddButton, 2000);
-  setTimeout(tryAddButton, 3000);
-
-  // MutationObserver ile dinamik değişiklikleri izle
-  if (typeof MutationObserver !== "undefined") {
-    const observer = new MutationObserver((mutations) => {
-      if (!buttonAdded) {
-        tryAddButton();
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  // URL değişikliklerini izle (SPA'lar için)
-  let currentUrl = window.location.href;
-  setInterval(() => {
-    if (window.location.href !== currentUrl) {
-      currentUrl = window.location.href;
-      buttonAdded = false;
-      tryAddButton();
-    }
-  }, 1000);
-})();
+console.log("🌐 [Content Script] Hazır");

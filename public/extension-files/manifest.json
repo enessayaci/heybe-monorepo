@@ -5,13 +5,19 @@
   "name": "Tüm Listem Extension",
   "description": "Farklı sitelerdeki ürünleri tek sepette topla.",
   "icons": {
-    "48": "images/extension_48.png"
+    "48": "images/shopping-basket.png"
   },
-  "permissions": ["scripting", "activeTab"],
+  "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
+  "host_permissions": ["https://my-list-pi.vercel.app/*"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tum-listem@extension.js"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["contentScript.js"],
+      "js": ["storageHelper.js", "contentScript.js"],
       "run_at": "document_idle"
     }
   ],
@@ -20,6 +26,12 @@
   },
   "action": {
     "default_title": "Tüm Listem Extension",
-    "default_icon": "images/extension_48.png"
-  }
+    "default_icon": "images/shopping-basket.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

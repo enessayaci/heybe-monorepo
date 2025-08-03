@@ -43,12 +43,16 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
       action: () => scrollToSection("uninstall"),
     },
     // Sadece admin kullanıcılar için "Geliştirici" menüsü
-    ...(userRole === 'admin' ? [{
-      id: "technical",
-      icon: "🔧",
-      label: "Geliştirici",
-      action: () => scrollToSection("technical"),
-    }] : []),
+    ...(userRole === "admin"
+      ? [
+          {
+            id: "technical",
+            icon: "🔧",
+            label: "Geliştirici",
+            action: () => scrollToSection("technical"),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -74,7 +78,11 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
       {/* Logo */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center">
-          <span className="text-xl flex-shrink-0">🛒</span>
+          <img
+            src="/extension-files/images/shopping-basket.png"
+            alt="Shopping Basket"
+            className="w-6 h-6 flex-shrink-0"
+          />
           {!isCollapsed && (
             <h1 className="text-lg font-bold text-gray-900 ml-2 flex-shrink-0">
               Tüm Listem
@@ -124,7 +132,9 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
         }`}
       >
         <div
-          className={`flex items-center ${isCollapsed ? "justify-center" : ""} relative group`}
+          className={`flex items-center ${
+            isCollapsed ? "justify-center" : ""
+          } relative group`}
         >
           <span className="text-sm text-gray-600">👤</span>
           {!isCollapsed && (
@@ -137,7 +147,7 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
               </p>
             </div>
           )}
-          
+
           {/* Tooltip for full UUID */}
           {currentUserId && (
             <div className="absolute left-full ml-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
