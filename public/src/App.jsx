@@ -17,7 +17,7 @@ function App() {
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [uuidType, setUuidType] = useState(null); // 'guest' veya 'permanent'
-  const [userRole, setUserRole] = useState('user'); // 'user' veya 'admin'
+  const [userRole, setUserRole] = useState("user"); // 'user' veya 'admin'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -842,10 +842,15 @@ function App() {
                     if (response.ok && result.uuid) {
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
-                      setUserRole(result.role || 'user');
+                      setUserRole(result.role || "user");
                       setIsLoggedIn(true);
                       setShowLoginForm(false);
-                      console.log("✅ [Web Site] Login başarılı:", result.uuid, "Role:", result.role);
+                      console.log(
+                        "✅ [Web Site] Login başarılı:",
+                        result.uuid,
+                        "Role:",
+                        result.role
+                      );
                     } else {
                       alert(
                         "Giriş başarısız: " +
@@ -968,10 +973,15 @@ function App() {
                     if (response.ok && result.uuid) {
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
-                      setUserRole(result.role || 'user');
+                      setUserRole(result.role || "user");
                       setIsLoggedIn(true);
                       setShowRegisterForm(false);
-                      console.log("✅ [Web Site] Kayıt başarılı:", result.uuid, "Role:", result.role);
+                      console.log(
+                        "✅ [Web Site] Kayıt başarılı:",
+                        result.uuid,
+                        "Role:",
+                        result.role
+                      );
                     } else {
                       alert(
                         "Kayıt başarısız: " +
@@ -1046,7 +1056,11 @@ function App() {
       )}
 
       {/* Sidebar */}
-      <Sidebar onToggle={handleSidebarToggle} currentUserId={currentUserId} userRole={userRole} />
+      <Sidebar
+        onToggle={handleSidebarToggle}
+        currentUserId={currentUserId}
+        userRole={userRole}
+      />
 
       {/* Main Content - Sidebar için dinamik margin */}
       <div
@@ -1424,103 +1438,106 @@ function App() {
           </div>
 
           {/* Teknik Bilgiler Section - En alta - Sadece admin kullanıcılar için */}
-          {userRole === 'admin' && (
+          {userRole === "admin" && (
             <div id="technical" className="mb-8">
-            <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                🔧 Geliştirici Bilgileri
-              </h3>
+              <div className="bg-white rounded-lg border p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  🔧 Geliştirici Bilgileri
+                </h3>
 
-              <div className="space-y-4 text-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 className="font-medium text-blue-600 mb-2">
-                      Extension Detayları:
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium text-blue-600 mb-2">
+                        Extension Detayları:
+                      </h5>
+                      <ul className="space-y-1 text-gray-600">
+                        <li>
+                          <strong>Extension ID:</strong> my-list-sepet-extension
+                        </li>
+                        <li>
+                          <strong>Manifest Version:</strong> 3
+                        </li>
+                        <li>
+                          <strong>Permissions:</strong> scripting, activeTab
+                        </li>
+                        <li>
+                          <strong>Content Scripts:</strong> Tüm URL'lerde
+                          çalışır
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h5 className="font-medium text-green-600 mb-2">
+                        Teknik Altyapı:
+                      </h5>
+                      <ul className="space-y-1 text-gray-600">
+                        <li>
+                          <strong>API Endpoint:</strong> Vercel + Neon
+                          PostgreSQL
+                        </li>
+                        <li>
+                          <strong>Frontend:</strong> React + TailwindCSS +
+                          Shadcn
+                        </li>
+                        <li>
+                          <strong>Browser Support:</strong> Chrome, Brave,
+                          Firefox, Safari
+                        </li>
+                        <li>
+                          <strong>Deployment:</strong> Vercel
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h5 className="font-medium text-gray-700 mb-2">
+                      🔧 Geliştirici Notları:
                     </h5>
-                    <ul className="space-y-1 text-gray-600">
-                      <li>
-                        <strong>Extension ID:</strong> my-list-sepet-extension
-                      </li>
-                      <li>
-                        <strong>Manifest Version:</strong> 3
-                      </li>
-                      <li>
-                        <strong>Permissions:</strong> scripting, activeTab
-                      </li>
-                      <li>
-                        <strong>Content Scripts:</strong> Tüm URL'lerde çalışır
-                      </li>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Extension Manifest V3 kullanıyor</li>
+                      <li>• Content script tüm sitelerde çalışıyor</li>
+                      <li>• Ürün bilgileri PostgreSQL'de saklanıyor</li>
+                      <li>• API serverless functions ile çalışıyor</li>
+                      <li>• Frontend Vercel'de host ediliyor</li>
                     </ul>
                   </div>
 
-                  <div>
-                    <h5 className="font-medium text-green-600 mb-2">
-                      Teknik Altyapı:
+                  {/* Debug Butonları - Geliştirici section'ında */}
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h5 className="font-medium text-blue-700 mb-3">
+                      🛠️ Geliştirici Araçları:
                     </h5>
-                    <ul className="space-y-1 text-gray-600">
-                      <li>
-                        <strong>API Endpoint:</strong> Vercel + Neon PostgreSQL
-                      </li>
-                      <li>
-                        <strong>Frontend:</strong> React + TailwindCSS + Shadcn
-                      </li>
-                      <li>
-                        <strong>Browser Support:</strong> Chrome, Brave,
-                        Firefox, Safari
-                      </li>
-                      <li>
-                        <strong>Deployment:</strong> Vercel
-                      </li>
-                    </ul>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={handleDebug}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                      >
+                        Debug
+                      </button>
+                      <button
+                        onClick={handleRefresh}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                      >
+                        Yenile
+                      </button>
+                      <button
+                        onClick={handleTest}
+                        className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                      >
+                        Test
+                      </button>
+                      <button
+                        onClick={handleStorageDebug}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                      >
+                        Storage Debug
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h5 className="font-medium text-gray-700 mb-2">
-                    🔧 Geliştirici Notları:
-                  </h5>
-                  <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• Extension Manifest V3 kullanıyor</li>
-                    <li>• Content script tüm sitelerde çalışıyor</li>
-                    <li>• Ürün bilgileri PostgreSQL'de saklanıyor</li>
-                    <li>• API serverless functions ile çalışıyor</li>
-                    <li>• Frontend Vercel'de host ediliyor</li>
-                  </ul>
-                </div>
-
-                {/* Debug Butonları - Geliştirici section'ında */}
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h5 className="font-medium text-blue-700 mb-3">
-                    🛠️ Geliştirici Araçları:
-                  </h5>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={handleDebug}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-                    >
-                      Debug
-                    </button>
-                    <button
-                      onClick={handleRefresh}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-                    >
-                      Yenile
-                    </button>
-                    <button
-                      onClick={handleTest}
-                      className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-                    >
-                      Test
-                    </button>
-                    <button
-                      onClick={handleStorageDebug}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-                    >
-                      Storage Debug
-                    </button>
-                  </div>
-                </div>
-              </div>
               </div>
             </div>
           )}

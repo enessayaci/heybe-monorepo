@@ -1,4 +1,4 @@
-import pkg from 'pg';
+import pkg from "pg";
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -61,4 +61,4 @@ export default async function handler(req, res) {
       details: error.message,
     });
   }
-};
+}
