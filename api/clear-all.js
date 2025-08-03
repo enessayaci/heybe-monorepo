@@ -28,33 +28,27 @@ export default async (req, res) => {
   }
 
   try {
-    const { id, user_id } = req.body;
+    const { user_id } = req.body;
 
-    if (!id || !user_id) {
+    if (!user_id) {
       return res
         .status(400)
-        .json({ error: "Product ID and User ID are required" });
+        .json({ error: "User ID is required" });
     }
 
     const query = `
       DELETE FROM products 
-      WHERE id = $1 AND user_id = $2
-      RETURNING *
+      WHERE user_id = $1
     `;
 
-    const result = await pool.query(query, [id, user_id]);
+    const result = await pool.query(query, [user_id]);
 
-    if (result.rowCount === 0) {
-      return res
-        .status(404)
-        .json({ error: "Product not found or not authorized" });
-    }
-
-    console.log("👤 [Tüm Listem] Kullanıcı ürünü silindi:", user_id, "->", id);
+    console.log("🗑️ [Tüm Listem] Kullanıcının tüm ürünleri silindi:", user_id, "->", result.rowCount, "ürün");
 
     res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message: "All products deleted successfully",
+      deletedCount: result.rowCount,
     });
   } catch (error) {
     console.error("Database error:", error);
@@ -63,4 +57,4 @@ export default async (req, res) => {
       details: error.message,
     });
   }
-};
+}; 
