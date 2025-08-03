@@ -153,21 +153,13 @@ async function addProductToMyList(productInfo) {
       }
     }
     
-    // API'ye ürün ekle
-    const apiResponse = await fetch("https://my-list-pi.vercel.app/api/add-product", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...productInfo,
-        user_id: uuidData.uuid,
-      }),
+    // Background script üzerinden API'ye ürün ekle (CORS bypass)
+    const result = await apiRequest("POST", "add-product", {
+      ...productInfo,
+      user_id: uuidData.uuid,
     });
     
-    const result = await apiResponse.json();
-    
-    if (apiResponse.ok) {
+    if (result) {
       console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
       showSuccessMessage("Ürün Tüm Listeme eklendi!");
       return true;
