@@ -163,7 +163,9 @@ async function addProductToMyList(productInfo) {
 
     // Eğer kayıt işlemi devam ediyorsa ürün bilgisini sakla ve bekle
     if (isRegistrationInProgress) {
-      console.log("⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...");
+      console.log(
+        "⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor..."
+      );
       pendingProductInfo = productInfo;
       showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
       return true;
@@ -225,10 +227,13 @@ async function addProductToMyList(productInfo) {
 // Bekleyen ürünü ekle (kayıt sonrası çağrılır)
 async function addPendingProduct() {
   if (pendingProductInfo) {
-    console.log("🔄 [Content Script] Bekleyen ürün ekleniyor:", pendingProductInfo);
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün ekleniyor:",
+      pendingProductInfo
+    );
     const productInfo = pendingProductInfo;
     pendingProductInfo = null;
-    
+
     // Yeni permanent UUID ile ürün ekle
     const uuidData = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
@@ -239,27 +244,38 @@ async function addPendingProduct() {
         resolve(response);
       });
     });
-    
+
     // Kayıt sonrası yeni permanent UUID'yi kullan
-    console.log("🔄 [Content Script] Bekleyen ürün için UUID kontrolü:", uuidData);
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün için UUID kontrolü:",
+      uuidData
+    );
 
     if (uuidData && uuidData.uuid) {
-      console.log("🆕 [Content Script] Yeni permanent UUID ile ürün ekleniyor:", uuidData.uuid);
-      
+      console.log(
+        "🆕 [Content Script] Yeni permanent UUID ile ürün ekleniyor:",
+        uuidData.uuid
+      );
+
       const result = await apiRequest("POST", "add-product", {
         ...productInfo,
         user_id: uuidData.uuid,
       });
 
       if (result) {
-        console.log("✅ [Content Script] Bekleyen ürün başarıyla eklendi:", result);
+        console.log(
+          "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
+          result
+        );
         showSuccessMessage("Ürün Tüm Listeme eklendi!");
       } else {
         console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
         showErrorMessage("Ürün eklenirken hata oluştu!");
       }
     } else {
-      console.log("❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi");
+      console.log(
+        "❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi"
+      );
       showErrorMessage("UUID bulunamadı, ürün eklenemedi!");
     }
   }
@@ -268,17 +284,25 @@ async function addPendingProduct() {
 // Bekleyen ürünü belirli UUID ile ekle (kayıt sonrası çağrılır)
 async function addPendingProductWithUUID(uuid) {
   if (pendingProductInfo) {
-    console.log("🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:", pendingProductInfo, "UUID:", uuid);
+    console.log(
+      "🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:",
+      pendingProductInfo,
+      "UUID:",
+      uuid
+    );
     const productInfo = pendingProductInfo;
     pendingProductInfo = null;
-    
+
     const result = await apiRequest("POST", "add-product", {
       ...productInfo,
       user_id: uuid,
     });
 
     if (result) {
-      console.log("✅ [Content Script] Bekleyen ürün başarıyla eklendi:", result);
+      console.log(
+        "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
+        result
+      );
       showSuccessMessage("Ürün Tüm Listeme eklendi!");
     } else {
       console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
@@ -751,16 +775,18 @@ function showLoginOrRegisterForm() {
 
           document.body.removeChild(popup);
           showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
-          
+
           // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
-          
+
           resolve(true);
         } else if (result && result.error && result.error.includes("409")) {
           // Kullanıcı zaten kayıtlı, login dene
-          console.log("🔄 [Content Script] Kullanıcı zaten kayıtlı, login deneniyor...");
-          
+          console.log(
+            "🔄 [Content Script] Kullanıcı zaten kayıtlı, login deneniyor..."
+          );
+
           try {
             const loginResult = await apiRequest("POST", "login", {
               email: email,
@@ -777,12 +803,14 @@ function showLoginOrRegisterForm() {
               );
 
               document.body.removeChild(popup);
-              showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
-              
+              showSuccessMessage(
+                "Giriş başarılı! Artık kalıcı kullanıcısınız."
+              );
+
               // Login işlemi tamamlandı, bekleyen ürünü ekle
               isRegistrationInProgress = false;
               await addPendingProductWithUUID(loginResult.uuid);
-              
+
               resolve(true);
             } else {
               errorMessage.textContent = "Email veya şifre hatalı";
