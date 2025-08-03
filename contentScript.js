@@ -334,7 +334,7 @@ async function addPendingProductWithUUID(uuid) {
         result
       );
       showSuccessMessage("Ürün Tüm Listeme eklendi!");
-      
+
       // Buton durumunu güncelle
       const addButton = document.getElementById("tum-listem-ekle-btn");
       if (addButton) {
@@ -1216,9 +1216,9 @@ function createAddToListButton() {
     display: flex;
     z-index: 99999;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    border-radius: 24px 0 0 24px;
+    border-radius: 20px 0 0 20px;
     overflow: hidden;
-    margin-right: -200px;
+    margin-right: -160px;
     transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
@@ -1238,12 +1238,12 @@ function createAddToListButton() {
   addButton.style.cssText = `
     background: #2563eb;
     color: white;
-    padding: 0 24px 0 12px;
+    padding: 0 16px 0 8px;
     border: none;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    height: 48px;
-    width: 200px;
+    height: 40px;
+    width: 160px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -1265,12 +1265,12 @@ function createAddToListButton() {
   viewButton.style.cssText = `
     background: #f59e0b;
     color: white;
-    padding: 0 16px 0 8px;
+    padding: 0 12px 0 6px;
     border: none;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
-    height: 48px;
-    width: 120px;
+    height: 40px;
+    width: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1283,7 +1283,7 @@ function createAddToListButton() {
   });
 
   buttonContainer.addEventListener("mouseleave", () => {
-    buttonContainer.style.marginRight = "-200px";
+    buttonContainer.style.marginRight = "-160px";
   });
 
   // "Tüm Listeme Ekle" tıklama olayı
