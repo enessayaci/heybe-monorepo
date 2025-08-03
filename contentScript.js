@@ -4,12 +4,22 @@ console.log("🌐 [Content Script] Yüklendi");
 // API helper function (CORS bypass için background script kullanır)
 async function apiRequest(method, endpoint, data = null) {
   return new Promise((resolve, reject) => {
+    console.log(`🌐 [Content Script] API isteği gönderiliyor: ${method} ${endpoint}`, data);
+    
     chrome.runtime.sendMessage({
       action: "apiRequest",
       method: method,
       endpoint: endpoint,
       data: data
     }, response => {
+      console.log(`📡 [Content Script] API response:`, response);
+      
+      if (chrome.runtime.lastError) {
+        console.error("❌ [Content Script] Runtime error:", chrome.runtime.lastError);
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      
       if (response && response.success) {
         resolve(response.data);
       } else {
