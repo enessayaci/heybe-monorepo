@@ -146,6 +146,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true; // Async response
   }
+
+  // API istekleri için handler
+  if (request.action === "apiRequest") {
+    const { method, endpoint, data } = request;
+    
+    fetch(`https://my-list-pi.vercel.app/api/${endpoint}`, {
+      method: method || "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log(`✅ [Background] API ${endpoint} başarılı:`, result);
+      sendResponse({ success: true, data: result });
+    })
+    .catch(error => {
+      console.error(`❌ [Background] API ${endpoint} hatası:`, error);
+      sendResponse({ success: false, error: error.message });
+    });
+    
+    return true; // Async response
+  }
   
   if (request.action === "ensureGuestUUID") {
     // Guest UUID'yi oluştur veya mevcut olanı kullan

@@ -1,6 +1,24 @@
 // Content Script - Persistent UUID Bridge
 console.log("🌐 [Content Script] Yüklendi");
 
+// API helper function (CORS bypass için background script kullanır)
+async function apiRequest(method, endpoint, data = null) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({
+      action: "apiRequest",
+      method: method,
+      endpoint: endpoint,
+      data: data
+    }, response => {
+      if (response && response.success) {
+        resolve(response.data);
+      } else {
+        reject(new Error(response?.error || "API isteği başarısız"));
+      }
+    });
+  });
+}
+
 // Aktif UUID'yi extension'dan al ve web sitesine gönder
 async function sendActiveUUIDToWebSite() {
   try {
@@ -546,21 +564,13 @@ function showLoginOrRegisterForm() {
       errorMessage.style.display = "none";
 
       try {
-        // API'ye giriş isteği gönder
-        const response = await fetch("https://my-list-pi.vercel.app/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
+        // Background script üzerinden API'ye giriş isteği gönder (CORS bypass)
+        const result = await apiRequest("POST", "login", {
+          email: email,
+          password: password,
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.uuid) {
+        if (result && result.uuid) {
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Login başarılı, permanent UUID set edildi:", result.uuid);
@@ -611,22 +621,14 @@ function showLoginOrRegisterForm() {
       errorMessage.style.display = "none";
 
       try {
-        // API'ye kayıt isteği gönder
-        const response = await fetch("https://my-list-pi.vercel.app/api/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            password: password,
-          }),
+        // Background script üzerinden API'ye kayıt isteği gönder (CORS bypass)
+        const result = await apiRequest("POST", "register", {
+          name: name,
+          email: email,
+          password: password,
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.uuid) {
+        if (result && result.uuid) {
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:", result.uuid);
