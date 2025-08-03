@@ -7,20 +7,17 @@ console.log("🧪 [UUID Persistence Test] Başlıyor...");
 function checkExtensionUUID() {
   return new Promise((resolve) => {
     if (window.chrome && chrome.runtime) {
-      chrome.runtime.sendMessage(
-        { action: "getUserId" },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.log("❌ Extension mesaj hatası:", chrome.runtime.lastError);
-            resolve(null);
-            return;
-          }
-          
-          const uuid = response?.userId;
-          console.log("📦 Extension'dan UUID:", uuid);
-          resolve(uuid);
+      chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log("❌ Extension mesaj hatası:", chrome.runtime.lastError);
+          resolve(null);
+          return;
         }
-      );
+
+        const uuid = response?.userId;
+        console.log("📦 Extension'dan UUID:", uuid);
+        resolve(uuid);
+      });
     } else {
       console.log("❌ Chrome Runtime API bulunamadı");
       resolve(null);
