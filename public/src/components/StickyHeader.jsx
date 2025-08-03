@@ -56,7 +56,7 @@ function StickyHeader({ onScrollToSection }) {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <img src="/images/logo.png" alt="Shopping Basket" className="w-6 h-6" />
+            <img src="/logo.png" alt="Shopping Basket" className="w-6 h-6" />
             <h1 className="text-lg font-bold text-gray-900">Heybe</h1>
           </div>
 
