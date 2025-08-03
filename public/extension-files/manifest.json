@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "1.0.0",
-  "name": "Tüm Listem Extension",
-  "description": "Farklı sitelerdeki ürünleri tek sepette topla.",
+  "name": "Heybe Extension",
+  "description": "Farklı sitelerdeki ürünleri Heybe'de topla.",
   "icons": {
     "48": "images/logo.png"
   },
@@ -25,7 +25,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Tüm Listem Extension",
+    "default_title": "Heybe Extension",
     "default_icon": "images/logo.png"
   },
   "web_accessible_resources": [
