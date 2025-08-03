@@ -1240,7 +1240,7 @@ function createAddToListButton() {
   addButton.id = "tum-listem-ekle-btn";
   addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <img src="https://my-heybe.vercel.app/logo.png" width="20" height="20" style="object-fit: contain;">
+      <img src="chrome-extension://__MSG_@@extension_id__/images/logo.png" width="20" height="20" style="object-fit: contain;">
       <span>Heybeye Ekle</span>
     </div>
   `;
