@@ -393,30 +393,7 @@ function showLoginOrRegisterForm() {
       gap: 16px;
     `;
 
-    // Name input
-    const nameLabel = document.createElement("label");
-    nameLabel.style.cssText = `
-      font-size: 14px;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 4px;
-    `;
-    nameLabel.textContent = "Ad Soyad";
 
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.required = true;
-    nameInput.style.cssText = `
-      padding: 12px 16px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border-color 0.2s;
-      outline: none;
-    `;
-    nameInput.placeholder = "Adınız Soyadınız";
-    nameInput.onfocus = () => nameInput.style.borderColor = "#2563eb";
-    nameInput.onblur = () => nameInput.style.borderColor = "#d1d5db";
 
     // Email input
     const emailLabel = document.createElement("label");
@@ -573,6 +550,25 @@ function showLoginOrRegisterForm() {
         });
 
         if (result && result.uuid) {
+          // Misafir ürünlerini kalıcı kullanıcıya aktar
+          try {
+            const guestUUID = await new Promise((resolve) => {
+              chrome.storage.local.get(['guest_uuid'], (result) => {
+                resolve(result.guest_uuid);
+              });
+            });
+            
+            if (guestUUID && guestUUID !== result.uuid) {
+              console.log("🔄 [Content Script] Misafir ürünleri aktarılıyor...");
+              await apiRequest("POST", "transfer-products", {
+                guest_user_id: guestUUID,
+                permanent_user_id: result.uuid
+              });
+            }
+          } catch (transferError) {
+            console.error("❌ [Content Script] Ürün aktarma hatası:", transferError);
+          }
+
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Login başarılı, permanent UUID set edildi:", result.uuid);
@@ -600,12 +596,11 @@ function showLoginOrRegisterForm() {
 
     // Register button click handler
     registerButton.onclick = async () => {
-      const name = nameInput.value.trim();
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      if (!name || !email || !password) {
-        errorMessage.textContent = "Lütfen tüm alanları doldurun";
+      if (!email || !password) {
+        errorMessage.textContent = "Lütfen email ve şifre girin";
         errorMessage.style.display = "block";
         return;
       }
@@ -625,12 +620,30 @@ function showLoginOrRegisterForm() {
       try {
         // Background script üzerinden API'ye kayıt isteği gönder (CORS bypass)
         const result = await apiRequest("POST", "register", {
-          name: name,
           email: email,
           password: password,
         });
 
         if (result && result.uuid) {
+          // Misafir ürünlerini kalıcı kullanıcıya aktar
+          try {
+            const guestUUID = await new Promise((resolve) => {
+              chrome.storage.local.get(['guest_uuid'], (result) => {
+                resolve(result.guest_uuid);
+              });
+            });
+            
+            if (guestUUID && guestUUID !== result.uuid) {
+              console.log("🔄 [Content Script] Misafir ürünleri aktarılıyor...");
+              await apiRequest("POST", "transfer-products", {
+                guest_user_id: guestUUID,
+                permanent_user_id: result.uuid
+              });
+            }
+          } catch (transferError) {
+            console.error("❌ [Content Script] Ürün aktarma hatası:", transferError);
+          }
+
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, 'permanent');
           console.log("✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:", result.uuid);
@@ -657,8 +670,6 @@ function showLoginOrRegisterForm() {
     };
 
     // Assemble form
-    form.appendChild(nameLabel);
-    form.appendChild(nameInput);
     form.appendChild(emailLabel);
     form.appendChild(emailInput);
     form.appendChild(passwordLabel);
@@ -677,8 +688,8 @@ function showLoginOrRegisterForm() {
     // Add to page
     document.body.appendChild(popup);
 
-    // Focus name input
-    nameInput.focus();
+    // Focus email input
+    emailInput.focus();
 
     // Close on outside click
     popup.onclick = (e) => {

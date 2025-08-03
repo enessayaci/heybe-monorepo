@@ -28,6 +28,7 @@ function App() {
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
   const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
+  const TRANSFER_PRODUCTS_ENDPOINT = `${API_BASE}/transfer-products`;
 
   // Sidebar toggle handler
   const handleSidebarToggle = (collapsed) => {
@@ -61,6 +62,35 @@ function App() {
     }, 500);
 
     setSearchTimeout(newTimeout);
+  };
+
+  // Misafir ürünlerini kalıcı kullanıcıya aktarma fonksiyonu
+  const transferGuestProductsToPermanent = async (guestUserId, permanentUserId) => {
+    try {
+      console.log(`🔄 [Web Site] Misafir ürünleri aktarılıyor: ${guestUserId} -> ${permanentUserId}`);
+      
+      const response = await fetch(TRANSFER_PRODUCTS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guest_user_id: guestUserId,
+          permanent_user_id: permanentUserId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        console.log(`✅ [Web Site] ${result.transferred_count} ürün başarıyla aktarıldı`);
+        return true;
+      } else {
+        console.error("❌ [Web Site] Ürün aktarma hatası:", result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ [Web Site] Ürün aktarma network hatası:", error);
+      return false;
+    }
   };
 
   // Debug fonksiyonu
@@ -834,6 +864,13 @@ function App() {
                     const result = await response.json();
 
                     if (response.ok && result.uuid) {
+                      // Misafir ürünlerini kalıcı kullanıcıya aktar
+                      const guestUserId = localStorage.getItem("guest_uuid");
+                      if (guestUserId && guestUserId !== result.uuid) {
+                        console.log("🔄 [Web Site] Misafir ürünleri aktarılıyor...");
+                        await transferGuestProductsToPermanent(guestUserId, result.uuid);
+                      }
+
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
                       setIsLoggedIn(true);
@@ -923,7 +960,6 @@ function App() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                const name = formData.get("name");
                 const email = formData.get("email");
                 const password = formData.get("password");
 
@@ -948,13 +984,20 @@ function App() {
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name, email, password }),
+                        body: JSON.stringify({ email, password }),
                       }
                     );
 
                     const result = await response.json();
 
                     if (response.ok && result.uuid) {
+                      // Misafir ürünlerini kalıcı kullanıcıya aktar
+                      const guestUserId = localStorage.getItem("guest_uuid");
+                      if (guestUserId && guestUserId !== result.uuid) {
+                        console.log("🔄 [Web Site] Misafir ürünleri aktarılıyor...");
+                        await transferGuestProductsToPermanent(guestUserId, result.uuid);
+                      }
+
                       setCurrentUserId(result.uuid);
                       setUuidType("permanent");
                       setIsLoggedIn(true);
@@ -977,18 +1020,6 @@ function App() {
               }}
             >
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ad Soyad
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Adınız Soyadınız"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     E-posta
@@ -1113,14 +1144,16 @@ function App() {
               <div className="text-sm text-gray-500 flex items-center gap-4">
                 <span>Son güncelleme: {new Date().toLocaleTimeString()}</span>
                 <span>•</span>
-                <span>{status === "error" ? "N/A" : stats.totalProducts} ürün</span>
+                <span>
+                  {status === "error" ? "N/A" : stats.totalProducts} ürün
+                </span>
                 <span>•</span>
-                <span>{status === "error" ? "N/A" : stats.uniqueSites} farklı site</span>
+                <span>
+                  {status === "error" ? "N/A" : stats.uniqueSites} farklı site
+                </span>
               </div>
             </div>
           </div>
-
-
 
           {/* Uyarı Mesajı */}
           {showWarning && (
