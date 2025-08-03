@@ -51,39 +51,34 @@ async function setPermanentUUID(uuid) {
 // Aktif UUID'yi oku (Guest veya Permanent)
 async function getActiveUUID() {
   try {
-    // Önce login status'u kontrol et
-    const loginResult = await chrome.storage.local.get([USER_LOGIN_STATUS]);
-    const isLoggedIn = loginResult[USER_LOGIN_STATUS];
+    // Önce permanent UUID'yi kontrol et
+    let result = await chrome.storage.local.get([PERMANENT_UUID_KEY]);
+    let permanentUUID = result[PERMANENT_UUID_KEY];
 
-    if (isLoggedIn) {
-      // Giriş yapılmışsa permanent UUID'yi oku
-      let result = await chrome.storage.local.get([PERMANENT_UUID_KEY]);
-      let permanentUUID = result[PERMANENT_UUID_KEY];
-
-      // Local storage'da yoksa sync storage'dan dene
-      if (!permanentUUID) {
-        result = await chrome.storage.sync.get([PERMANENT_UUID_KEY]);
-        permanentUUID = result[PERMANENT_UUID_KEY];
-
-        if (permanentUUID) {
-          // Sync'ten bulduysa local'a da yaz
-          await chrome.storage.local.set({
-            [PERMANENT_UUID_KEY]: permanentUUID,
-          });
-          console.log(
-            "🔄 [Background] Permanent UUID sync storage'dan restore edildi:",
-            permanentUUID
-          );
-        }
-      }
+    // Local storage'da yoksa sync storage'dan dene
+    if (!permanentUUID) {
+      result = await chrome.storage.sync.get([PERMANENT_UUID_KEY]);
+      permanentUUID = result[PERMANENT_UUID_KEY];
 
       if (permanentUUID) {
-        console.log("🔍 [Background] Permanent UUID okundu:", permanentUUID);
-        return { uuid: permanentUUID, type: "permanent" };
+        // Sync'ten bulduysa local'a da yaz
+        await chrome.storage.local.set({
+          [PERMANENT_UUID_KEY]: permanentUUID,
+        });
+        console.log(
+          "🔄 [Background] Permanent UUID sync storage'dan restore edildi:",
+          permanentUUID
+        );
       }
     }
 
-    // Giriş yapılmamışsa guest UUID'yi oku
+    // Permanent UUID varsa onu kullan
+    if (permanentUUID) {
+      console.log("🔍 [Background] Permanent UUID okundu:", permanentUUID);
+      return { uuid: permanentUUID, type: "permanent" };
+    }
+
+    // Permanent UUID yoksa guest UUID'yi oku
     const guestResult = await chrome.storage.local.get([GUEST_UUID_KEY]);
     const guestUUID = guestResult[GUEST_UUID_KEY];
 
