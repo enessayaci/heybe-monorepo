@@ -152,10 +152,22 @@ async function sendUUIDToExtension(uuid, type = "guest") {
   }
 }
 
+// Global değişkenler
+let isRegistrationInProgress = false;
+let pendingProductInfo = null;
+
 // Ürün ekleme fonksiyonu - Guest/Permanent UUID kontrolü ile
 async function addProductToMyList(productInfo) {
   try {
     console.log("🛒 [Content Script] Ürün ekleme başlatılıyor:", productInfo);
+
+    // Eğer kayıt işlemi devam ediyorsa ürün bilgisini sakla ve bekle
+    if (isRegistrationInProgress) {
+      console.log("⏳ [Content Script] Kayıt işlemi devam ediyor, ürün bekletiliyor...");
+      pendingProductInfo = productInfo;
+      showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+      return true;
+    }
 
     // Önce aktif UUID'yi al
     const uuidData = await new Promise((resolve, reject) => {
@@ -207,6 +219,41 @@ async function addProductToMyList(productInfo) {
     console.error("❌ [Content Script] Ürün ekleme hatası:", error);
     showErrorMessage("Ürün eklenirken hata oluştu!");
     return false;
+  }
+}
+
+// Bekleyen ürünü ekle (kayıt sonrası çağrılır)
+async function addPendingProduct() {
+  if (pendingProductInfo) {
+    console.log("🔄 [Content Script] Bekleyen ürün ekleniyor:", pendingProductInfo);
+    const productInfo = pendingProductInfo;
+    pendingProductInfo = null;
+    
+    // Yeni permanent UUID ile ürün ekle
+    const uuidData = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error("Extension bulunamadı"));
+          return;
+        }
+        resolve(response);
+      });
+    });
+
+    if (uuidData && uuidData.uuid) {
+      const result = await apiRequest("POST", "add-product", {
+        ...productInfo,
+        user_id: uuidData.uuid,
+      });
+
+      if (result) {
+        console.log("✅ [Content Script] Bekleyen ürün başarıyla eklendi:", result);
+        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+      } else {
+        console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+        showErrorMessage("Ürün eklenirken hata oluştu!");
+      }
+    }
   }
 }
 
@@ -646,6 +693,9 @@ function showLoginOrRegisterForm() {
       registerButton.disabled = true;
       errorMessage.style.display = "none";
 
+      // Kayıt işlemi başladığını işaretle
+      isRegistrationInProgress = true;
+
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
@@ -671,6 +721,11 @@ function showLoginOrRegisterForm() {
 
           document.body.removeChild(popup);
           showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
+          
+          // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
+          isRegistrationInProgress = false;
+          await addPendingProduct();
+          
           resolve(true);
         } else if (result && result.error && result.error.includes("409")) {
           // Kullanıcı zaten kayıtlı, login dene
@@ -693,6 +748,11 @@ function showLoginOrRegisterForm() {
 
               document.body.removeChild(popup);
               showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
+              
+              // Login işlemi tamamlandı, bekleyen ürünü ekle
+              isRegistrationInProgress = false;
+              await addPendingProduct();
+              
               resolve(true);
             } else {
               errorMessage.textContent = "Email veya şifre hatalı";
@@ -700,6 +760,7 @@ function showLoginOrRegisterForm() {
               loginButton.disabled = false;
               registerButton.textContent = "Kayıt Ol";
               registerButton.disabled = false;
+              isRegistrationInProgress = false;
             }
           } catch (loginError) {
             console.error("❌ [Content Script] Login hatası:", loginError);
@@ -708,6 +769,7 @@ function showLoginOrRegisterForm() {
             loginButton.disabled = false;
             registerButton.textContent = "Kayıt Ol";
             registerButton.disabled = false;
+            isRegistrationInProgress = false;
           }
         } else {
           errorMessage.textContent = result.error || "Kayıt başarısız";
@@ -715,6 +777,7 @@ function showLoginOrRegisterForm() {
           loginButton.disabled = false;
           registerButton.textContent = "Kayıt Ol";
           registerButton.disabled = false;
+          isRegistrationInProgress = false;
         }
       } catch (error) {
         console.error("❌ [Content Script] Kayıt hatası:", error);
@@ -723,6 +786,7 @@ function showLoginOrRegisterForm() {
         loginButton.disabled = false;
         registerButton.textContent = "Kayıt Ol";
         registerButton.disabled = false;
+        isRegistrationInProgress = false;
       }
     };
 
