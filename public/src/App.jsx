@@ -235,21 +235,9 @@ function App() {
       });
     };
 
-    // Extension hazır olduğunda UUID kontrol et
-    waitForExtension().then(async () => {
-      try {
-        const userId = await getActiveUUID();
-        console.log("🚀 [Basit] getActiveUUID() sonucu:", userId);
-        if (userId) {
-          console.log("✅ [Basit] UUID bulundu:", userId);
-          // fetchProducts'ı çağırma, currentUserId set edildiğinde otomatik çalışacak
-        } else {
-          console.log("❌ [Basit] UUID bulunamadı");
-        }
-      } catch (e) {
-        console.log("⚠️ [Basit] Hata:", e);
-      }
-    });
+    // ContentScript'ten gelen UUID event'ini bekle
+    console.log("🚀 [Basit] ContentScript'ten UUID event'i bekleniyor...");
+    // handleExtensionActiveUUID fonksiyonu zaten UUID'yi alıp set edecek
 
     return () => {
       window.removeEventListener(
@@ -598,15 +586,18 @@ function App() {
       ) {
         console.log("🔍 [Web Site] Extension mevcut, aktif UUID isteniyor...");
         console.log("🔍 [Web Site] Extension ID:", chrome.runtime.id);
-        
+
         try {
           const response = await new Promise((resolve, reject) => {
             chrome.runtime.sendMessage(
               { action: "getActiveUUID" },
               (response) => {
                 console.log("🔍 [Web Site] Extension response:", response);
-                console.log("🔍 [Web Site] Chrome runtime error:", chrome.runtime.lastError);
-                
+                console.log(
+                  "🔍 [Web Site] Chrome runtime error:",
+                  chrome.runtime.lastError
+                );
+
                 if (chrome.runtime.lastError) {
                   console.log(
                     "❌ [Web Site] Extension mesaj hatası:",
