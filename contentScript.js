@@ -239,6 +239,9 @@ async function addPendingProduct() {
         resolve(response);
       });
     });
+    
+    // Kayıt sonrası yeni permanent UUID'yi kullan
+    console.log("🔄 [Content Script] Bekleyen ürün için UUID kontrolü:", uuidData);
 
     if (uuidData && uuidData.uuid) {
       console.log("🆕 [Content Script] Yeni permanent UUID ile ürün ekleniyor:", uuidData.uuid);
@@ -258,6 +261,28 @@ async function addPendingProduct() {
     } else {
       console.log("❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi");
       showErrorMessage("UUID bulunamadı, ürün eklenemedi!");
+    }
+  }
+}
+
+// Bekleyen ürünü belirli UUID ile ekle (kayıt sonrası çağrılır)
+async function addPendingProductWithUUID(uuid) {
+  if (pendingProductInfo) {
+    console.log("🔄 [Content Script] Bekleyen ürün belirli UUID ile ekleniyor:", pendingProductInfo, "UUID:", uuid);
+    const productInfo = pendingProductInfo;
+    pendingProductInfo = null;
+    
+    const result = await apiRequest("POST", "add-product", {
+      ...productInfo,
+      user_id: uuid,
+    });
+
+    if (result) {
+      console.log("✅ [Content Script] Bekleyen ürün başarıyla eklendi:", result);
+      showSuccessMessage("Ürün Tüm Listeme eklendi!");
+    } else {
+      console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+      showErrorMessage("Ürün eklenirken hata oluştu!");
     }
   }
 }
@@ -635,8 +660,8 @@ function showLoginOrRegisterForm() {
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(["guest_uuid"], (result) => {
-            resolve(result.guest_uuid);
+          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
+            resolve(result.tum_listem_guest_uuid);
           });
         });
 
@@ -704,8 +729,8 @@ function showLoginOrRegisterForm() {
       try {
         // Misafir UUID'yi al
         const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(["guest_uuid"], (result) => {
-            resolve(result.guest_uuid);
+          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
+            resolve(result.tum_listem_guest_uuid);
           });
         });
 
@@ -729,7 +754,7 @@ function showLoginOrRegisterForm() {
           
           // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
-          await addPendingProduct();
+          await addPendingProductWithUUID(result.uuid);
           
           resolve(true);
         } else if (result && result.error && result.error.includes("409")) {
@@ -756,7 +781,7 @@ function showLoginOrRegisterForm() {
               
               // Login işlemi tamamlandı, bekleyen ürünü ekle
               isRegistrationInProgress = false;
-              await addPendingProduct();
+              await addPendingProductWithUUID(loginResult.uuid);
               
               resolve(true);
             } else {
