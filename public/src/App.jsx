@@ -20,6 +20,7 @@ function App() {
   const [userRole, setUserRole] = useState("user"); // 'user' veya 'admin'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -466,6 +467,7 @@ function App() {
 
   const handleDeleteProduct = async (productId) => {
     setDeletingProductId(productId);
+    setIsDeleting(true);
     try {
       const response = await fetch(DELETE_PRODUCT_ENDPOINT, {
         method: "DELETE",
@@ -495,6 +497,7 @@ function App() {
       setError("Silme hatası: " + error.message);
     } finally {
       setDeletingProductId(null);
+      setIsDeleting(false);
     }
   };
   // Tümünü sil
