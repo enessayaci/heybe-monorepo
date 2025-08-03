@@ -73,7 +73,7 @@ function App() {
     console.log("🔄 Refresh butonu tıklandı");
     try {
       setStatus("loading");
-      
+
       // currentUserId kullan (getUserId() çağırma!)
       if (!currentUserId) {
         console.log("❌ [handleRefresh] currentUserId yok");
@@ -81,7 +81,7 @@ function App() {
         setStatus("error");
         return;
       }
-      
+
       const response = await fetch(
         `${GET_PRODUCTS_ENDPOINT}?user_id=${currentUserId}`
       );
@@ -566,7 +566,10 @@ function App() {
   async function getActiveUUID() {
     // Eğer zaten UUID varsa, onu kullan (değiştirme!)
     if (currentUserId) {
-      console.log("🔄 [getActiveUUID] Mevcut UUID kullanılıyor:", currentUserId);
+      console.log(
+        "🔄 [getActiveUUID] Mevcut UUID kullanılıyor:",
+        currentUserId
+      );
       return currentUserId;
     }
 
@@ -756,35 +759,47 @@ function App() {
               <button
                 onClick={async () => {
                   setShowGuestWarning(false);
-                  
+
                   try {
                     // Web sitesinde login yap
-                    const response = await fetch("https://my-list-pi.vercel.app/api/login", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        email: "test@example.com", // Test kullanıcısı
-                        password: "123456",
-                      }),
-                    });
+                    const response = await fetch(
+                      "https://my-list-pi.vercel.app/api/login",
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          email: "test@example.com", // Test kullanıcısı
+                          password: "123456",
+                        }),
+                      }
+                    );
 
                     const result = await response.json();
 
                     if (response.ok && result.uuid) {
                       // Permanent UUID'yi set et (extension'dan bağımsız)
                       setCurrentUserId(result.uuid);
-                      setUuidType('permanent');
+                      setUuidType("permanent");
                       setIsLoggedIn(true);
-                      
-                      console.log("✅ [Web Site] Login başarılı, permanent UUID set edildi:", result.uuid);
-                      
+
+                      console.log(
+                        "✅ [Web Site] Login başarılı, permanent UUID set edildi:",
+                        result.uuid
+                      );
+
                       // Ürünleri yeniden yükle
                       await fetchProducts();
                     } else {
-                      console.error("❌ [Web Site] Login başarısız:", result.error);
-                      alert("Giriş başarısız: " + (result.error || "Bilinmeyen hata"));
+                      console.error(
+                        "❌ [Web Site] Login başarısız:",
+                        result.error
+                      );
+                      alert(
+                        "Giriş başarısız: " +
+                          (result.error || "Bilinmeyen hata")
+                      );
                     }
                   } catch (error) {
                     console.error("❌ [Web Site] Login hatası:", error);
