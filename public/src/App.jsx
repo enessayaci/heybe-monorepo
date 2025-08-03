@@ -799,35 +799,42 @@ function App() {
               Giriş Yap
             </h3>
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              const email = formData.get('email');
-              const password = formData.get('password');
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const email = formData.get("email");
+                const password = formData.get("password");
 
-              try {
-                const response = await fetch("https://my-list-pi.vercel.app/api/login", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, password }),
-                });
+                try {
+                  const response = await fetch(
+                    "https://my-list-pi.vercel.app/api/login",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email, password }),
+                    }
+                  );
 
-                const result = await response.json();
+                  const result = await response.json();
 
-                if (response.ok && result.uuid) {
-                  setCurrentUserId(result.uuid);
-                  setUuidType("permanent");
-                  setIsLoggedIn(true);
-                  setShowLoginForm(false);
-                  console.log("✅ [Web Site] Login başarılı:", result.uuid);
-                } else {
-                  alert("Giriş başarısız: " + (result.error || "Bilinmeyen hata"));
+                  if (response.ok && result.uuid) {
+                    setCurrentUserId(result.uuid);
+                    setUuidType("permanent");
+                    setIsLoggedIn(true);
+                    setShowLoginForm(false);
+                    console.log("✅ [Web Site] Login başarılı:", result.uuid);
+                  } else {
+                    alert(
+                      "Giriş başarısız: " + (result.error || "Bilinmeyen hata")
+                    );
+                  }
+                } catch (error) {
+                  console.error("❌ [Web Site] Login hatası:", error);
+                  alert("Bağlantı hatası");
                 }
-              } catch (error) {
-                console.error("❌ [Web Site] Login hatası:", error);
-                alert("Bağlantı hatası");
-              }
-            }}>
+              }}
+            >
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -892,36 +899,43 @@ function App() {
               Kayıt Ol
             </h3>
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              const name = formData.get('name');
-              const email = formData.get('email');
-              const password = formData.get('password');
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const name = formData.get("name");
+                const email = formData.get("email");
+                const password = formData.get("password");
 
-              try {
-                const response = await fetch("https://my-list-pi.vercel.app/api/register", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ name, email, password }),
-                });
+                try {
+                  const response = await fetch(
+                    "https://my-list-pi.vercel.app/api/register",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name, email, password }),
+                    }
+                  );
 
-                const result = await response.json();
+                  const result = await response.json();
 
-                if (response.ok && result.uuid) {
-                  setCurrentUserId(result.uuid);
-                  setUuidType("permanent");
-                  setIsLoggedIn(true);
-                  setShowRegisterForm(false);
-                  console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
-                } else {
-                  alert("Kayıt başarısız: " + (result.error || "Bilinmeyen hata"));
+                  if (response.ok && result.uuid) {
+                    setCurrentUserId(result.uuid);
+                    setUuidType("permanent");
+                    setIsLoggedIn(true);
+                    setShowRegisterForm(false);
+                    console.log("✅ [Web Site] Kayıt başarılı:", result.uuid);
+                  } else {
+                    alert(
+                      "Kayıt başarısız: " + (result.error || "Bilinmeyen hata")
+                    );
+                  }
+                } catch (error) {
+                  console.error("❌ [Web Site] Kayıt hatası:", error);
+                  alert("Bağlantı hatası");
                 }
-              } catch (error) {
-                console.error("❌ [Web Site] Kayıt hatası:", error);
-                alert("Bağlantı hatası");
-              }
-            }}>
+              }}
+            >
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
