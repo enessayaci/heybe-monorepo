@@ -407,6 +407,8 @@ function showGuestWarningPopup() {
     loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
     loginButton.onclick = () => {
       document.body.removeChild(popup);
+      // Kayıt işlemi başladığını işaretle
+      isRegistrationInProgress = true;
       showLoginOrRegisterForm().then((result) => {
         resolve(result);
       });
@@ -747,8 +749,7 @@ function showLoginOrRegisterForm() {
       registerButton.disabled = true;
       errorMessage.style.display = "none";
 
-      // Kayıt işlemi başladığını işaretle
-      isRegistrationInProgress = true;
+      // Kayıt işlemi zaten başladı (showGuestWarningPopup'ta set edildi)
 
       try {
         // Misafir UUID'yi al
