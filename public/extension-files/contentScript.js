@@ -1240,10 +1240,8 @@ function createAddToListButton() {
   addButton.id = "tum-listem-ekle-btn";
   addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13" />
-      </svg>
-                      <span>Heybeye Ekle</span>
+      <img src="https://my-heybe.vercel.app/images/logo.png" width="20" height="20" style="object-fit: contain;">
+      <span>Heybeye Ekle</span>
     </div>
   `;
 
@@ -1340,7 +1338,7 @@ function createAddToListButton() {
 
   // "Listeyi Gör" tıklama olayı
   viewButton.addEventListener("click", () => {
-            window.open("https://my-heybe.vercel.app", "_blank");
+    window.open("https://my-heybe.vercel.app", "_blank");
   });
 
   // Butonları container'a ekle

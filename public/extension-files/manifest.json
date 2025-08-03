@@ -5,7 +5,7 @@
   "name": "Heybe Extension",
   "description": "Farklı sitelerdeki ürünleri Heybe'de topla.",
   "icons": {
-    "48": "images/logo-heybe.png"
+    "48": "images/logo.png"
   },
   "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
   "host_permissions": ["https://my-heybe.vercel.app/*"],
@@ -26,7 +26,7 @@
   },
   "action": {
     "default_title": "Heybe Extension",
-    "default_icon": "images/logo-heybe.png"
+    "default_icon": "images/logo.png"
   },
   "web_accessible_resources": [
     {
