@@ -251,7 +251,7 @@ async function addProductToMyList(productInfo) {
                 loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
                 loginButton.onclick = () => {
                   document.body.removeChild(popup);
-                  showLoginForm().then((result) => {
+                  showLoginOrRegisterForm().then((result) => {
                     resolve(result);
                   });
                 };
@@ -323,8 +323,8 @@ async function addProductToMyList(productInfo) {
               });
             }
 
-// Login form popup'ı
-function showLoginForm() {
+// Login veya Register form popup'ı
+function showLoginOrRegisterForm() {
   return new Promise((resolve) => {
     // Popup container oluştur
     const popup = document.createElement("div");
@@ -363,7 +363,7 @@ function showLoginForm() {
       margin: 0 0 24px;
       text-align: center;
     `;
-    title.textContent = "Giriş Yap";
+    title.textContent = "Giriş Yap / Kayıt Ol";
 
     // Form
     const form = document.createElement("form");
@@ -372,6 +372,31 @@ function showLoginForm() {
       flex-direction: column;
       gap: 16px;
     `;
+
+    // Name input
+    const nameLabel = document.createElement("label");
+    nameLabel.style.cssText = `
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    `;
+    nameLabel.textContent = "Ad Soyad";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.required = true;
+    nameInput.style.cssText = `
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    `;
+    nameInput.placeholder = "Adınız Soyadınız";
+    nameInput.onfocus = () => nameInput.style.borderColor = "#2563eb";
+    nameInput.onblur = () => nameInput.style.borderColor = "#d1d5db";
 
     // Email input
     const emailLabel = document.createElement("label");
@@ -443,7 +468,7 @@ function showLoginForm() {
 
     // Login button
     const loginButton = document.createElement("button");
-    loginButton.type = "submit";
+    loginButton.type = "button";
     loginButton.style.cssText = `
       flex: 1;
       background: #2563eb;
@@ -460,11 +485,30 @@ function showLoginForm() {
     loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
     loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
 
+    // Register button
+    const registerButton = document.createElement("button");
+    registerButton.type = "button";
+    registerButton.style.cssText = `
+      flex: 1;
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    registerButton.textContent = "Kayıt Ol";
+    registerButton.onmouseover = () => registerButton.style.background = "#047857";
+    registerButton.onmouseout = () => registerButton.style.background = "#059669";
+
     // Cancel button
     const cancelButton = document.createElement("button");
     cancelButton.type = "button";
     cancelButton.style.cssText = `
-      flex: 1;
+      width: 100%;
       background: #f3f4f6;
       color: #374151;
       border: none;
@@ -474,6 +518,7 @@ function showLoginForm() {
       font-weight: 500;
       cursor: pointer;
       transition: background 0.2s;
+      margin-top: 12px;
     `;
     cancelButton.textContent = "İptal";
     cancelButton.onmouseover = () => cancelButton.style.background = "#e5e7eb";
@@ -483,15 +528,13 @@ function showLoginForm() {
       resolve(false);
     };
 
-    // Form submit handler
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      
+    // Login button click handler
+    loginButton.onclick = async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
       if (!email || !password) {
-        errorMessage.textContent = "Lütfen tüm alanları doldurun";
+        errorMessage.textContent = "Lütfen email ve şifre girin";
         errorMessage.style.display = "block";
         return;
       }
@@ -499,6 +542,7 @@ function showLoginForm() {
       // Loading state
       loginButton.textContent = "Giriş yapılıyor...";
       loginButton.disabled = true;
+      registerButton.disabled = true;
       errorMessage.style.display = "none";
 
       try {
@@ -529,6 +573,7 @@ function showLoginForm() {
           errorMessage.style.display = "block";
           loginButton.textContent = "Giriş Yap";
           loginButton.disabled = false;
+          registerButton.disabled = false;
         }
 
       } catch (error) {
@@ -537,18 +582,88 @@ function showLoginForm() {
         errorMessage.style.display = "block";
         loginButton.textContent = "Giriş Yap";
         loginButton.disabled = false;
+        registerButton.disabled = false;
+      }
+    };
+
+    // Register button click handler
+    registerButton.onclick = async () => {
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!name || !email || !password) {
+        errorMessage.textContent = "Lütfen tüm alanları doldurun";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      if (password.length < 6) {
+        errorMessage.textContent = "Şifre en az 6 karakter olmalı";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      // Loading state
+      loginButton.disabled = true;
+      registerButton.textContent = "Kayıt yapılıyor...";
+      registerButton.disabled = true;
+      errorMessage.style.display = "none";
+
+      try {
+        // API'ye kayıt isteği gönder
+        const response = await fetch("https://my-list-pi.vercel.app/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            password: password,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.uuid) {
+          // Permanent UUID'yi extension'a set et
+          await sendUUIDToExtension(result.uuid, 'permanent');
+          console.log("✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:", result.uuid);
+          
+          document.body.removeChild(popup);
+          showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
+          resolve(true);
+        } else {
+          errorMessage.textContent = result.error || "Kayıt başarısız";
+          errorMessage.style.display = "block";
+          loginButton.disabled = false;
+          registerButton.textContent = "Kayıt Ol";
+          registerButton.disabled = false;
+        }
+
+      } catch (error) {
+        console.error("❌ [Content Script] Kayıt hatası:", error);
+        errorMessage.textContent = "Bağlantı hatası";
+        errorMessage.style.display = "block";
+        loginButton.disabled = false;
+        registerButton.textContent = "Kayıt Ol";
+        registerButton.disabled = false;
       }
     };
 
     // Assemble form
+    form.appendChild(nameLabel);
+    form.appendChild(nameInput);
     form.appendChild(emailLabel);
     form.appendChild(emailInput);
     form.appendChild(passwordLabel);
     form.appendChild(passwordInput);
     form.appendChild(errorMessage);
     buttonsContainer.appendChild(loginButton);
-    buttonsContainer.appendChild(cancelButton);
+    buttonsContainer.appendChild(registerButton);
     form.appendChild(buttonsContainer);
+    form.appendChild(cancelButton);
 
     // Assemble popup
     content.appendChild(title);
@@ -558,8 +673,8 @@ function showLoginForm() {
     // Add to page
     document.body.appendChild(popup);
 
-    // Focus email input
-    emailInput.focus();
+    // Focus name input
+    nameInput.focus();
 
     // Close on outside click
     popup.onclick = (e) => {

@@ -23,13 +23,13 @@ export default function handler(req, res) {
       {
         email: "test@example.com",
         password: "123456", // Gerçek implementasyonda hash'lenmiş olacak
-        uuid: "permanent-user-uuid-12345",
+        uuid: "test@example.com", // Email'i UUID olarak kullan
         name: "Test Kullanıcı"
       },
       {
         email: "admin@example.com", 
         password: "admin123",
-        uuid: "permanent-admin-uuid-67890",
+        uuid: "admin@example.com", // Email'i UUID olarak kullan
         name: "Admin Kullanıcı"
       }
     ];
