@@ -1,5 +1,5 @@
 // Storage Helper - Chrome Extension Storage API kullanarak cross-origin communication
-console.log("🗄️ [Storage Helper] Yüklendi");
+// console.log removed
 
 class ExtensionStorageHelper {
   constructor() {
@@ -13,7 +13,7 @@ class ExtensionStorageHelper {
       if (this.isExtension) {
         // Extension'da Chrome Storage API kullan
         await chrome.storage.local.set({ [this.storageKey]: userId });
-        console.log("✅ [Extension] UUID Chrome Storage'a yazıldı:", userId);
+        // console.log removed
         
         // Web sitesine event gönder
         this.notifyWebSite(userId);
@@ -24,7 +24,7 @@ class ExtensionStorageHelper {
           localStorage.setItem(this.storageKey, userId);
           console.log("✅ [Web Site] UUID localStorage'a yazıldı (extension yok):", userId);
         } else {
-          console.log("⚠️ [Web Site] Extension mevcut, localStorage'a yazılmadı:", userId);
+          // console.log removed
         }
       }
       return true;
@@ -41,7 +41,7 @@ class ExtensionStorageHelper {
         // Extension'da Chrome Storage API kullan
         const result = await chrome.storage.local.get([this.storageKey]);
         const userId = result[this.storageKey];
-        console.log("🔍 [Extension] Chrome Storage'dan UUID okundu:", userId);
+        // console.log removed
         return userId;
       } else {
         // Web sitesinde extension'dan mesaj gönder
@@ -56,21 +56,21 @@ class ExtensionStorageHelper {
   // Extension'dan UUID iste - Persistent storage'dan
   async requestFromExtension() {
     try {
-      console.log("🔍 [Web Site] Extension'dan UUID isteniyor...");
+      // console.log removed
       
       const response = await new Promise((resolve, reject) => {
         chrome.runtime.sendMessage({ action: "getUserId" }, (response) => {
           if (chrome.runtime.lastError) {
-            console.log("❌ [Web Site] Extension mesaj hatası:", chrome.runtime.lastError);
+            // console.log removed
             reject(new Error("Extension bulunamadı"));
             return;
           }
           
           if (response && response.userId) {
-            console.log("✅ [Web Site] Extension'dan UUID alındı:", response.userId);
+            // console.log removed
             resolve(response.userId);
           } else {
-            console.log("❌ [Web Site] Extension'dan UUID alınamadı");
+            // console.log removed
             reject(new Error("UUID bulunamadı"));
           }
         });
@@ -78,12 +78,12 @@ class ExtensionStorageHelper {
       
       return response;
     } catch (error) {
-      console.log("❌ [Web Site] Extension mesajlaşma hatası:", error.message);
+      // console.log removed
       
       // Fallback: localStorage'dan oku (eski sistem)
       const backupUserId = localStorage.getItem(this.storageKey);
       if (backupUserId) {
-        console.log("🔄 [Web Site] Fallback: localStorage'dan UUID okundu:", backupUserId);
+        // console.log removed
         return backupUserId;
       }
       
@@ -100,7 +100,7 @@ class ExtensionStorageHelper {
           detail: { userId: userId }
         })
       );
-      console.log("📤 [Extension] extensionUserIdSet event gönderildi:", userId);
+      // console.log removed
     } catch (error) {
       console.error("❌ [Extension] Event gönderme hatası:", error);
     }
@@ -111,10 +111,10 @@ class ExtensionStorageHelper {
     try {
       if (this.isExtension) {
         await chrome.storage.local.remove([this.storageKey]);
-        console.log("🗑️ [Extension] UUID Chrome Storage'dan silindi");
+        // console.log removed
       } else {
         localStorage.removeItem(this.storageKey);
-        console.log("🗑️ [Web Site] UUID localStorage'dan silindi");
+        // console.log removed
       }
       return true;
     } catch (error) {
@@ -128,7 +128,7 @@ class ExtensionStorageHelper {
     try {
       if (this.isExtension) {
         const allData = await chrome.storage.local.get(null);
-        console.log("🔍 [Extension Debug] Chrome Storage:", allData);
+        // console.log removed
         return allData;
       } else {
         const allData = {};
@@ -136,7 +136,7 @@ class ExtensionStorageHelper {
           const key = localStorage.key(i);
           allData[key] = localStorage.getItem(key);
         }
-        console.log("🔍 [Web Site Debug] localStorage:", allData);
+        // console.log removed
         return allData;
       }
     } catch (error) {
@@ -161,4 +161,4 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
   });
 }
 
-console.log("🗄️ [Storage Helper] Hazır - Extension:", typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+// console.log removed

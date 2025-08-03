@@ -1,5 +1,5 @@
 // Background Script - Guest & Permanent UUID Storage
-console.log("🔄 [Background] Yüklendi");
+// console.log removed
 
 // Extension storage keys
 const GUEST_UUID_KEY = "tum_listem_guest_uuid";
@@ -19,10 +19,10 @@ function generateUUID() {
 async function setGuestUUID(uuid) {
   try {
     await chrome.storage.local.set({ [GUEST_UUID_KEY]: uuid });
-    console.log("✅ [Background] Guest UUID kaydedildi:", uuid);
+    // console.log removed
     return true;
   } catch (error) {
-    console.error("❌ [Background] Guest UUID kaydetme hatası:", error);
+    // console.error removed
     return false;
   }
 }
@@ -40,10 +40,10 @@ async function setPermanentUUID(uuid) {
     await chrome.storage.local.set({ [USER_LOGIN_STATUS]: true });
     await chrome.storage.sync.set({ [USER_LOGIN_STATUS]: true });
 
-    console.log("✅ [Background] Permanent UUID kaydedildi:", uuid);
+    // console.log removed
     return true;
   } catch (error) {
-    console.error("❌ [Background] Permanent UUID kaydetme hatası:", error);
+    // console.error removed
     return false;
   }
 }
@@ -74,7 +74,7 @@ async function getActiveUUID() {
 
     // Permanent UUID varsa onu kullan
     if (permanentUUID) {
-      console.log("🔍 [Background] Permanent UUID okundu:", permanentUUID);
+      // console.log removed
       return { uuid: permanentUUID, type: "permanent" };
     }
 
@@ -82,10 +82,10 @@ async function getActiveUUID() {
     const guestResult = await chrome.storage.local.get([GUEST_UUID_KEY]);
     const guestUUID = guestResult[GUEST_UUID_KEY];
 
-    console.log("🔍 [Background] Guest UUID okundu:", guestUUID);
+    // console.log removed
     return { uuid: guestUUID, type: "guest" };
   } catch (error) {
-    console.error("❌ [Background] UUID okuma hatası:", error);
+    // console.error removed
     return { uuid: null, type: "none" };
   }
 }
@@ -98,7 +98,7 @@ async function ensureGuestUUID() {
     if (!result.uuid || result.type === "none") {
       const guestUUID = generateUUID();
       await setGuestUUID(guestUUID);
-      console.log("👤 [Background] Yeni Guest UUID oluşturuldu:", guestUUID);
+      // console.log removed
       return guestUUID;
     } else if (result.type === "guest") {
       console.log(
@@ -114,19 +114,19 @@ async function ensureGuestUUID() {
       return result.uuid;
     }
   } catch (error) {
-    console.error("❌ [Background] Guest UUID oluşturma hatası:", error);
+    // console.error removed
     return null;
   }
 }
 
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("📨 [Background] Mesaj alındı:", request);
+  // console.log removed
 
   if (request.action === "getActiveUUID") {
     // Aktif UUID'yi oku ve gönder
     getActiveUUID().then((result) => {
-      console.log("📤 [Background] Aktif UUID gönderiliyor:", result);
+      // console.log removed
       sendResponse(result);
     });
     return true; // Async response
@@ -135,7 +135,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "setGuestUUID") {
     // Guest UUID'yi kaydet
     setGuestUUID(request.uuid).then((success) => {
-      console.log("📤 [Background] Guest UUID kaydetme sonucu:", success);
+      // console.log removed
       sendResponse({ success: success });
     });
     return true; // Async response
@@ -144,7 +144,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "setPermanentUUID") {
     // Permanent UUID'yi kaydet
     setPermanentUUID(request.uuid).then((success) => {
-      console.log("📤 [Background] Permanent UUID kaydetme sonucu:", success);
+      // console.log removed
       // Login status'u true yap
       chrome.storage.local.set({ [USER_LOGIN_STATUS]: true });
       chrome.storage.sync.set({ [USER_LOGIN_STATUS]: true });
@@ -176,7 +176,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           response.status,
           response.statusText
         );
-        console.log(`📡 [Background] API response headers:`, response.headers);
+        // console.log removed
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -184,11 +184,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return response.json();
       })
       .then((result) => {
-        console.log(`✅ [Background] API ${endpoint} başarılı:`, result);
+        // console.log removed
         sendResponse({ success: true, data: result });
       })
       .catch((error) => {
-        console.error(`❌ [Background] API ${endpoint} hatası:`, error);
+        // console.error removed
         sendResponse({ success: false, error: error.message });
       });
 
@@ -198,7 +198,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "ensureGuestUUID") {
     // Guest UUID'yi oluştur veya mevcut olanı kullan
     ensureGuestUUID().then((uuid) => {
-      console.log("📤 [Background] Guest UUID hazır:", uuid);
+      // console.log removed
       sendResponse({ uuid: uuid });
     });
     return true; // Async response
@@ -207,7 +207,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "clearGuestUUID") {
     // Guest UUID'yi sil
     chrome.storage.local.remove([GUEST_UUID_KEY]).then(() => {
-      console.log("🗑️ [Background] Guest UUID silindi");
+      // console.log removed
       sendResponse({ success: true });
     });
     return true; // Async response
@@ -220,7 +220,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.storage.local.set({ [USER_LOGIN_STATUS]: false }),
       chrome.storage.sync.set({ [USER_LOGIN_STATUS]: false }),
     ]).then(() => {
-      console.log("🚪 [Background] Logout yapıldı");
+      // console.log removed
       sendResponse({ success: true });
     });
     return true; // Async response
@@ -248,7 +248,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     "🚀 [Background] Extension yüklendi, Guest UUID kontrol ediliyor..."
   );
   const guestUUID = await ensureGuestUUID();
-  console.log("✅ [Background] Extension hazır, Guest UUID:", guestUUID);
+  // console.log removed
 });
 
 // Storage değişikliklerini dinle
@@ -328,4 +328,4 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   }
 });
 
-console.log("🔄 [Background] Hazır");
+// console.log removed

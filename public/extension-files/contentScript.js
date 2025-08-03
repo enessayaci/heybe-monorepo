@@ -1,14 +1,8 @@
 // Content Script - Persistent UUID Bridge
-console.log("🌐 [Content Script] Yüklendi");
 
 // API helper function (CORS bypass için background script kullanır)
 async function apiRequest(method, endpoint, data = null) {
   return new Promise((resolve, reject) => {
-    console.log(
-      `🌐 [Content Script] API isteği gönderiliyor: ${method} ${endpoint}`,
-      data
-    );
-
     chrome.runtime.sendMessage(
       {
         action: "apiRequest",
@@ -17,13 +11,7 @@ async function apiRequest(method, endpoint, data = null) {
         data: data,
       },
       (response) => {
-        console.log(`📡 [Content Script] API response:`, response);
-
         if (chrome.runtime.lastError) {
-          console.error(
-            "❌ [Content Script] Runtime error:",
-            chrome.runtime.lastError
-          );
           reject(new Error(chrome.runtime.lastError.message));
           return;
         }
@@ -41,27 +29,16 @@ async function apiRequest(method, endpoint, data = null) {
 // Aktif UUID'yi extension'dan al ve web sitesine gönder
 async function sendActiveUUIDToWebSite() {
   try {
-    console.log("🔍 [Content Script] Extension'dan aktif UUID alınıyor...");
-
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
         if (chrome.runtime.lastError) {
-          console.log(
-            "❌ [Content Script] Extension mesaj hatası:",
-            chrome.runtime.lastError
-          );
           reject(new Error("Extension bulunamadı"));
           return;
         }
 
         if (response && response.uuid) {
-          console.log(
-            "✅ [Content Script] Extension'dan aktif UUID alındı:",
-            response
-          );
           resolve(response);
         } else {
-          console.log("❌ [Content Script] Extension'dan UUID alınamadı");
           reject(new Error("UUID bulunamadı"));
         }
       });
@@ -70,18 +47,13 @@ async function sendActiveUUIDToWebSite() {
     // Web sitesine UUID'yi gönder
     sendActiveUUIDToPage(response);
   } catch (error) {
-    console.log("❌ [Content Script] UUID alma hatası:", error.message);
+    // UUID alma hatası
   }
 }
 
 // Web sitesine aktif UUID'yi gönder
 function sendActiveUUIDToPage(uuidData) {
   try {
-    console.log(
-      "📤 [Content Script] Aktif UUID web sitesine gönderiliyor:",
-      uuidData
-    );
-
     // Web sitesine event gönder
     window.dispatchEvent(
       new CustomEvent("extensionActiveUUIDSet", {
@@ -96,13 +68,8 @@ function sendActiveUUIDToPage(uuidData) {
     window.EXTENSION_ACTIVE_UUID = uuidData.uuid;
     window.EXTENSION_UUID_TYPE = uuidData.type;
     window.EXTENSION_UUID_TIMESTAMP = Date.now();
-
-    console.log(
-      "✅ [Content Script] Aktif UUID web sitesine gönderildi:",
-      uuidData
-    );
   } catch (error) {
-    console.error("❌ [Content Script] Web sitesine gönderme hatası:", error);
+    // Web sitesine gönderme hatası
   }
 }
 
@@ -138,7 +105,7 @@ async function sendUUIDToExtension(uuid, type = "guest") {
             });
             resolve(true);
           } else {
-            console.log("❌ [Content Script] UUID extension'a gönderilemedi");
+            // console.log removed
             reject(new Error("UUID kaydedilemedi"));
           }
         }
@@ -147,7 +114,7 @@ async function sendUUIDToExtension(uuid, type = "guest") {
 
     return response;
   } catch (error) {
-    console.error("❌ [Content Script] Extension'a gönderme hatası:", error);
+    // console.error removed
     return false;
   }
 }
@@ -159,7 +126,7 @@ let pendingProductInfo = null;
 // Ürün ekleme fonksiyonu - Guest/Permanent UUID kontrolü ile
 async function addProductToMyList(productInfo) {
   try {
-    console.log("🛒 [Content Script] Ürün ekleme başlatılıyor:", productInfo);
+    // console.log removed
 
     // Eğer kayıt işlemi devam ediyorsa ürün bilgisini sakla ve bekle
     if (isRegistrationInProgress) {
@@ -186,10 +153,10 @@ async function addProductToMyList(productInfo) {
         }
 
         if (response && response.uuid) {
-          console.log("✅ [Content Script] Aktif UUID alındı:", response);
+          // console.log removed
           resolve(response);
         } else {
-          console.log("❌ [Content Script] UUID bulunamadı");
+          // console.log removed
           reject(new Error("UUID bulunamadı"));
         }
       });
@@ -203,15 +170,15 @@ async function addProductToMyList(productInfo) {
 
       // Ürün ekleme işlemini beklet
       pendingProductInfo = productInfo;
-      console.log("⏸️ [Content Script] Ürün bekletiliyor:", productInfo);
+      // console.log removed
 
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
-        console.log("❌ [Content Script] Kullanıcı ürün eklemeyi iptal etti");
+        // console.log removed
         pendingProductInfo = null;
         return false;
       }
-      console.log("✅ [Content Script] Kullanıcı ürün eklemeye devam etti");
+      // console.log removed
 
       // Eğer kayıt/giriş işlemi devam ediyorsa ürünü beklet
       if (isRegistrationInProgress) {
@@ -238,10 +205,10 @@ async function addProductToMyList(productInfo) {
         user_id: uuidData.uuid,
       });
 
-      console.log("📡 [Content Script] API response:", result);
+      // console.log removed
 
       if (result && result.success) {
-        console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
+        // console.log removed
         showSuccessMessage("Ürün Heybeye eklendi!");
 
         // Buton durumunu güncelle
@@ -256,17 +223,17 @@ async function addProductToMyList(productInfo) {
         }
         return true;
       } else {
-        console.log("❌ [Content Script] Ürün ekleme hatası:", result);
+        // console.log removed
         showErrorMessage("Ürün eklenirken hata oluştu!");
         return false;
       }
     } catch (error) {
-      console.error("❌ [Content Script] Ürün ekleme exception:", error);
+      // console.error removed
       showErrorMessage("Ürün eklenirken hata oluştu!");
       return false;
     }
   } catch (error) {
-    console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+    // console.error removed
     showErrorMessage("Ürün eklenirken hata oluştu!");
     return false;
   }
@@ -317,7 +284,7 @@ async function addPendingProduct() {
         );
         showSuccessMessage("Ürün Tüm Listeme eklendi!");
       } else {
-        console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+        // console.log removed
         showErrorMessage("Ürün eklenirken hata oluştu!");
       }
     } else {
@@ -354,7 +321,7 @@ async function addPendingProductWithUUID(uuid) {
         user_id: uuid,
       });
 
-      console.log("📡 [Content Script] API response:", result);
+      // console.log removed
 
       if (result && result.success) {
         console.log(
@@ -374,7 +341,7 @@ async function addPendingProductWithUUID(uuid) {
           `;
         }
       } else {
-        console.log("❌ [Content Script] Bekleyen ürün ekleme hatası:", result);
+        // console.log removed
         showErrorMessage("Ürün eklenirken hata oluştu!");
       }
     } catch (error) {
@@ -809,7 +776,7 @@ function showLoginOrRegisterForm() {
           isRegistrationInProgress = false;
         }
       } catch (error) {
-        console.error("❌ [Content Script] Login hatası:", error);
+        // console.error removed
         errorMessage.textContent = "Bağlantı hatası";
         errorMessage.style.display = "block";
         loginButton.textContent = "Giriş Yap";
@@ -916,7 +883,7 @@ function showLoginOrRegisterForm() {
               return false;
             }
           } catch (loginError) {
-            console.error("❌ [Content Script] Login hatası:", loginError);
+            // console.error removed
             errorMessage.textContent = "Email veya şifre hatalı";
             errorMessage.style.display = "block";
             loginButton.disabled = false;
@@ -935,7 +902,7 @@ function showLoginOrRegisterForm() {
           return false;
         }
       } catch (error) {
-        console.error("❌ [Content Script] Kayıt hatası:", error);
+        // console.error removed
         errorMessage.textContent = "Bağlantı hatası";
         errorMessage.style.display = "block";
         loginButton.disabled = false;
@@ -1068,7 +1035,7 @@ window.addEventListener("message", (event) => {
   }
 
   if (event.data.type === "GET_ACTIVE_UUID") {
-    console.log("📨 [Content Script] Web sitesinden aktif UUID isteği alındı");
+    // console.log removed
     sendActiveUUIDToWebSite();
   }
 
@@ -1200,7 +1167,7 @@ function getProductInfo() {
       site: window.location.hostname,
     };
   } catch (error) {
-    console.error("❌ [Content Script] Ürün bilgisi çekme hatası:", error);
+    // console.error removed
     return {
       name: "Ürün",
       price: "",
@@ -1342,13 +1309,13 @@ function createAddToListButton() {
 
       // Ürün bilgilerini al
       const productInfo = getProductInfo();
-      console.log("🛒 [Content Script] Ürün bilgileri:", productInfo);
+      // console.log removed
 
       // Ürün ekleme fonksiyonunu çağır
       const success = await addProductToMyList(productInfo);
 
       if (success) {
-        console.log("✅ [Content Script] Ürün başarıyla eklendi");
+        // console.log removed
         // Ürün başarıyla eklendiyse buton durumunu güncelle
         addButton.disabled = true;
         addButton.style.background = "#10b981"; // Yeşil renk
@@ -1357,13 +1324,13 @@ function createAddToListButton() {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
         `;
       } else {
-        console.log("❌ [Content Script] Ürün eklenemedi");
+        // console.log removed
         // Hata durumunda buton durumunu geri al
         addButton.disabled = false;
         addButton.querySelector("span").textContent = "Heybeye Ekle";
       }
     } catch (error) {
-      console.error("❌ [Content Script] Ürün ekleme hatası:", error);
+      // console.error removed
       showErrorMessage("Ürün eklenirken hata oluştu!");
       // Hata durumunda buton durumunu geri al
       addButton.disabled = false;
@@ -1420,4 +1387,4 @@ window.postMessage(
   "*"
 );
 
-console.log("🌐 [Content Script] Hazır");
+// console.log removed
