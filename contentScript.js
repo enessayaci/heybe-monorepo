@@ -242,7 +242,7 @@ async function addProductToMyList(productInfo) {
             "✅ [Content Script] Guest kullanıcı için ürün başarıyla eklendi:",
             result
           );
-          showSuccessMessage("Ürün Tüm Listeme eklendi!");
+          showSuccessMessage("Ürün Heybeye eklendi!");
 
           // Buton durumunu güncelle
           const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -284,7 +284,7 @@ async function addProductToMyList(productInfo) {
 
       if (result && result.success) {
         console.log("✅ [Content Script] Ürün başarıyla eklendi:", result);
-        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+        showSuccessMessage("Ürün Heybeye eklendi!");
 
         // Buton durumunu güncelle
         const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -403,7 +403,7 @@ async function addPendingProductWithUUID(uuid) {
           "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
           result
         );
-        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+        showSuccessMessage("Ürün Heybeye eklendi!");
 
         // Buton durumunu güncelle
         const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -1315,7 +1315,7 @@ function createAddToListButton() {
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 0 0 7.48 19h9.04a2 2 0 0 0 1.83-1.3L21 13M7 13V6h13" />
       </svg>
-      <span>Tüm Listeme Ekle</span>
+                      <span>Heybeye Ekle</span>
     </div>
   `;
 
@@ -1399,14 +1399,14 @@ function createAddToListButton() {
         console.log("❌ [Content Script] Ürün eklenemedi");
         // Hata durumunda buton durumunu geri al
         addButton.disabled = false;
-        addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
+        addButton.querySelector("span").textContent = "Heybeye Ekle";
       }
     } catch (error) {
       console.error("❌ [Content Script] Ürün ekleme hatası:", error);
       showErrorMessage("Ürün eklenirken hata oluştu!");
       // Hata durumunda buton durumunu geri al
       addButton.disabled = false;
-      addButton.querySelector("span").textContent = "Tüm Listeme Ekle";
+      addButton.querySelector("span").textContent = "Heybeye Ekle";
     }
   });
 

@@ -79,13 +79,13 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center">
           <img
-            src="/extension-files/images/shopping-basket.png"
+            src="/logo.png"
             alt="Shopping Basket"
             className="w-6 h-6 flex-shrink-0"
           />
           {!isCollapsed && (
             <h1 className="text-lg font-bold text-gray-900 ml-2 flex-shrink-0">
-              Tüm Listem
+              Heybe
             </h1>
           )}
         </div>

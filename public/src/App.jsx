@@ -19,10 +19,6 @@ function App() {
   const [uuidType, setUuidType] = useState(null); // 'guest' veya 'permanent'
   const [userRole, setUserRole] = useState("user"); // 'user' veya 'admin'
   const [isGettingUserId, setIsGettingUserId] = useState(false);
-  const [showGuestWarning, setShowGuestWarning] = useState(false);
-  const [showLoginForm, setShowLoginForm] = useState(false);
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-list-pi.vercel.app/api";
@@ -143,32 +139,19 @@ function App() {
     };
 
     // Extension'dan login status event'ini dinle
-    const handleExtensionLoginStatus = (event) => {
-      console.log(
-        "📨 [Web Site] extensionLoginStatusChanged event alındı:",
-        event.detail
-      );
-
-      setIsLoggedIn(event.detail.isLoggedIn);
-
-      // Giriş yapıldıysa guest uyarısını kapat
-      if (event.detail.isLoggedIn) {
-        setShowGuestWarning(false);
-      }
-    };
 
     // Extension'dan permanent UUID isteği dinle
     const handleExtensionPermanentUUIDRequest = (event) => {
       console.log("📨 [Web Site] Extension'dan permanent UUID isteği alındı");
 
-      // Eğer kullanıcı giriş yapmışsa permanent UUID'yi extension'a gönder
-      if (isLoggedIn && currentUserId && uuidType === "permanent") {
+      // Eğer currentUserId varsa extension'a gönder
+      if (currentUserId) {
         console.log(
-          "✅ [Web Site] Permanent UUID extension'a gönderiliyor:",
+          "✅ [Web Site] UUID extension'a gönderiliyor:",
           currentUserId
         );
 
-        // Extension'a permanent UUID'yi gönder
+        // Extension'a UUID'yi gönder
         window.postMessage(
           {
             type: "SEND_PERMANENT_UUID",
@@ -178,9 +161,7 @@ function App() {
           "*"
         );
       } else {
-        console.log(
-          "⚠️ [Web Site] Kullanıcı giriş yapmamış, permanent UUID yok"
-        );
+        console.log("⚠️ [Web Site] UUID yok");
       }
     };
 
@@ -188,10 +169,7 @@ function App() {
       "extensionActiveUUIDSet",
       handleExtensionActiveUUID
     );
-    window.addEventListener(
-      "extensionLoginStatusChanged",
-      handleExtensionLoginStatus
-    );
+
     window.addEventListener("message", handleExtensionPermanentUUIDRequest);
 
     // Basit: UUID hazır olduğunda ürünleri çek
@@ -247,10 +225,7 @@ function App() {
         "extensionActiveUUIDSet",
         handleExtensionActiveUUID
       );
-      window.removeEventListener(
-        "extensionLoginStatusChanged",
-        handleExtensionLoginStatus
-      );
+
       window.removeEventListener(
         "message",
         handleExtensionPermanentUUIDRequest
@@ -389,15 +364,15 @@ function App() {
   const updateMetaTags = (product) => {
     // Open Graph meta tag'leri
     const metaTags = {
-      "og:title": `${product.name} - Tüm Listem`,
+      "og:title": `${product.name} - Heybe`,
       "og:description": `${product.name} ürünü ${product.site} sitesinde ${
         product.price || "fiyat belirtilmemiş"
       } fiyatla satılıyor.`,
       "og:image": product.image_url || "https://my-list-pi.vercel.app/logo.svg",
       "og:url": window.location.href,
       "og:type": "product",
-      "og:site_name": "Tüm Listem",
-      "twitter:title": `${product.name} - Tüm Listem`,
+      "og:site_name": "Heybe",
+      "twitter:title": `${product.name} - Heybe`,
       "twitter:description": `${product.name} ürünü ${product.site} sitesinde satılıyor.`,
       "twitter:image":
         product.image_url || "https://my-list-pi.vercel.app/logo.svg",
@@ -416,7 +391,7 @@ function App() {
     });
 
     // Sayfa başlığını güncelle
-    document.title = `${product.name} - Tüm Listem`;
+    document.title = `${product.name} - Heybe`;
 
     // Description meta tag'ini de güncelle
     let descMeta = document.querySelector('meta[name="description"]');
@@ -577,7 +552,11 @@ function App() {
 
   // Ürün linkini aç
   const handleOpenProduct = (product) => {
-    window.open(product.product_url, "_blank");
+    if (product.url) {
+      window.open(product.url, "_blank");
+    } else {
+      console.error("❌ [handleOpenProduct] Ürün URL'i bulunamadı:", product);
+    }
   };
 
   // Minimal istatistikler
@@ -776,11 +755,6 @@ function App() {
       setCurrentUserId(uuidData.uuid);
       setUuidType(uuidData.type);
 
-      // Guest kullanıcı ise uyarı göster
-      if (uuidData.type === "guest") {
-        setShowGuestWarning(true);
-      }
-
       setIsGettingUserId(false);
       return uuidData.uuid;
     } catch (error) {
@@ -792,321 +766,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Guest Warning Modal */}
-      {showGuestWarning && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-                <svg
-                  className="w-6 h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Misafir Kullanıcı
-              </h3>
-            </div>
-
-            <p className="text-gray-600 mb-6">
-              Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanıyor ve
-              kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş
-              yapın veya misafir olarak devam edin.
-            </p>
-
-            <div className="flex flex-col space-y-3">
-              <button
-                onClick={() => {
-                  setShowGuestWarning(false);
-                  setShowLoginForm(true);
-                }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                Giriş Yap
-              </button>
-              <button
-                onClick={() => setShowGuestWarning(false)}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                Misafir Devam Et
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Login Form Modal */}
-      {showLoginForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-              Giriş Yap
-            </h3>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const email = formData.get("email");
-                const password = formData.get("password");
-
-                try {
-                  // Extension'dan gelen UUID'yi kullan
-                  if (window.EXTENSION_ACTIVE_UUID) {
-                    console.log(
-                      "✅ [Web Site] Extension UUID kullanılıyor:",
-                      window.EXTENSION_ACTIVE_UUID
-                    );
-                    setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
-                    setUuidType("permanent");
-                    setIsLoggedIn(true);
-                    setShowLoginForm(false);
-                    return;
-                  }
-
-                  // Extension yoksa normal API çağrısı
-                  try {
-                    const guestUserId = localStorage.getItem("guest_uuid");
-                    const response = await fetch(
-                      "https://my-list-pi.vercel.app/api/login",
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          email,
-                          password,
-                          guest_user_id: guestUserId || null,
-                        }),
-                      }
-                    );
-
-                    const result = await response.json();
-
-                    if (response.ok && result.uuid) {
-                      setCurrentUserId(result.uuid);
-                      setUuidType("permanent");
-                      setUserRole(result.role || "user");
-                      setIsLoggedIn(true);
-                      setShowLoginForm(false);
-                      console.log(
-                        "✅ [Web Site] Login başarılı:",
-                        result.uuid,
-                        "Role:",
-                        result.role
-                      );
-                    } else {
-                      alert(
-                        "Giriş başarısız: " +
-                          (result.error || "Bilinmeyen hata")
-                      );
-                    }
-                  } catch (fetchError) {
-                    console.error("❌ [Web Site] Fetch hatası:", fetchError);
-                    alert("Bağlantı hatası");
-                  }
-                } catch (error) {
-                  console.error("❌ [Web Site] Login hatası:", error);
-                  alert("Bağlantı hatası");
-                }
-              }}
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    E-posta
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="ornek@email.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Şifre
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Şifrenizi girin"
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                  >
-                    Giriş Yap
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowLoginForm(false);
-                      setShowRegisterForm(true);
-                    }}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                  >
-                    Kayıt Ol
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowLoginForm(false)}
-                  className="w-full text-gray-500 hover:text-gray-700 text-sm"
-                >
-                  İptal
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Register Form Modal */}
-      {showRegisterForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-              Kayıt Ol
-            </h3>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const email = formData.get("email");
-                const password = formData.get("password");
-
-                try {
-                  // Extension'dan gelen UUID'yi kullan
-                  if (window.EXTENSION_ACTIVE_UUID) {
-                    console.log(
-                      "✅ [Web Site] Extension UUID kullanılıyor:",
-                      window.EXTENSION_ACTIVE_UUID
-                    );
-                    setCurrentUserId(window.EXTENSION_ACTIVE_UUID);
-                    setUuidType("permanent");
-                    setIsLoggedIn(true);
-                    setShowRegisterForm(false);
-                    return;
-                  }
-
-                  // Extension yoksa normal API çağrısı
-                  try {
-                    const guestUserId = localStorage.getItem("guest_uuid");
-                    const response = await fetch(
-                      "https://my-list-pi.vercel.app/api/register",
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          email,
-                          password,
-                          guest_user_id: guestUserId || null,
-                        }),
-                      }
-                    );
-
-                    const result = await response.json();
-
-                    if (response.ok && result.uuid) {
-                      setCurrentUserId(result.uuid);
-                      setUuidType("permanent");
-                      setUserRole(result.role || "user");
-                      setIsLoggedIn(true);
-                      setShowRegisterForm(false);
-                      console.log(
-                        "✅ [Web Site] Kayıt başarılı:",
-                        result.uuid,
-                        "Role:",
-                        result.role
-                      );
-                    } else {
-                      alert(
-                        "Kayıt başarısız: " +
-                          (result.error || "Bilinmeyen hata")
-                      );
-                    }
-                  } catch (fetchError) {
-                    console.error("❌ [Web Site] Fetch hatası:", fetchError);
-                    alert("Bağlantı hatası");
-                  }
-                } catch (error) {
-                  console.error("❌ [Web Site] Kayıt hatası:", error);
-                  alert("Bağlantı hatası");
-                }
-              }}
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    E-posta
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="ornek@email.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Şifre
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="En az 6 karakter"
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                  >
-                    Kayıt Ol
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowRegisterForm(false);
-                      setShowLoginForm(true);
-                    }}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                  >
-                    Giriş Yap
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterForm(false)}
-                  className="w-full text-gray-500 hover:text-gray-700 text-sm"
-                >
-                  İptal
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Sidebar */}
       <Sidebar
         onToggle={handleSidebarToggle}
@@ -1514,7 +1173,7 @@ function App() {
                       </code>{" "}
                       adresine gidin
                     </li>
-                    <li>"Tüm Listem Extension"ı bulun</li>
+                    <li>"Heybe Extension"ı bulun</li>
                     <li>"Remove" butonuna tıklayın</li>
                     <li>Onay penceresinde "Remove" seçin</li>
                   </ol>
@@ -1531,7 +1190,7 @@ function App() {
                       adresine gidin
                     </li>
                     <li>"This Firefox" sekmesine tıklayın</li>
-                    <li>"Tüm Listem Extension"ı bulun</li>
+                    <li>"Heybe Extension"ı bulun</li>
                     <li>"Remove" butonuna tıklayın</li>
                   </ol>
                 </div>
@@ -1541,7 +1200,7 @@ function App() {
                   <ol className="list-decimal list-inside ml-2 space-y-1">
                     <li>Safari'de "Develop" menüsünü açın</li>
                     <li>"Show Extension Builder" seçin</li>
-                    <li>"Tüm Listem Extension"ı seçin</li>
+                    <li>"Heybe Extension"ı seçin</li>
                     <li>"Remove" butonuna tıklayın</li>
                   </ol>
                 </div>
