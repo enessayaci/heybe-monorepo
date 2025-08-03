@@ -156,8 +156,175 @@ async function addProductToMyList(productInfo) {
   }
 }
 
-// Guest kullanıcılar için uyarı popup'ı
-function showGuestWarningPopup() {
+            // Guest kullanıcılar için uyarı popup'ı
+            function showGuestWarningPopup() {
+              return new Promise((resolve) => {
+                // Popup container oluştur
+                const popup = document.createElement("div");
+                popup.style.cssText = `
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: rgba(0, 0, 0, 0.5);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: 999999;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                `;
+
+                // Popup content
+                const content = document.createElement("div");
+                content.style.cssText = `
+                  background: white;
+                  border-radius: 12px;
+                  padding: 24px;
+                  max-width: 400px;
+                  margin: 20px;
+                  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                  text-align: center;
+                `;
+
+                // Icon
+                const icon = document.createElement("div");
+                icon.style.cssText = `
+                  width: 48px;
+                  height: 48px;
+                  background: #fef3c7;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin: 0 auto 16px;
+                `;
+                icon.innerHTML = `
+                  <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                `;
+
+                // Title
+                const title = document.createElement("h3");
+                title.style.cssText = `
+                  font-size: 18px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin: 0 0 12px;
+                `;
+                title.textContent = "Misafir Kullanıcı";
+
+                // Message
+                const message = document.createElement("p");
+                message.style.cssText = `
+                  font-size: 14px;
+                  color: #6b7280;
+                  margin: 0 0 24px;
+                  line-height: 1.5;
+                `;
+                message.textContent = "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
+
+                // Buttons container
+                const buttonsContainer = document.createElement("div");
+                buttonsContainer.style.cssText = `
+                  display: flex;
+                  gap: 12px;
+                `;
+
+                // Login button
+                const loginButton = document.createElement("button");
+                loginButton.style.cssText = `
+                  flex: 1;
+                  background: #2563eb;
+                  color: white;
+                  border: none;
+                  padding: 12px 16px;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                `;
+                loginButton.textContent = "Giriş Yap";
+                loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
+                loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
+                loginButton.onclick = () => {
+                  document.body.removeChild(popup);
+                  showLoginForm().then((result) => {
+                    resolve(result);
+                  });
+                };
+
+                // Continue as guest button
+                const guestButton = document.createElement("button");
+                guestButton.style.cssText = `
+                  flex: 1;
+                  background: #f3f4f6;
+                  color: #374151;
+                  border: none;
+                  padding: 12px 16px;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                `;
+                guestButton.textContent = "Misafir Devam Et";
+                guestButton.onmouseover = () => guestButton.style.background = "#e5e7eb";
+                guestButton.onmouseout = () => guestButton.style.background = "#f3f4f6";
+                guestButton.onclick = () => {
+                  document.body.removeChild(popup);
+                  resolve(true);
+                };
+
+                // Cancel button
+                const cancelButton = document.createElement("button");
+                cancelButton.style.cssText = `
+                  width: 100%;
+                  background: transparent;
+                  color: #6b7280;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  cursor: pointer;
+                  margin-top: 12px;
+                  transition: background 0.2s;
+                `;
+                cancelButton.textContent = "İptal";
+                cancelButton.onmouseover = () => cancelButton.style.background = "#f9fafb";
+                cancelButton.onmouseout = () => cancelButton.style.background = "transparent";
+                cancelButton.onclick = () => {
+                  document.body.removeChild(popup);
+                  resolve(false);
+                };
+
+                // Assemble popup
+                content.appendChild(icon);
+                content.appendChild(title);
+                content.appendChild(message);
+                buttonsContainer.appendChild(loginButton);
+                buttonsContainer.appendChild(guestButton);
+                content.appendChild(buttonsContainer);
+                content.appendChild(cancelButton);
+                popup.appendChild(content);
+
+                // Add to page
+                document.body.appendChild(popup);
+
+                // Close on outside click
+                popup.onclick = (e) => {
+                  if (e.target === popup) {
+                    document.body.removeChild(popup);
+                    resolve(false);
+                  }
+                };
+              });
+            }
+
+// Login form popup'ı
+function showLoginForm() {
   return new Promise((resolve) => {
     // Popup container oluştur
     const popup = document.createElement("div");
@@ -174,66 +341,109 @@ function showGuestWarningPopup() {
       z-index: 999999;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
-    
+
     // Popup content
     const content = document.createElement("div");
     content.style.cssText = `
       background: white;
       border-radius: 12px;
-      padding: 24px;
+      padding: 32px;
       max-width: 400px;
       margin: 20px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      text-align: center;
+      width: 100%;
     `;
-    
-    // Icon
-    const icon = document.createElement("div");
-    icon.style.cssText = `
-      width: 48px;
-      height: 48px;
-      background: #fef3c7;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-    `;
-    icon.innerHTML = `
-      <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-      </svg>
-    `;
-    
+
     // Title
     const title = document.createElement("h3");
     title.style.cssText = `
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
       color: #1f2937;
-      margin: 0 0 12px;
-    `;
-    title.textContent = "Misafir Kullanıcı";
-    
-    // Message
-    const message = document.createElement("p");
-    message.style.cssText = `
-      font-size: 14px;
-      color: #6b7280;
       margin: 0 0 24px;
-      line-height: 1.5;
+      text-align: center;
     `;
-    message.textContent = "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
-    
+    title.textContent = "Giriş Yap";
+
+    // Form
+    const form = document.createElement("form");
+    form.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    `;
+
+    // Email input
+    const emailLabel = document.createElement("label");
+    emailLabel.style.cssText = `
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    `;
+    emailLabel.textContent = "E-posta";
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.required = true;
+    emailInput.style.cssText = `
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    `;
+    emailInput.placeholder = "ornek@email.com";
+    emailInput.onfocus = () => emailInput.style.borderColor = "#2563eb";
+    emailInput.onblur = () => emailInput.style.borderColor = "#d1d5db";
+
+    // Password input
+    const passwordLabel = document.createElement("label");
+    passwordLabel.style.cssText = `
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    `;
+    passwordLabel.textContent = "Şifre";
+
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "password";
+    passwordInput.required = true;
+    passwordInput.style.cssText = `
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    `;
+    passwordInput.placeholder = "Şifrenizi girin";
+    passwordInput.onfocus = () => passwordInput.style.borderColor = "#2563eb";
+    passwordInput.onblur = () => passwordInput.style.borderColor = "#d1d5db";
+
+    // Error message
+    const errorMessage = document.createElement("div");
+    errorMessage.style.cssText = `
+      color: #dc2626;
+      font-size: 14px;
+      text-align: center;
+      min-height: 20px;
+      display: none;
+    `;
+
     // Buttons container
     const buttonsContainer = document.createElement("div");
     buttonsContainer.style.cssText = `
       display: flex;
       gap: 12px;
+      margin-top: 8px;
     `;
-    
+
     // Login button
     const loginButton = document.createElement("button");
+    loginButton.type = "submit";
     loginButton.style.cssText = `
       flex: 1;
       background: #2563eb;
@@ -249,23 +459,11 @@ function showGuestWarningPopup() {
     loginButton.textContent = "Giriş Yap";
     loginButton.onmouseover = () => loginButton.style.background = "#1d4ed8";
     loginButton.onmouseout = () => loginButton.style.background = "#2563eb";
-    loginButton.onclick = () => {
-      document.body.removeChild(popup);
-      
-      // Web sitesine permanent UUID isteği gönder
-      window.postMessage({
-        type: "REQUEST_PERMANENT_UUID",
-        source: "extension"
-      }, "*");
-      
-      // Web sitesine yönlendir
-      window.open("https://my-list-pi.vercel.app/login", "_blank");
-      resolve(false);
-    };
-    
-    // Continue as guest button
-    const guestButton = document.createElement("button");
-    guestButton.style.cssText = `
+
+    // Cancel button
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.style.cssText = `
       flex: 1;
       background: #f3f4f6;
       color: #374151;
@@ -277,49 +475,92 @@ function showGuestWarningPopup() {
       cursor: pointer;
       transition: background 0.2s;
     `;
-    guestButton.textContent = "Misafir Devam Et";
-    guestButton.onmouseover = () => guestButton.style.background = "#e5e7eb";
-    guestButton.onmouseout = () => guestButton.style.background = "#f3f4f6";
-    guestButton.onclick = () => {
-      document.body.removeChild(popup);
-      resolve(true);
-    };
-    
-    // Cancel button
-    const cancelButton = document.createElement("button");
-    cancelButton.style.cssText = `
-      width: 100%;
-      background: transparent;
-      color: #6b7280;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-top: 12px;
-      transition: background 0.2s;
-    `;
     cancelButton.textContent = "İptal";
-    cancelButton.onmouseover = () => cancelButton.style.background = "#f9fafb";
-    cancelButton.onmouseout = () => cancelButton.style.background = "transparent";
+    cancelButton.onmouseover = () => cancelButton.style.background = "#e5e7eb";
+    cancelButton.onmouseout = () => cancelButton.style.background = "#f3f4f6";
     cancelButton.onclick = () => {
       document.body.removeChild(popup);
       resolve(false);
     };
-    
-    // Assemble popup
-    content.appendChild(icon);
-    content.appendChild(title);
-    content.appendChild(message);
+
+    // Form submit handler
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        errorMessage.textContent = "Lütfen tüm alanları doldurun";
+        errorMessage.style.display = "block";
+        return;
+      }
+
+      // Loading state
+      loginButton.textContent = "Giriş yapılıyor...";
+      loginButton.disabled = true;
+      errorMessage.style.display = "none";
+
+      try {
+        // API'ye giriş isteği gönder
+        const response = await fetch("https://my-list-pi.vercel.app/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.uuid) {
+          // Permanent UUID'yi extension'a set et
+          await sendUUIDToExtension(result.uuid, 'permanent');
+          console.log("✅ [Content Script] Login başarılı, permanent UUID set edildi:", result.uuid);
+          
+          document.body.removeChild(popup);
+          showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
+          resolve(true);
+        } else {
+          errorMessage.textContent = result.error || "Giriş başarısız";
+          errorMessage.style.display = "block";
+          loginButton.textContent = "Giriş Yap";
+          loginButton.disabled = false;
+        }
+
+      } catch (error) {
+        console.error("❌ [Content Script] Login hatası:", error);
+        errorMessage.textContent = "Bağlantı hatası";
+        errorMessage.style.display = "block";
+        loginButton.textContent = "Giriş Yap";
+        loginButton.disabled = false;
+      }
+    };
+
+    // Assemble form
+    form.appendChild(emailLabel);
+    form.appendChild(emailInput);
+    form.appendChild(passwordLabel);
+    form.appendChild(passwordInput);
+    form.appendChild(errorMessage);
     buttonsContainer.appendChild(loginButton);
-    buttonsContainer.appendChild(guestButton);
-    content.appendChild(buttonsContainer);
-    content.appendChild(cancelButton);
+    buttonsContainer.appendChild(cancelButton);
+    form.appendChild(buttonsContainer);
+
+    // Assemble popup
+    content.appendChild(title);
+    content.appendChild(form);
     popup.appendChild(content);
-    
+
     // Add to page
     document.body.appendChild(popup);
-    
+
+    // Focus email input
+    emailInput.focus();
+
     // Close on outside click
     popup.onclick = (e) => {
       if (e.target === popup) {
