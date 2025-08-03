@@ -63,7 +63,7 @@ function ExtensionInstall() {
           variant="outline"
           onClick={() =>
             window.open(
-              "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+              "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
               "_blank"
             )
           }

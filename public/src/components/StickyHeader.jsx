@@ -23,11 +23,11 @@ function StickyHeader({ onScrollToSection }) {
   // Extension dosyalarını otomatik indir
   const handleDownloadExtension = () => {
     try {
-      const localUrl = "/extension-files.zip";
+      const localUrl = "/tum-listem-extension.zip";
 
       const link = document.createElement("a");
       link.href = localUrl;
-      link.download = "my-list-sepet-extension.zip";
+      link.download = "tum-listem-extension.zip";
       link.target = "_blank";
 
       // Hata durumunda kullanıcıya bilgi ver
@@ -111,7 +111,7 @@ function StickyHeader({ onScrollToSection }) {
               size="sm"
               onClick={() =>
                 window.open(
-                  "https://drive.google.com/file/d/1iBhxLVVOry2x1YYa7TyXmimaHIxLxBM6/view?usp=drive_link",
+                  "https://drive.google.com/file/d/12xB8igD7wLhPvHHo0ZMWmLzLrIzbYd8v/view?usp=drive_link",
                   "_blank"
                 )
               }
