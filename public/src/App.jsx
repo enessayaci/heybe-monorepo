@@ -63,8 +63,6 @@ function App() {
     setSearchTimeout(newTimeout);
   };
 
-
-
   // Debug fonksiyonu
   const handleDebug = () => {
     console.log("🔧 Debug butonu tıklandı");
@@ -830,10 +828,10 @@ function App() {
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                          email, 
+                        body: JSON.stringify({
+                          email,
                           password,
-                          guest_user_id: guestUserId || null
+                          guest_user_id: guestUserId || null,
                         }),
                       }
                     );
@@ -955,10 +953,10 @@ function App() {
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                          email, 
+                        body: JSON.stringify({
+                          email,
                           password,
-                          guest_user_id: guestUserId || null
+                          guest_user_id: guestUserId || null,
                         }),
                       }
                     );
@@ -1063,62 +1061,9 @@ function App() {
 
           {/* Status Bar */}
           <div className="bg-white rounded-lg border p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      status === "loading"
-                        ? "bg-yellow-500"
-                        : uuidType === "permanent"
-                        ? "bg-green-500"
-                        : uuidType === "guest"
-                        ? "bg-orange-500"
-                        : "bg-gray-500"
-                    }`}
-                  ></div>
-                  <span className="text-sm text-gray-600">
-                    {status === "loading"
-                      ? "Yükleniyor..."
-                      : uuidType === "permanent"
-                      ? "Kalıcı Kullanıcı"
-                      : uuidType === "guest"
-                      ? "Misafir Kullanıcı"
-                      : "Bağlantı Yok"}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  {products.length} ürün
-                </div>
-                {uuidType === "guest" && (
-                  <div className="flex items-center space-x-1">
-                    <svg
-                      className="w-4 h-4 text-yellow-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                    <span className="text-xs text-yellow-600">Geçici</span>
-                  </div>
-                )}
-              </div>
-              <div className="text-sm text-gray-500 flex items-center gap-4">
-                <span>Son güncelleme: {new Date().toLocaleTimeString()}</span>
-                <span>•</span>
-                <span>
-                  {status === "error" ? "N/A" : stats.totalProducts} ürün
-                </span>
-                <span>•</span>
-                <span>
-                  {status === "error" ? "N/A" : stats.uniqueSites} farklı site
-                </span>
+            <div className="flex items-center justify-end">
+              <div className="text-sm text-gray-500">
+                Son güncelleme: {new Date().toLocaleTimeString()}
               </div>
             </div>
           </div>
