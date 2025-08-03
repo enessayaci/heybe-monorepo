@@ -1,6 +1,6 @@
 // Registration API endpoint
-import bcrypt from 'bcryptjs';
-import { executeQuery, initDatabase } from './db.js';
+import bcrypt from "bcryptjs";
+import { executeQuery, initDatabase } from "./db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -10,16 +10,16 @@ export default async function handler(req, res) {
   try {
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
-      console.error('❌ DATABASE_URL environment variable not set');
-      return res.status(500).json({ error: 'Database configuration error' });
+      console.error("❌ DATABASE_URL environment variable not set");
+      return res.status(500).json({ error: "Database configuration error" });
     }
 
     // Initialize database if needed
     try {
       await initDatabase();
     } catch (dbError) {
-      console.error('❌ Database initialization error:', dbError);
-      return res.status(500).json({ error: 'Database connection failed' });
+      console.error("❌ Database initialization error:", dbError);
+      return res.status(500).json({ error: "Database connection failed" });
     }
 
     const { email, password, name, guest_user_id } = req.body;
@@ -44,16 +44,10 @@ export default async function handler(req, res) {
     }
 
     // Check if email already exists
-    let existingUser;
-    try {
-      existingUser = await executeQuery(
-        'SELECT * FROM users WHERE email = $1',
-        [email]
-      );
-    } catch (dbError) {
-      console.error('❌ Database query error:', dbError);
-      return res.status(500).json({ error: 'Database query failed' });
-    }
+    const existingUser = await executeQuery(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
     if (existingUser.rows.length > 0) {
       return res.status(409).json({ error: "Bu email adresi zaten kayıtlı" });
@@ -67,29 +61,23 @@ export default async function handler(req, res) {
     const uuid = email;
 
     // Insert new user into database
-    let newUser;
-    try {
-      newUser = await executeQuery(
-        `INSERT INTO users (uuid, email, password_hash, name, role) 
-         VALUES ($1, $2, $3, $4, $5) 
-         RETURNING uuid, email, name, role`,
-        [uuid, email, hashedPassword, userName, 'user']
-      );
-    } catch (dbError) {
-      console.error('❌ Database insert error:', dbError);
-      return res.status(500).json({ error: 'User creation failed' });
-    }
+    const newUser = await executeQuery(
+      `INSERT INTO users (uuid, email, password_hash, name, role) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING uuid, email, name, role`,
+      [uuid, email, hashedPassword, userName, "user"]
+    );
 
     // Transfer guest products to permanent user if guest_user_id provided
     if (guest_user_id && guest_user_id !== uuid) {
       try {
         await executeQuery(
-          'UPDATE products SET user_id = $1 WHERE user_id = $2',
+          "UPDATE products SET user_id = $1 WHERE user_id = $2",
           [uuid, guest_user_id]
         );
         console.log(`✅ Transferred products from ${guest_user_id} to ${uuid}`);
       } catch (transferError) {
-        console.error('❌ Product transfer error:', transferError);
+        console.error("❌ Product transfer error:", transferError);
       }
     }
 
@@ -102,7 +90,6 @@ export default async function handler(req, res) {
       role: newUser.rows[0].role,
       message: "Kayıt başarılı",
     });
-
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Sunucu hatası" });
