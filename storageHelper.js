@@ -18,9 +18,14 @@ class ExtensionStorageHelper {
         // Web sitesine event gönder
         this.notifyWebSite(userId);
       } else {
-        // Web sitesinde localStorage'a yaz (backup)
-        localStorage.setItem(this.storageKey, userId);
-        console.log("✅ [Web Site] UUID localStorage'a yazıldı (backup):", userId);
+        // Web sitesinde localStorage'a yazma (extension UUID'si ezilmesin!)
+        // Sadece extension yoksa localStorage'a yaz
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+          localStorage.setItem(this.storageKey, userId);
+          console.log("✅ [Web Site] UUID localStorage'a yazıldı (extension yok):", userId);
+        } else {
+          console.log("⚠️ [Web Site] Extension mevcut, localStorage'a yazılmadı:", userId);
+        }
       }
       return true;
     } catch (error) {

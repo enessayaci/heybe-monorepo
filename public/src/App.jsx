@@ -701,12 +701,19 @@ function App() {
           }
         }
 
-        // localStorage'a da yaz (backup)
-        localStorage.setItem("tum_listem_user_id", newUUID);
-        console.log(
-          "✅ [Web Site] Guest UUID localStorage'a yazıldı (backup):",
-          newUUID
-        );
+        // localStorage'a da yaz (sadece extension yoksa)
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+          localStorage.setItem("tum_listem_user_id", newUUID);
+          console.log(
+            "✅ [Web Site] Guest UUID localStorage'a yazıldı (extension yok):",
+            newUUID
+          );
+        } else {
+          console.log(
+            "⚠️ [Web Site] Extension mevcut, localStorage'a yazılmadı:",
+            newUUID
+          );
+        }
 
         uuidData = { uuid: newUUID, type: "guest" };
       }
