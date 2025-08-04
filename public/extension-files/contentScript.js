@@ -965,6 +965,7 @@ function showLoginOrRegisterForm() {
         });
 
         if (result && result.uuid) {
+          console.log("✅ [API Response] Login başarılı:", result);
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, "permanent");
           console.log(
@@ -980,6 +981,7 @@ function showLoginOrRegisterForm() {
 
           resolve(true);
         } else {
+          console.log("❌ [API Response] Login başarısız:", result);
           errorMessage.textContent = result.error || "Giriş başarısız";
           errorMessage.style.display = "block";
           loginButton.textContent = "Giriş Yap";
@@ -988,8 +990,10 @@ function showLoginOrRegisterForm() {
           isRegistrationInProgress = false;
         }
       } catch (error) {
-        // console.error removed
-        if (error.message && error.message.includes("401")) {
+        console.log("❌ [API Error] Login hatası:", error.message);
+        if (error.message && error.message.includes("400")) {
+          errorMessage.textContent = "Geçerli bir email adresi girin";
+        } else if (error.message && error.message.includes("401")) {
           errorMessage.textContent = "Email veya şifre hatalı";
         } else {
           errorMessage.textContent = "Bağlantı hatası";
@@ -1043,6 +1047,7 @@ function showLoginOrRegisterForm() {
         });
 
         if (result && result.uuid) {
+          console.log("✅ [API Response] Register başarılı:", result);
           // Permanent UUID'yi extension'a set et
           await sendUUIDToExtension(result.uuid, "permanent");
           console.log(
@@ -1058,6 +1063,10 @@ function showLoginOrRegisterForm() {
 
           return true;
         } else if (result && result.error && result.error.includes("409")) {
+          console.log(
+            "🔄 [API Response] Kullanıcı zaten var, login deneniyor:",
+            result
+          );
           // Kullanıcı zaten kayıtlı, login dene
           console.log(
             "🔄 [Content Script] Kullanıcı zaten kayıtlı, login deneniyor..."
@@ -1071,6 +1080,10 @@ function showLoginOrRegisterForm() {
             });
 
             if (loginResult && loginResult.uuid) {
+              console.log(
+                "✅ [API Response] Auto-login başarılı:",
+                loginResult
+              );
               // Permanent UUID'yi extension'a set et
               await sendUUIDToExtension(loginResult.uuid, "permanent");
               console.log(
@@ -1086,6 +1099,10 @@ function showLoginOrRegisterForm() {
 
               return true;
             } else {
+              console.log(
+                "❌ [API Response] Auto-login başarısız:",
+                loginResult
+              );
               errorMessage.textContent = "Email veya şifre hatalı";
               errorMessage.style.display = "block";
               loginButton.disabled = false;
@@ -1095,7 +1112,10 @@ function showLoginOrRegisterForm() {
               return false;
             }
           } catch (loginError) {
-            // console.error removed
+            console.log(
+              "❌ [API Error] Auto-login hatası:",
+              loginError.message
+            );
             errorMessage.textContent = "Email veya şifre hatalı";
             errorMessage.style.display = "block";
             loginButton.disabled = false;
@@ -1105,6 +1125,7 @@ function showLoginOrRegisterForm() {
             return false;
           }
         } else {
+          console.log("❌ [API Response] Register başarısız:", result);
           errorMessage.textContent = result.error || "Kayıt başarısız";
           errorMessage.style.display = "block";
           loginButton.disabled = false;
@@ -1114,8 +1135,10 @@ function showLoginOrRegisterForm() {
           return false;
         }
       } catch (error) {
-        // console.error removed
-        if (error.message && error.message.includes("409")) {
+        console.log("❌ [API Error] Register hatası:", error.message);
+        if (error.message && error.message.includes("400")) {
+          errorMessage.textContent = "Geçerli bir email adresi girin";
+        } else if (error.message && error.message.includes("409")) {
           errorMessage.textContent = "Bu kullanıcı zaten var";
         } else if (error.message && error.message.includes("401")) {
           errorMessage.textContent = "Email veya şifre hatalı";
