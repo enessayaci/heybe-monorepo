@@ -162,21 +162,40 @@ async function addProductToMyList(productInfo) {
       });
     });
 
-    // Guest kullanıcı ise uyarı göster ama ürünü ekle
+        // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
     if (uuidData.type === "guest") {
       console.log(
         "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
       );
 
+      // Ürün ekleme işlemini beklet
+      pendingProductInfo = productInfo;
+      console.log("📦 [Content Script] Ürün bekletiliyor:", pendingProductInfo);
+
       const shouldContinue = await showGuestWarningPopup();
       if (!shouldContinue) {
         console.log("❌ [Content Script] Kullanıcı iptal etti");
+        pendingProductInfo = null;
         return false;
       }
+      console.log("✅ [Content Script] Kullanıcı devam etmeyi seçti");
 
+      // Eğer kayıt/giriş işlemi devam ediyorsa ürünü beklet
+      if (isRegistrationInProgress) {
+        console.log(
+          "⏳ [Content Script] Kayıt/Giriş işlemi devam ediyor, ürün bekletiliyor..."
+        );
+        showSuccessMessage("İşlem tamamlandıktan sonra ürün eklenecek!");
+        return true;
+      }
+
+      // Guest kullanıcı için ürünü beklet - sadece yeni UUID ile eklenecek
       console.log(
-        "✅ [Content Script] Guest kullanıcı ürün eklemeye devam ediyor"
+        "⏳ [Content Script] Guest kullanıcı için ürün bekletiliyor..."
       );
+      pendingProductInfo = productInfo;
+      showSuccessMessage("Ürün kayıt/giriş sonrası eklenecek!");
+      return true;
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
