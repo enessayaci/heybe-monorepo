@@ -173,8 +173,10 @@ async function addProductToMyList(productInfo) {
         console.log("❌ [Content Script] Kullanıcı iptal etti");
         return false;
       }
-      
-      console.log("✅ [Content Script] Guest kullanıcı ürün eklemeye devam ediyor");
+
+      console.log(
+        "✅ [Content Script] Guest kullanıcı ürün eklemeye devam ediyor"
+      );
     }
 
     // Background script üzerinden API'ye ürün ekle (CORS bypass)
@@ -195,10 +197,18 @@ async function addProductToMyList(productInfo) {
         if (addButton) {
           addButton.disabled = true;
           addButton.style.background = "#10b981"; // Yeşil renk
-          addButton.querySelector("span").textContent = "Ürün Eklendi";
-          addButton.querySelector("svg").innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          `;
+          
+          const spanElement = addButton.querySelector("span");
+          if (spanElement) {
+            spanElement.textContent = "Ürün Eklendi";
+          }
+          
+          const svgElement = addButton.querySelector("svg");
+          if (svgElement) {
+            svgElement.innerHTML = `
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            `;
+          }
         }
         return true;
       } else {
@@ -314,10 +324,18 @@ async function addPendingProductWithUUID(uuid) {
         if (addButton) {
           addButton.disabled = true;
           addButton.style.background = "#10b981"; // Yeşil renk
-          addButton.querySelector("span").textContent = "Ürün Eklendi";
-          addButton.querySelector("svg").innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          `;
+          
+          const spanElement = addButton.querySelector("span");
+          if (spanElement) {
+            spanElement.textContent = "Ürün Eklendi";
+          }
+          
+          const svgElement = addButton.querySelector("svg");
+          if (svgElement) {
+            svgElement.innerHTML = `
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            `;
+          }
         }
       } else {
         // console.log removed
@@ -1302,10 +1320,18 @@ function createAddToListButton() {
         // Ürün başarıyla eklendiyse buton durumunu güncelle
         addButton.disabled = true;
         addButton.style.background = "#10b981"; // Yeşil renk
-        addButton.querySelector("span").textContent = "Ürün Eklendi";
-        addButton.querySelector("svg").innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        `;
+        
+        const spanElement = addButton.querySelector("span");
+        if (spanElement) {
+          spanElement.textContent = "Ürün Eklendi";
+        }
+        
+        const svgElement = addButton.querySelector("svg");
+        if (svgElement) {
+          svgElement.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          `;
+        }
       } else {
         // console.log removed
         // Hata durumunda buton durumunu geri al
