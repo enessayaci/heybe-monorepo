@@ -11,6 +11,9 @@
     "package:all": "echo '📦 Tüm tarayıcılar için paketleme'"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "vite": "^5.0.8"
   }
 }
