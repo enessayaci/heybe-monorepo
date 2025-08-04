@@ -228,7 +228,7 @@ async function addProductToMyList(productInfo) {
           if (imgElement) {
             // Logo'yu gizleme yerine, yerine check PNG ekle
             tikIcon = document.createElement("img");
-            tikIcon.src = "https://my-heybe.vercel.app/check-green.png";
+            tikIcon.src = "https://my-heybe.vercel.app/images/check-green.png";
             tikIcon.width = "20";
             tikIcon.height = "20";
             tikIcon.style.objectFit = "contain";
@@ -414,7 +414,7 @@ async function addPendingProductWithUUID(uuid) {
           if (imgElement) {
             // Logo'yu gizleme yerine, yerine check PNG ekle
             tikIcon = document.createElement("img");
-            tikIcon.src = "https://my-heybe.vercel.app/check-green.png";
+            tikIcon.src = "https://my-heybe.vercel.app/images/check-green.png";
             tikIcon.width = "20";
             tikIcon.height = "20";
             tikIcon.style.objectFit = "contain";
@@ -669,7 +669,8 @@ function showGuestWarningPopup() {
                 if (imgElement) {
                   // Logo'yu gizleme yerine, yerine check PNG ekle
                   tikIcon = document.createElement("img");
-                  tikIcon.src = "https://my-heybe.vercel.app/check-green.png";
+                  tikIcon.src =
+                    "https://my-heybe.vercel.app/images/check-green.png";
                   tikIcon.width = "20";
                   tikIcon.height = "20";
                   tikIcon.style.objectFit = "contain";
