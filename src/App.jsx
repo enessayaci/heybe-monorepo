@@ -994,35 +994,7 @@ function App() {
                   <ol className="list-decimal list-inside ml-2 space-y-1">
                     <li>
                       Extension dosyalarını indirin{" "}
-                      <button
-                        onClick={() => {
-                          try {
-                            const link = document.createElement("a");
-                            link.href = "/heybe-extension.zip";
-                            link.download = "heybe-extension.zip";
-                            link.target = "_blank";
-                            link.onerror = () => {
-                              alert(
-                                "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                              );
-                            };
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            console.log(
-                              "📦 Extension dosyaları indiriliyor..."
-                            );
-                          } catch (error) {
-                            console.error("❌ Dosya indirme hatası:", error);
-                            alert(
-                              "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                            );
-                          }
-                        }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
-                      >
-                        İndir
-                      </button>
+
                       <button
                         onClick={() =>
                           window.open(
@@ -1191,8 +1163,6 @@ function App() {
                     <li>Onay penceresinde "Remove" seçin</li>
                   </ol>
                 </div>
-
-
 
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                   <p className="text-yellow-800 text-xs">
