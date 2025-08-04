@@ -162,7 +162,7 @@ async function addProductToMyList(productInfo) {
       });
     });
 
-        // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
+    // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
     if (uuidData.type === "guest") {
       console.log(
         "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
@@ -194,7 +194,6 @@ async function addProductToMyList(productInfo) {
         "⏳ [Content Script] Guest kullanıcı için ürün bekletiliyor..."
       );
       pendingProductInfo = productInfo;
-      showSuccessMessage("Ürün kayıt/giriş sonrası eklenecek!");
       return true;
     }
 
@@ -216,12 +215,12 @@ async function addProductToMyList(productInfo) {
         if (addButton) {
           addButton.disabled = true;
           addButton.style.background = "#10b981"; // Yeşil renk
-          
+
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
             spanElement.textContent = "Ürün Eklendi";
           }
-          
+
           const svgElement = addButton.querySelector("svg");
           if (svgElement) {
             svgElement.innerHTML = `
@@ -343,12 +342,12 @@ async function addPendingProductWithUUID(uuid) {
         if (addButton) {
           addButton.disabled = true;
           addButton.style.background = "#10b981"; // Yeşil renk
-          
+
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
             spanElement.textContent = "Ürün Eklendi";
           }
-          
+
           const svgElement = addButton.querySelector("svg");
           if (svgElement) {
             svgElement.innerHTML = `
@@ -499,21 +498,26 @@ function showGuestWarningPopup() {
     guestButton.onmouseout = () => (guestButton.style.background = "#f3f4f6");
     guestButton.onclick = async () => {
       document.body.removeChild(popup);
-      
+
       // Misafir olarak devam et seçildi, bekleyen ürünü guest UUID ile ekle
       if (pendingProductInfo) {
-        console.log("👤 [Content Script] Misafir olarak devam et seçildi, ürün ekleniyor...");
-        
+        console.log(
+          "👤 [Content Script] Misafir olarak devam et seçildi, ürün ekleniyor..."
+        );
+
         try {
           // Aktif UUID'yi al (guest UUID)
           const uuidData = await new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
-              if (chrome.runtime.lastError) {
-                reject(new Error("Extension bulunamadı"));
-                return;
+            chrome.runtime.sendMessage(
+              { action: "getActiveUUID" },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  reject(new Error("Extension bulunamadı"));
+                  return;
+                }
+                resolve(response);
               }
-              resolve(response);
-            });
+            );
           });
 
           if (uuidData && uuidData.uuid) {
@@ -524,20 +528,22 @@ function showGuestWarningPopup() {
             });
 
             if (result && result.success) {
-              console.log("✅ [Content Script] Misafir kullanıcı ürünü başarıyla eklendi");
+              console.log(
+                "✅ [Content Script] Misafir kullanıcı ürünü başarıyla eklendi"
+              );
               showSuccessMessage("Ürün Heybeye eklendi!");
-              
+
               // Buton durumunu güncelle
               const addButton = document.getElementById("tum-listem-ekle-btn");
               if (addButton) {
                 addButton.disabled = true;
                 addButton.style.background = "#10b981"; // Yeşil renk
-                
+
                 const spanElement = addButton.querySelector("span");
                 if (spanElement) {
                   spanElement.textContent = "Ürün Eklendi";
                 }
-                
+
                 const svgElement = addButton.querySelector("svg");
                 if (svgElement) {
                   svgElement.innerHTML = `
@@ -550,14 +556,17 @@ function showGuestWarningPopup() {
             }
           }
         } catch (error) {
-          console.error("❌ [Content Script] Misafir ürün ekleme hatası:", error);
+          console.error(
+            "❌ [Content Script] Misafir ürün ekleme hatası:",
+            error
+          );
           showErrorMessage("Ürün eklenirken hata oluştu!");
         }
-        
+
         // Bekleyen ürünü temizle
         pendingProductInfo = null;
       }
-      
+
       resolve(true);
     };
 
@@ -835,7 +844,6 @@ function showLoginOrRegisterForm() {
           );
 
           document.body.removeChild(popup);
-          showSuccessMessage("Giriş başarılı! Artık kalıcı kullanıcısınız.");
 
           // Login işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
@@ -910,7 +918,6 @@ function showLoginOrRegisterForm() {
           );
 
           document.body.removeChild(popup);
-          showSuccessMessage("Kayıt başarılı! Artık kalıcı kullanıcısınız.");
 
           // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
@@ -939,9 +946,6 @@ function showLoginOrRegisterForm() {
               );
 
               document.body.removeChild(popup);
-              showSuccessMessage(
-                "Giriş başarılı! Artık kalıcı kullanıcısınız."
-              );
 
               // Login işlemi tamamlandı, bekleyen ürünü ekle
               isRegistrationInProgress = false;
@@ -1400,12 +1404,12 @@ function createAddToListButton() {
         // Ürün başarıyla eklendiyse buton durumunu güncelle
         addButton.disabled = true;
         addButton.style.background = "#10b981"; // Yeşil renk
-        
+
         const spanElement = addButton.querySelector("span");
         if (spanElement) {
           spanElement.textContent = "Ürün Eklendi";
         }
-        
+
         const svgElement = addButton.querySelector("svg");
         if (svgElement) {
           svgElement.innerHTML = `
