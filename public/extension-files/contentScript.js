@@ -494,11 +494,70 @@ function showGuestWarningPopup() {
                   cursor: pointer;
                   transition: background 0.2s;
                 `;
-    guestButton.textContent = "Misafir Devam Et";
+    guestButton.textContent = "Misafir Olarak Devam Et";
     guestButton.onmouseover = () => (guestButton.style.background = "#e5e7eb");
     guestButton.onmouseout = () => (guestButton.style.background = "#f3f4f6");
-    guestButton.onclick = () => {
+    guestButton.onclick = async () => {
       document.body.removeChild(popup);
+      
+      // Misafir olarak devam et seçildi, bekleyen ürünü guest UUID ile ekle
+      if (pendingProductInfo) {
+        console.log("👤 [Content Script] Misafir olarak devam et seçildi, ürün ekleniyor...");
+        
+        try {
+          // Aktif UUID'yi al (guest UUID)
+          const uuidData = await new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error("Extension bulunamadı"));
+                return;
+              }
+              resolve(response);
+            });
+          });
+
+          if (uuidData && uuidData.uuid) {
+            // Guest UUID ile ürün ekle
+            const result = await apiRequest("POST", "add-product", {
+              ...pendingProductInfo,
+              user_id: uuidData.uuid,
+            });
+
+            if (result && result.success) {
+              console.log("✅ [Content Script] Misafir kullanıcı ürünü başarıyla eklendi");
+              showSuccessMessage("Ürün Heybeye eklendi!");
+              
+              // Buton durumunu güncelle
+              const addButton = document.getElementById("tum-listem-ekle-btn");
+              if (addButton) {
+                addButton.disabled = true;
+                addButton.style.background = "#10b981"; // Yeşil renk
+                
+                const spanElement = addButton.querySelector("span");
+                if (spanElement) {
+                  spanElement.textContent = "Ürün Eklendi";
+                }
+                
+                const svgElement = addButton.querySelector("svg");
+                if (svgElement) {
+                  svgElement.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  `;
+                }
+              }
+            } else {
+              showErrorMessage("Ürün eklenirken hata oluştu!");
+            }
+          }
+        } catch (error) {
+          console.error("❌ [Content Script] Misafir ürün ekleme hatası:", error);
+          showErrorMessage("Ürün eklenirken hata oluştu!");
+        }
+        
+        // Bekleyen ürünü temizle
+        pendingProductInfo = null;
+      }
+      
       resolve(true);
     };
 
