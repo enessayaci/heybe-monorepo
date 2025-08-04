@@ -989,7 +989,11 @@ function showLoginOrRegisterForm() {
         }
       } catch (error) {
         // console.error removed
-        errorMessage.textContent = "Bağlantı hatası";
+        if (error.message && error.message.includes("401")) {
+          errorMessage.textContent = "Email veya şifre hatalı";
+        } else {
+          errorMessage.textContent = "Bağlantı hatası";
+        }
         errorMessage.style.display = "block";
         loginButton.textContent = "Giriş Yap";
         loginButton.disabled = false;
@@ -1111,7 +1115,13 @@ function showLoginOrRegisterForm() {
         }
       } catch (error) {
         // console.error removed
-        errorMessage.textContent = "Bağlantı hatası";
+        if (error.message && error.message.includes("409")) {
+          errorMessage.textContent = "Bu kullanıcı zaten var";
+        } else if (error.message && error.message.includes("401")) {
+          errorMessage.textContent = "Email veya şifre hatalı";
+        } else {
+          errorMessage.textContent = "Bağlantı hatası";
+        }
         errorMessage.style.display = "block";
         loginButton.disabled = false;
         registerButton.textContent = "Kayıt Ol";
