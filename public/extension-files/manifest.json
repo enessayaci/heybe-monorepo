@@ -1,37 +1,37 @@
 {
-  "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
-  "version": "1.0.0",
   "name": "Heybe Extension",
-  "description": "Farklı sitelerdeki ürünleri Heybe'de topla.",
-  "icons": {
-    "48": "images/logo.png"
-  },
-  "permissions": ["scripting", "activeTab", "storage", "storage.sync"],
-  "host_permissions": ["https://my-heybe.vercel.app/*"],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "tum-listem@extension.js"
-    }
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["storageHelper.js", "contentScript.js"],
-      "run_at": "document_idle"
-    }
+  "version": "1.0.0",
+  "description": "Alışveriş listesi yönetimi için browser extension",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://my-heybe.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "action": {
-    "default_title": "Heybe Extension",
-    "default_icon": "images/logo.png"
-  },
-  "web_accessible_resources": [
+  "content_scripts": [
     {
-      "resources": ["images/*"],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"],
+      "run_at": "document_end"
     }
-  ]
-}
+  ],
+  "icons": {
+    "16": "images/logo.png",
+    "48": "images/logo.png",
+    "128": "images/logo.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "images/logo.png",
+      "48": "images/logo.png",
+      "128": "images/logo.png"
+    },
+    "default_title": "Heybe Extension"
+  }
+} 

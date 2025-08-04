@@ -4,8 +4,10 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
+  root: "..",
   build: {
-    outDir: "dist",
+    outDir: "public/dist",
     emptyOutDir: true,
   },
+  publicDir: "public",
 });

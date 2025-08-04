@@ -4,17 +4,14 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
-  build: {
-    rollupOptions: {
-      input: {
-        popup: resolve(__dirname, "index.html"),
-      },
-      output: {
-        entryFileNames: "index.js",
-        assetFileNames: "index.css",
-      },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
     },
-    outDir: ".", // build çıktısı kök dizine gelsin
-    emptyOutDir: false,
   },
+  build: {
+    outDir: "public/dist",
+    emptyOutDir: true,
+  },
+  publicDir: "public",
 });
