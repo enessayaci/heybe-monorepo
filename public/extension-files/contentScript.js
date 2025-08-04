@@ -206,7 +206,7 @@ async function addProductToMyList(productInfo) {
 
       // console.log removed
 
-      if (result && result.success) {
+            if (result && result.success) {
         // console.log removed
         showSuccessMessage("Ürün Heybeye eklendi!");
 
@@ -215,18 +215,51 @@ async function addProductToMyList(productInfo) {
         if (addButton) {
           addButton.disabled = true;
           addButton.style.background = "#10b981"; // Yeşil renk
-
+          
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
             spanElement.textContent = "Ürün Eklendi";
           }
-
-          const svgElement = addButton.querySelector("svg");
-          if (svgElement) {
-            svgElement.innerHTML = `
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            `;
+          
+          const imgElement = addButton.querySelector("img");
+          if (imgElement) {
+            imgElement.style.display = "none";
           }
+          
+          // SVG check ikonu ekle
+          const checkIcon = document.createElement("svg");
+          checkIcon.width = "20";
+          checkIcon.height = "20";
+          checkIcon.style.fill = "none";
+          checkIcon.style.stroke = "currentColor";
+          checkIcon.style.viewBox = "0 0 24 24";
+          checkIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          `;
+          
+          const buttonContent = addButton.querySelector("div");
+          if (buttonContent) {
+            buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
+          }
+          
+          // 2 saniye sonra butonu geri döndür
+          setTimeout(() => {
+            addButton.disabled = false;
+            addButton.style.background = "white";
+            addButton.style.color = "#374151";
+            
+            if (spanElement) {
+              spanElement.textContent = "Heybeye Ekle";
+            }
+            
+            if (imgElement) {
+              imgElement.style.display = "block";
+            }
+            
+            if (checkIcon) {
+              checkIcon.remove();
+            }
+          }, 2000);
         }
         return true;
       } else {
@@ -348,12 +381,45 @@ async function addPendingProductWithUUID(uuid) {
             spanElement.textContent = "Ürün Eklendi";
           }
 
-          const svgElement = addButton.querySelector("svg");
-          if (svgElement) {
-            svgElement.innerHTML = `
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            `;
+          const imgElement = addButton.querySelector("img");
+          if (imgElement) {
+            imgElement.style.display = "none";
           }
+          
+          // SVG check ikonu ekle
+          const checkIcon = document.createElement("svg");
+          checkIcon.width = "20";
+          checkIcon.height = "20";
+          checkIcon.style.fill = "none";
+          checkIcon.style.stroke = "currentColor";
+          checkIcon.style.viewBox = "0 0 24 24";
+          checkIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          `;
+          
+          const buttonContent = addButton.querySelector("div");
+          if (buttonContent) {
+            buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
+          }
+          
+          // 2 saniye sonra butonu geri döndür
+          setTimeout(() => {
+            addButton.disabled = false;
+            addButton.style.background = "white";
+            addButton.style.color = "#374151";
+            
+            if (spanElement) {
+              spanElement.textContent = "Heybeye Ekle";
+            }
+            
+            if (imgElement) {
+              imgElement.style.display = "block";
+            }
+            
+            if (checkIcon) {
+              checkIcon.remove();
+            }
+          }, 2000);
         }
       } else {
         // console.log removed
@@ -544,12 +610,45 @@ function showGuestWarningPopup() {
                   spanElement.textContent = "Ürün Eklendi";
                 }
 
-                const svgElement = addButton.querySelector("svg");
-                if (svgElement) {
-                  svgElement.innerHTML = `
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  `;
+                const imgElement = addButton.querySelector("img");
+                if (imgElement) {
+                  imgElement.style.display = "none";
                 }
+                
+                // SVG check ikonu ekle
+                const checkIcon = document.createElement("svg");
+                checkIcon.width = "20";
+                checkIcon.height = "20";
+                checkIcon.style.fill = "none";
+                checkIcon.style.stroke = "currentColor";
+                checkIcon.style.viewBox = "0 0 24 24";
+                checkIcon.innerHTML = `
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                `;
+                
+                const buttonContent = addButton.querySelector("div");
+                if (buttonContent) {
+                  buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
+                }
+                
+                // 2 saniye sonra butonu geri döndür
+                setTimeout(() => {
+                  addButton.disabled = false;
+                  addButton.style.background = "white";
+                  addButton.style.color = "#374151";
+                  
+                  if (spanElement) {
+                    spanElement.textContent = "Heybeye Ekle";
+                  }
+                  
+                  if (imgElement) {
+                    imgElement.style.display = "block";
+                  }
+                  
+                  if (checkIcon) {
+                    checkIcon.remove();
+                  }
+                }, 2000);
               }
             } else {
               showErrorMessage("Ürün eklenirken hata oluştu!");
@@ -1325,16 +1424,14 @@ function createAddToListButton() {
   addButton.id = "tum-listem-ekle-btn";
   addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-      </svg>
+      <img src="https://my-heybe.vercel.app/logo.png" width="20" height="20" style="object-fit: contain;">
       <span>Heybeye Ekle</span>
     </div>
   `;
 
   addButton.style.cssText = `
-    background: #2563eb;
-    color: white;
+    background: white;
+    color: #374151;
     padding: 0 24px 0 12px;
     border: none;
     font-size: 16px;
@@ -1344,8 +1441,10 @@ function createAddToListButton() {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
   `;
 
   // Sağ taraf - "Listeyi Gör" butonu (sarı)
