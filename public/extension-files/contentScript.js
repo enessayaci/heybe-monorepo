@@ -1243,7 +1243,9 @@ function createAddToListButton() {
   addButton.id = "tum-listem-ekle-btn";
   addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <img src="https://my-heybe.vercel.app/logo.png" width="20" height="20" style="object-fit: contain;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
       <span>Heybeye Ekle</span>
     </div>
   `;
