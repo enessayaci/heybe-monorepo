@@ -994,7 +994,6 @@ function App() {
                   <ol className="list-decimal list-inside ml-2 space-y-1">
                     <li>
                       Extension dosyalarını indirin{" "}
-
                       <button
                         onClick={() =>
                           window.open(
@@ -1004,7 +1003,11 @@ function App() {
                         }
                         className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2 flex items-center gap-1"
                       >
-                        <img src="/images/google-drive.png" alt="Google Drive" className="w-3 h-3" />
+                        <img
+                          src="/images/google-drive.png"
+                          alt="Google Drive"
+                          className="w-3 h-3"
+                        />
                         İndir
                       </button>
                     </li>

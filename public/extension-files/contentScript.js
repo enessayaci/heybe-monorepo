@@ -214,11 +214,13 @@ async function addProductToMyList(productInfo) {
         const addButton = document.getElementById("tum-listem-ekle-btn");
         if (addButton) {
           addButton.disabled = true;
-          addButton.style.background = "#10b981"; // Yeşil renk
+          addButton.style.background = "white"; // Beyaz arka plan
+          addButton.style.color = "#10b981"; // Yeşil metin
           
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
             spanElement.textContent = "Ürün Eklendi";
+            spanElement.style.color = "#10b981"; // Yeşil metin
           }
           
           const imgElement = addButton.querySelector("img");
@@ -226,12 +228,12 @@ async function addProductToMyList(productInfo) {
             imgElement.style.display = "none";
           }
           
-          // SVG check ikonu ekle
+          // SVG yeşil tik ikonu ekle
           const checkIcon = document.createElement("svg");
           checkIcon.width = "20";
           checkIcon.height = "20";
           checkIcon.style.fill = "none";
-          checkIcon.style.stroke = "currentColor";
+          checkIcon.style.stroke = "#10b981"; // Yeşil renk
           checkIcon.style.viewBox = "0 0 24 24";
           checkIcon.innerHTML = `
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -242,6 +244,26 @@ async function addProductToMyList(productInfo) {
             buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
           }
           
+          // Progress bar oluştur
+          const progressBar = document.createElement("div");
+          progressBar.style.cssText = `
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #10b981;
+            width: 0%;
+            transition: width 2s linear;
+            border-radius: 0 0 8px 8px;
+          `;
+          addButton.style.position = "relative";
+          addButton.appendChild(progressBar);
+          
+          // Progress bar'ı başlat
+          setTimeout(() => {
+            progressBar.style.width = "100%";
+          }, 100);
+          
           // 2 saniye sonra butonu geri döndür
           setTimeout(() => {
             addButton.disabled = false;
@@ -250,6 +272,7 @@ async function addProductToMyList(productInfo) {
             
             if (spanElement) {
               spanElement.textContent = "Heybeye Ekle";
+              spanElement.style.color = "#374151"; // Normal renk
             }
             
             if (imgElement) {
@@ -258,6 +281,10 @@ async function addProductToMyList(productInfo) {
             
             if (checkIcon) {
               checkIcon.remove();
+            }
+            
+            if (progressBar) {
+              progressBar.remove();
             }
           }, 2000);
         }
@@ -374,11 +401,13 @@ async function addPendingProductWithUUID(uuid) {
         const addButton = document.getElementById("tum-listem-ekle-btn");
         if (addButton) {
           addButton.disabled = true;
-          addButton.style.background = "#10b981"; // Yeşil renk
+          addButton.style.background = "white"; // Beyaz arka plan
+          addButton.style.color = "#10b981"; // Yeşil metin
 
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
             spanElement.textContent = "Ürün Eklendi";
+            spanElement.style.color = "#10b981"; // Yeşil metin
           }
 
           const imgElement = addButton.querySelector("img");
@@ -386,12 +415,12 @@ async function addPendingProductWithUUID(uuid) {
             imgElement.style.display = "none";
           }
           
-          // SVG check ikonu ekle
+          // SVG yeşil tik ikonu ekle
           const checkIcon = document.createElement("svg");
           checkIcon.width = "20";
           checkIcon.height = "20";
           checkIcon.style.fill = "none";
-          checkIcon.style.stroke = "currentColor";
+          checkIcon.style.stroke = "#10b981"; // Yeşil renk
           checkIcon.style.viewBox = "0 0 24 24";
           checkIcon.innerHTML = `
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -402,6 +431,26 @@ async function addPendingProductWithUUID(uuid) {
             buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
           }
           
+          // Progress bar oluştur
+          const progressBar = document.createElement("div");
+          progressBar.style.cssText = `
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #10b981;
+            width: 0%;
+            transition: width 2s linear;
+            border-radius: 0 0 8px 8px;
+          `;
+          addButton.style.position = "relative";
+          addButton.appendChild(progressBar);
+          
+          // Progress bar'ı başlat
+          setTimeout(() => {
+            progressBar.style.width = "100%";
+          }, 100);
+          
           // 2 saniye sonra butonu geri döndür
           setTimeout(() => {
             addButton.disabled = false;
@@ -410,6 +459,7 @@ async function addPendingProductWithUUID(uuid) {
             
             if (spanElement) {
               spanElement.textContent = "Heybeye Ekle";
+              spanElement.style.color = "#374151"; // Normal renk
             }
             
             if (imgElement) {
@@ -418,6 +468,10 @@ async function addPendingProductWithUUID(uuid) {
             
             if (checkIcon) {
               checkIcon.remove();
+            }
+            
+            if (progressBar) {
+              progressBar.remove();
             }
           }, 2000);
         }
@@ -603,11 +657,13 @@ function showGuestWarningPopup() {
               const addButton = document.getElementById("tum-listem-ekle-btn");
               if (addButton) {
                 addButton.disabled = true;
-                addButton.style.background = "#10b981"; // Yeşil renk
+                addButton.style.background = "white"; // Beyaz arka plan
+                addButton.style.color = "#10b981"; // Yeşil metin
 
                 const spanElement = addButton.querySelector("span");
                 if (spanElement) {
                   spanElement.textContent = "Ürün Eklendi";
+                  spanElement.style.color = "#10b981"; // Yeşil metin
                 }
 
                 const imgElement = addButton.querySelector("img");
@@ -615,12 +671,12 @@ function showGuestWarningPopup() {
                   imgElement.style.display = "none";
                 }
                 
-                // SVG check ikonu ekle
+                // SVG yeşil tik ikonu ekle
                 const checkIcon = document.createElement("svg");
                 checkIcon.width = "20";
                 checkIcon.height = "20";
                 checkIcon.style.fill = "none";
-                checkIcon.style.stroke = "currentColor";
+                checkIcon.style.stroke = "#10b981"; // Yeşil renk
                 checkIcon.style.viewBox = "0 0 24 24";
                 checkIcon.innerHTML = `
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -631,6 +687,26 @@ function showGuestWarningPopup() {
                   buttonContent.insertBefore(checkIcon, buttonContent.firstChild);
                 }
                 
+                // Progress bar oluştur
+                const progressBar = document.createElement("div");
+                progressBar.style.cssText = `
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  height: 3px;
+                  background: #10b981;
+                  width: 0%;
+                  transition: width 2s linear;
+                  border-radius: 0 0 8px 8px;
+                `;
+                addButton.style.position = "relative";
+                addButton.appendChild(progressBar);
+                
+                // Progress bar'ı başlat
+                setTimeout(() => {
+                  progressBar.style.width = "100%";
+                }, 100);
+                
                 // 2 saniye sonra butonu geri döndür
                 setTimeout(() => {
                   addButton.disabled = false;
@@ -639,6 +715,7 @@ function showGuestWarningPopup() {
                   
                   if (spanElement) {
                     spanElement.textContent = "Heybeye Ekle";
+                    spanElement.style.color = "#374151"; // Normal renk
                   }
                   
                   if (imgElement) {
@@ -647,6 +724,10 @@ function showGuestWarningPopup() {
                   
                   if (checkIcon) {
                     checkIcon.remove();
+                  }
+                  
+                  if (progressBar) {
+                    progressBar.remove();
                   }
                 }, 2000);
               }
