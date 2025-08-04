@@ -1,62 +1,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Trash2, ExternalLink } from "lucide-react";
+import { Download } from "lucide-react";
 
 function ExtensionInstall() {
-  // Extension dosyalarını indir
-  const handleDownloadExtension = () => {
-    try {
-      const localUrl = "/extension-files.zip";
-
-      const link = document.createElement("a");
-      link.href = localUrl;
-      link.download = "my-list-sepet-extension.zip";
-      link.target = "_blank";
-
-      // Hata durumunda kullanıcıya bilgi ver
-      link.onerror = () => {
-        alert(
-          "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-        );
-      };
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      console.log("📦 Extension dosyaları indiriliyor...");
-    } catch (error) {
-      console.error("❌ Dosya indirme hatası:", error);
-      alert(
-        "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-      );
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg border p-6 mb-6">
       {/* Butonlar */}
-      <div className="flex gap-3 flex-wrap">
-        <Button
-          variant="outline"
-          onClick={() =>
-            document
-              .getElementById("install")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-          className="flex-1 min-w-[200px]"
-        >
-          <Monitor className="w-4 h-4 mr-2" />
-          Kurulum Talimatları
-        </Button>
-
+      <div className="flex gap-3 flex-wrap justify-center">
         <Button
           variant="outline"
           onClick={() => window.open("/heybe-extension.zip", "_blank")}
           className="flex-1 min-w-[200px]"
         >
           <Download className="w-4 h-4 mr-2" />
-          Extension İndir
+          İndir
         </Button>
 
         <Button
@@ -69,21 +26,10 @@ function ExtensionInstall() {
           }
           className="flex-1 min-w-[200px]"
         >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Google Drive'dan İndir
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={() =>
-            document
-              .getElementById("uninstall")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-          className="flex-1 min-w-[200px]"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Kaldırma Talimatları
+          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          İndir
         </Button>
       </div>
     </div>

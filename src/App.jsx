@@ -1192,31 +1192,7 @@ function App() {
                   </ol>
                 </div>
 
-                <div>
-                  <h5 className="font-medium text-orange-600">Firefox:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>
-                      Firefox'ta{" "}
-                      <code className="bg-gray-200 px-1 rounded">
-                        about:debugging
-                      </code>{" "}
-                      adresine gidin
-                    </li>
-                    <li>"This Firefox" sekmesine tıklayın</li>
-                    <li>"Heybe Extension"ı bulun</li>
-                    <li>"Remove" butonuna tıklayın</li>
-                  </ol>
-                </div>
 
-                <div>
-                  <h5 className="font-medium text-green-600">Safari:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>Safari'de "Develop" menüsünü açın</li>
-                    <li>"Show Extension Builder" seçin</li>
-                    <li>"Heybe Extension"ı seçin</li>
-                    <li>"Remove" butonuna tıklayın</li>
-                  </ol>
-                </div>
 
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                   <p className="text-yellow-800 text-xs">
@@ -1274,8 +1250,7 @@ function App() {
                           Shadcn
                         </li>
                         <li>
-                          <strong>Browser Support:</strong> Chrome, Brave,
-                          Firefox, Safari
+                          <strong>Browser Support:</strong> Chrome, Brave
                         </li>
                         <li>
                           <strong>Deployment:</strong> Vercel
