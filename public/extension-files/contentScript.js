@@ -329,6 +329,24 @@ function init() {
   document.body.appendChild(addButton);
   document.body.appendChild(loginButton);
   
+  // Website'e aktif UUID'yi gönder
+  chrome.storage.local.get(['guestUUID', 'permanentUUID'], (result) => {
+    const activeUUID = result.permanentUUID || result.guestUUID;
+    if (activeUUID) {
+      console.log("📨 [Content Script] Sayfa zaten yüklü, aktif UUID gönderiliyor...");
+      
+      // Website'e UUID event'ini gönder
+      window.dispatchEvent(
+        new CustomEvent("extensionActiveUUIDSet", {
+          detail: {
+            uuid: activeUUID,
+            type: result.permanentUUID ? "permanent" : "guest"
+          }
+        })
+      );
+    }
+  });
+  
   addButton.onclick = async () => {
     const productInfo = extractProductInfo();
     
