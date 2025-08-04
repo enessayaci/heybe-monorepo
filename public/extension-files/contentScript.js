@@ -1193,7 +1193,13 @@ function createAddToListButton() {
     document.title.toLowerCase().includes("ana sayfa") ||
     document.title.toLowerCase().includes("homepage");
 
-  if (isHomePage) {
+  // Heybe website'inde buton gösterme
+  const isHeybeWebsite = 
+    window.location.hostname === "my-heybe.vercel.app" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname.includes("vercel.app");
+
+  if (isHomePage || isHeybeWebsite) {
     return;
   }
 
