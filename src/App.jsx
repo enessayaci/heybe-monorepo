@@ -21,6 +21,7 @@ function App() {
   const [isGettingUserId, setIsGettingUserId] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showGuestWarning, setShowGuestWarning] = useState(false);
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-heybe.vercel.app/api";
@@ -107,7 +108,7 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        await getUserId(); // UUID hazırla / IndexedDB hazır
+        await getActiveUUID(); // UUID hazırla / IndexedDB hazır
         await fetchProducts();
       } catch (e) {
         console.error("Initial fetch error", e);
