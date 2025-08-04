@@ -224,15 +224,9 @@ async function addProductToMyList(productInfo) {
           }
 
           const imgElement = addButton.querySelector("img");
-          let tikIcon;
           if (imgElement) {
-            // Logo'yu gizleme yerine, yerine check PNG ekle
-            tikIcon = document.createElement("img");
-            tikIcon.src = "https://my-heybe.vercel.app/images/check-green.png";
-            tikIcon.width = "20";
-            tikIcon.height = "20";
-            tikIcon.style.objectFit = "contain";
-            imgElement.parentNode.replaceChild(tikIcon, imgElement);
+            imgElement.src =
+              "https://my-heybe.vercel.app/images/check-green.png";
           }
 
           // Progress bar oluştur
@@ -266,20 +260,10 @@ async function addProductToMyList(productInfo) {
               spanElement.style.color = "#374151"; // Normal renk
             }
 
-            // Logo geri gelsin, tik SVG'si silinsin
-            const svgIcon = addButton.querySelector("svg");
-            if (svgIcon) {
-              // Eski logo img yoksa tekrar ekle
-              const div = addButton.querySelector("div");
-              if (div && !div.querySelector("img")) {
-                const logo = document.createElement("img");
-                logo.src = "https://my-heybe.vercel.app/logo.png";
-                logo.width = 20;
-                logo.height = 20;
-                logo.style.objectFit = "contain";
-                div.insertBefore(logo, div.firstChild);
-              }
-              svgIcon.remove();
+            // Logo geri gelsin
+            const imgElement = addButton.querySelector("img");
+            if (imgElement) {
+              imgElement.src = "https://my-heybe.vercel.app/logo.png";
             }
 
             if (progressBar) {
@@ -410,15 +394,9 @@ async function addPendingProductWithUUID(uuid) {
           }
 
           const imgElement = addButton.querySelector("img");
-          let tikIcon;
           if (imgElement) {
-            // Logo'yu gizleme yerine, yerine check PNG ekle
-            tikIcon = document.createElement("img");
-            tikIcon.src = "https://my-heybe.vercel.app/images/check-green.png";
-            tikIcon.width = "20";
-            tikIcon.height = "20";
-            tikIcon.style.objectFit = "contain";
-            imgElement.parentNode.replaceChild(tikIcon, imgElement);
+            imgElement.src =
+              "https://my-heybe.vercel.app/images/check-green.png";
           }
 
           // Progress bar oluştur
@@ -452,20 +430,10 @@ async function addPendingProductWithUUID(uuid) {
               spanElement.style.color = "#374151"; // Normal renk
             }
 
-            // Logo geri gelsin, tik SVG'si silinsin
-            const svgIcon = addButton.querySelector("svg");
-            if (svgIcon) {
-              // Eski logo img yoksa tekrar ekle
-              const div = addButton.querySelector("div");
-              if (div && !div.querySelector("img")) {
-                const logo = document.createElement("img");
-                logo.src = "https://my-heybe.vercel.app/logo.png";
-                logo.width = 20;
-                logo.height = 20;
-                logo.style.objectFit = "contain";
-                div.insertBefore(logo, div.firstChild);
-              }
-              svgIcon.remove();
+            // Logo geri gelsin
+            const imgElement = addButton.querySelector("img");
+            if (imgElement) {
+              imgElement.src = "https://my-heybe.vercel.app/logo.png";
             }
 
             if (progressBar) {
@@ -665,16 +633,9 @@ function showGuestWarningPopup() {
                 }
 
                 const imgElement = addButton.querySelector("img");
-                let tikIcon;
                 if (imgElement) {
-                  // Logo'yu gizleme yerine, yerine check PNG ekle
-                  tikIcon = document.createElement("img");
-                  tikIcon.src =
+                  imgElement.src =
                     "https://my-heybe.vercel.app/images/check-green.png";
-                  tikIcon.width = "20";
-                  tikIcon.height = "20";
-                  tikIcon.style.objectFit = "contain";
-                  imgElement.parentNode.replaceChild(tikIcon, imgElement);
                 }
 
                 // Progress bar oluştur
@@ -708,20 +669,10 @@ function showGuestWarningPopup() {
                     spanElement.style.color = "#374151"; // Normal renk
                   }
 
-                  // Logo geri gelsin, tik SVG'si silinsin
-                  const svgIcon = addButton.querySelector("svg");
-                  if (svgIcon) {
-                    // Eski logo img yoksa tekrar ekle
-                    const div = addButton.querySelector("div");
-                    if (div && !div.querySelector("img")) {
-                      const logo = document.createElement("img");
-                      logo.src = "https://my-heybe.vercel.app/logo.png";
-                      logo.width = 20;
-                      logo.height = 20;
-                      logo.style.objectFit = "contain";
-                      div.insertBefore(logo, div.firstChild);
-                    }
-                    svgIcon.remove();
+                  // Logo geri gelsin
+                  const imgElement = addButton.querySelector("img");
+                  if (imgElement) {
+                    imgElement.src = "https://my-heybe.vercel.app/logo.png";
                   }
 
                   if (progressBar) {
