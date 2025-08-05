@@ -1,5 +1,4 @@
-import pkg from "pg";
-const { Pool } = pkg;
+const { Pool } = require("pg");
 
 // Database connection pool
 const pool = new Pool({
@@ -9,7 +8,7 @@ const pool = new Pool({
   },
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -80,4 +79,4 @@ export default async function handler(req, res) {
     // Close the pool connection
     await pool.end();
   }
-}
+};
