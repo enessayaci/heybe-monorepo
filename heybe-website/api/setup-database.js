@@ -97,7 +97,5 @@ export default async function handler(req, res) {
       error: "Database setup failed",
       details: error.message,
     });
-  } finally {
-    await pool.end();
   }
 }

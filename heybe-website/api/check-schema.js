@@ -82,7 +82,5 @@ export default async function handler(req, res) {
       error: "Schema check failed",
       details: error.message,
     });
-  } finally {
-    await pool.end();
   }
 }
