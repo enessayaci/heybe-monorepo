@@ -1,6 +1,7 @@
 import pkg from "pg";
 const { Pool } = pkg;
 
+// Database connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -28,68 +29,55 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, price, image_url, url, site, user_id } = req.body;
-
-    if (!name || !url || !site || !user_id) {
-      return res.status(400).json({ error: "Missing required fields" });
+    // Check if DATABASE_URL exists
+    if (!process.env.DATABASE_URL) {
+      console.error("❌ DATABASE_URL environment variable is missing");
+      return res.status(500).json({
+        error: "Database configuration error",
+        details: "DATABASE_URL is not configured",
+      });
     }
 
-    // Ürün adını 100 karaktere kısalt
-    const truncatedName =
-      name.length > 100 ? name.substring(0, 97) + "..." : name;
+    const { user_id, name, price, image_url, product_url } = req.body;
 
-    // Site adını da kısalt (50 karakter)
-    const truncatedSite =
-      site.length > 50 ? site.substring(0, 47) + "..." : site;
-
-    console.log("📝 [Tüm Listem] Ürün adı kısaltıldı:", truncatedName);
-    console.log("📝 [Tüm Listem] Site adı kısaltıldı:", truncatedSite);
-    console.log("👤 [Tüm Listem] Kullanıcı ID:", user_id);
-
-    // For guest users, we don't need to create them in users table
-    // Just check if it's a guest user (contains UUID format or is not an email)
-    const isGuestUser = !user_id.includes('@') || user_id.includes('-');
-    
-    if (!isGuestUser) {
-      // Only check for permanent users (emails)
-      const userCheck = await pool.query(
-        "SELECT uuid FROM users WHERE uuid = $1",
-        [user_id]
-      );
-
-      if (userCheck.rows.length === 0) {
-        console.log("❌ User not found:", user_id);
-        return res.status(400).json({ error: "User not found" });
-      }
+    if (!user_id || !name) {
+      return res.status(400).json({
+        error: "User ID and product name are required",
+      });
     }
 
-    // Veritabanına kaydet
+    console.log("🔍 [API] Adding product for user:", user_id, "Product:", name);
+
     const query = `
-      INSERT INTO products (name, price, image_url, url, site, user_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      INSERT INTO products (user_id, name, price, image_url, product_url, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
       RETURNING *
     `;
 
-    const values = [
-      truncatedName,
-      price || "",
-      image_url || "",
-      url,
-      truncatedSite,
+    const result = await pool.query(query, [
       user_id,
-    ];
+      name,
+      price || null,
+      image_url || null,
+      product_url || null,
+    ]);
 
-    const result = await pool.query(query, values);
+    console.log("✅ [API] Product added successfully:", result.rows[0]);
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       product: result.rows[0],
     });
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("❌ [API] Database error:", error);
+
     res.status(500).json({
       error: "Internal server error",
       details: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
+  } finally {
+    // Close the pool connection
+    await pool.end();
   }
 }
