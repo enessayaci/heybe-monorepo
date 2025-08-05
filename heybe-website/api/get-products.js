@@ -1,6 +1,6 @@
-const { Pool } = require("pg");
+import pkg from "pg";
+const { Pool } = pkg;
 
-// Database connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -8,7 +8,7 @@ const pool = new Pool({
   },
 });
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -103,4 +103,4 @@ module.exports = async function handler(req, res) {
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
-};
+}

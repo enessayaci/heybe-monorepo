@@ -1,6 +1,6 @@
-const { Pool } = require("pg");
+import pkg from "pg";
+const { Pool } = pkg;
 
-// Database connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -8,7 +8,7 @@ const pool = new Pool({
   },
 });
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  if (req.method !== "POST") {
+  if (req.method !== "DELETE") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -37,45 +37,39 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const { user_id, name, price, image_url, url, site } = req.body;
+    const { user_id } = req.query;
 
-    if (!user_id || !name || !url || !site) {
+    if (!user_id) {
       return res.status(400).json({
-        error: "User ID, name, url, and site are required",
+        error: "User ID is required",
       });
     }
 
-    console.log("🔍 [API] Adding product for user:", user_id, "Product:", name);
+    console.log("🗑️ [API] Deleting all products for user:", user_id);
 
-    // Use the correct table structure
-    const query = `
-      INSERT INTO products (user_id, name, price, image_url, url, site, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
-      RETURNING *
-    `;
+    // Delete all products for the user
+    const result = await pool.query(
+      "DELETE FROM products WHERE user_id = $1 RETURNING id",
+      [user_id]
+    );
 
-    const result = await pool.query(query, [
-      user_id,
-      name,
-      price || null,
-      image_url || null,
-      url,
-      site,
-    ]);
+    console.log(
+      "✅ [API] Deleted",
+      result.rowCount,
+      "products for user:",
+      user_id
+    );
 
-    console.log("✅ [API] Product added successfully:", result.rows[0]);
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      product: result.rows[0],
+      message: "All products deleted successfully",
+      deletedCount: result.rowCount,
     });
   } catch (error) {
-    console.error("❌ [API] Database error:", error);
-
+    console.error("❌ [API] Bulk delete error:", error);
     res.status(500).json({
       error: "Internal server error",
       details: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
-};
+}

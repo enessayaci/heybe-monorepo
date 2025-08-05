@@ -1,4 +1,3 @@
-// Registration API endpoint
 import bcrypt from "bcryptjs";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -11,6 +10,20 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+  // CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -21,8 +34,6 @@ export default async function handler(req, res) {
       console.error("❌ DATABASE_URL environment variable not set");
       return res.status(500).json({ error: "Database configuration error" });
     }
-
-
 
     const { email, password, name, guest_user_id } = req.body;
 
@@ -73,23 +84,31 @@ export default async function handler(req, res) {
     // Transfer guest products to permanent user if guest_user_id provided
     if (guest_user_id && guest_user_id !== uuid) {
       try {
-        console.log(`🔄 Starting product transfer from ${guest_user_id} to ${uuid}`);
-        
+        console.log(
+          `🔄 Starting product transfer from ${guest_user_id} to ${uuid}`
+        );
+
         // First check if there are products to transfer
         const checkProducts = await pool.query(
           "SELECT COUNT(*) as count FROM products WHERE user_id = $1",
           [guest_user_id]
         );
-        console.log(`📊 Found ${checkProducts.rows[0].count} products to transfer`);
-        
+        console.log(
+          `📊 Found ${checkProducts.rows[0].count} products to transfer`
+        );
+
         if (checkProducts.rows[0].count > 0) {
           const transferResult = await pool.query(
             "UPDATE products SET user_id = $1 WHERE user_id = $2 RETURNING id",
             [uuid, guest_user_id]
           );
-          console.log(`✅ Transferred ${transferResult.rowCount} products from ${guest_user_id} to ${uuid}`);
+          console.log(
+            `✅ Transferred ${transferResult.rowCount} products from ${guest_user_id} to ${uuid}`
+          );
         } else {
-          console.log(`ℹ️ No products found for guest_user_id: ${guest_user_id}`);
+          console.log(
+            `ℹ️ No products found for guest_user_id: ${guest_user_id}`
+          );
         }
       } catch (transferError) {
         console.error("❌ Product transfer error:", transferError);
@@ -106,7 +125,7 @@ export default async function handler(req, res) {
       message: "Kayıt başarılı",
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("❌ [API] Registration error:", error);
     res.status(500).json({ error: "Sunucu hatası" });
   }
 }

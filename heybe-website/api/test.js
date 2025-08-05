@@ -1,4 +1,4 @@
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -7,15 +7,18 @@ module.exports = async function handler(req, res) {
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
 
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
-    console.log("🔍 [Test API] Environment check:");
-    console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
-    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("🧪 [Test API] Request received");
 
     res.status(200).json({
       success: true,
@@ -33,4 +36,4 @@ module.exports = async function handler(req, res) {
       details: error.message,
     });
   }
-};
+}
