@@ -73,6 +73,7 @@ export default async function handler(req, res) {
 
     console.log("📊 [API] Products table structure:", tableStructure.rows);
 
+    // Use the existing table structure - don't assume column names
     const query = `
       SELECT * FROM products 
       WHERE user_id = $1
