@@ -37,19 +37,20 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const { user_id, name, price, image_url, product_url } = req.body;
+    const { user_id, name, price, image_url, url, site } = req.body;
 
-    if (!user_id || !name) {
+    if (!user_id || !name || !url || !site) {
       return res.status(400).json({
-        error: "User ID and product name are required",
+        error: "User ID, name, url, and site are required",
       });
     }
 
     console.log("🔍 [API] Adding product for user:", user_id, "Product:", name);
 
+    // Use the correct table structure
     const query = `
-      INSERT INTO products (user_id, name, price, image_url, product_url, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO products (user_id, name, price, image_url, url, site, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING *
     `;
 
@@ -58,7 +59,8 @@ module.exports = async function handler(req, res) {
       name,
       price || null,
       image_url || null,
-      product_url || null,
+      url,
+      site,
     ]);
 
     console.log("✅ [API] Product added successfully:", result.rows[0]);

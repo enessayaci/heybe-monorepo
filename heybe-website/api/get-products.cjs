@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
 
     // Get table structure for debugging
     const tableStructure = await pool.query(`
-      SELECT column_name, data_type 
+      SELECT column_name, data_type, is_nullable
       FROM information_schema.columns 
       WHERE table_name = 'products'
       ORDER BY ordinal_position;
@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
 
     console.log("📊 [API] Products table structure:", tableStructure.rows);
 
-    // Use the existing table structure - don't assume column names
+    // Use the correct table structure
     const query = `
       SELECT * FROM products 
       WHERE user_id = $1
