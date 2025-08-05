@@ -1022,6 +1022,37 @@ function App() {
                     <li>"Load unpacked" butonuna tıklayın</li>
                     <li>İndirdiğiniz klasörü seçin</li>
                   </ol>
+
+                  {/* Kurulum Sonrası Kullanım Kılavuzu */}
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h6 className="font-medium text-blue-800 mb-3">
+                      🎯 Kurulum Sonrası Kullanım Kılavuzu
+                    </h6>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-blue-700 mb-2">
+                          <strong>Adım 1:</strong> Herhangi bir e-ticaret
+                          sitesine gidin
+                        </p>
+                        <img
+                          src="/images/guide-1.png"
+                          alt="E-ticaret sitesi örneği"
+                          className="w-full max-w-md rounded border shadow-sm"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 mb-2">
+                          <strong>Adım 2:</strong> Ürün sayfasında "Heybeye
+                          Ekle" butonunu görürsünüz
+                        </p>
+                        <img
+                          src="/images/guide-2.png"
+                          alt="Heybeye Ekle butonu örneği"
+                          className="w-full max-w-md rounded border shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Firefox ve Safari desteği şimdilik gizli
