@@ -1024,6 +1024,20 @@ function showGuestWarningPopup() {
 // Login veya Register form popup'ı
 function showLoginOrRegisterForm() {
   return new Promise((resolve) => {
+    // Popup kapatma fonksiyonu
+    const closePopup = (success = false) => {
+      if (document.body.contains(popup)) {
+        document.body.removeChild(popup);
+      }
+      if (!success) {
+        // İptal edildiğinde registration progress'i sıfırla
+        isRegistrationInProgress = false;
+        console.log(
+          "❌ [Content Script] Popup kapatıldı, isRegistrationInProgress = false"
+        );
+      }
+      resolve(success);
+    };
     // Popup container oluştur
     const popup = document.createElement("div");
     popup.style.cssText = `
@@ -1200,8 +1214,7 @@ function showLoginOrRegisterForm() {
       (cancelButton.style.background = "#e5e7eb");
     cancelButton.onmouseout = () => (cancelButton.style.background = "#f3f4f6");
     cancelButton.onclick = () => {
-      document.body.removeChild(popup);
-      resolve(false);
+      closePopup(false);
     };
 
     // Login button click handler
@@ -1248,13 +1261,11 @@ function showLoginOrRegisterForm() {
             result.uuid
           );
 
-          document.body.removeChild(popup);
+          closePopup(true);
 
           // Login işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
-
-          resolve(true);
         } else {
           console.log("❌ [API Response] Login başarısız:", result);
           errorMessage.textContent = result.error || "Giriş başarısız";
@@ -1330,13 +1341,11 @@ function showLoginOrRegisterForm() {
             result.uuid
           );
 
-          document.body.removeChild(popup);
+          closePopup(true);
 
           // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
-
-          return true;
         } else if (result && result.error && result.error.includes("409")) {
           console.log(
             "🔄 [API Response] Kullanıcı zaten var, login deneniyor:",
@@ -1366,13 +1375,11 @@ function showLoginOrRegisterForm() {
                 loginResult.uuid
               );
 
-              document.body.removeChild(popup);
+              closePopup(true);
 
               // Login işlemi tamamlandı, bekleyen ürünü ekle
               isRegistrationInProgress = false;
               await addPendingProductWithUUID(loginResult.uuid);
-
-              return true;
             } else {
               console.log(
                 "❌ [API Response] Auto-login başarısız:",
