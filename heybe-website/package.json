@@ -1,17 +1,19 @@
 {
   "name": "heybe-website",
   "version": "1.0.0",
-  "description": "Heybe Website - Shopping list management web application",
+  "description": "Heybe Website - Shopping list management web application with API",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api:dev": "vercel dev"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "vercel": "^32.5.0"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -23,14 +25,18 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3"
   },
   "keywords": [
     "react",
     "vite",
     "tailwindcss",
     "shadcn",
-    "shopping-list"
+    "shopping-list",
+    "api",
+    "serverless"
   ],
   "author": "Heybe Team",
   "license": "MIT"
