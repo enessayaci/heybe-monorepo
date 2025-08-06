@@ -103,7 +103,7 @@ class CrossBrowserStorageHelper {
         );
         return await new Promise((resolve, reject) => {
           chrome.runtime.sendMessage(
-            { action: "getActiveUUID" },
+            { action: "getCurrentUUID" },
             (response) => {
               if (chrome.runtime.lastError) {
                 console.log(
@@ -339,7 +339,7 @@ async function apiRequest(method, endpoint, data = null) {
 async function sendActiveUUIDToWebSite() {
   try {
     const response = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+      chrome.runtime.sendMessage({ action: "getCurrentUUID" }, (response) => {
         if (chrome.runtime.lastError) {
           reject(new Error("Extension bulunamadı"));
           return;
@@ -613,7 +613,7 @@ async function addPendingProduct() {
 
     // Yeni permanent UUID ile ürün ekle
     const uuidData = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+      chrome.runtime.sendMessage({ action: "getCurrentUUID" }, (response) => {
         if (chrome.runtime.lastError) {
           reject(new Error("Extension bulunamadı"));
           return;
@@ -907,7 +907,7 @@ function showGuestWarningPopup() {
           // Aktif UUID'yi al (guest UUID)
           const uuidData = await new Promise((resolve, reject) => {
             chrome.runtime.sendMessage(
-              { action: "getActiveUUID" },
+              { action: "getCurrentUUID" },
               (response) => {
                 if (chrome.runtime.lastError) {
                   reject(new Error("Extension bulunamadı"));
