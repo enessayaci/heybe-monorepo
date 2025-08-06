@@ -645,6 +645,9 @@ function App() {
     try {
       console.log("🔐 [Website] Giriş yapılıyor:", email);
 
+      // Eski misafir UUID'yi al (transfer için - Madde 1, 3)
+      const oldData = await storageHelper.getCurrentUUID();
+
       const response = await fetch(LOGIN_ENDPOINT, {
         method: "POST",
         headers: {
@@ -663,8 +666,7 @@ function App() {
       if (response.ok && result.uuid) {
         console.log("✅ [Website] Giriş başarılı:", result);
 
-        // Eski misafir UUID'yi al (transfer için - Madde 9)
-        const oldData = await storageHelper.getCurrentUUID();
+        // Transfer için eski UUID'yi kullan (zaten yukarıda alındı)
         const oldUuid = oldData?.uuid;
 
         // Yeni USER UUID'yi kaydet (Madde 4, 9, 11)
@@ -702,6 +704,9 @@ function App() {
     try {
       console.log("📝 [Website] Kayıt yapılıyor:", email);
 
+      // Eski misafir UUID'yi al (transfer için - Madde 2, 3)
+      const oldData = await storageHelper.getCurrentUUID();
+
       const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
         headers: {
@@ -721,8 +726,7 @@ function App() {
       if (response.ok && result.uuid) {
         console.log("✅ [Website] Kayıt başarılı:", result);
 
-        // Eski misafir UUID'yi al (transfer için - Madde 10)
-        const oldData = await storageHelper.getCurrentUUID();
+        // Transfer için eski UUID'yi kullan (zaten yukarıda alındı)
         const oldUuid = oldData?.uuid;
 
         // Yeni USER UUID'yi kaydet (Madde 4, 10, 11)
