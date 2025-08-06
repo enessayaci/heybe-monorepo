@@ -913,15 +913,28 @@ function showGuestWarningPopup() {
                   reject(new Error("Extension bulunamadı"));
                   return;
                 }
+                console.log(
+                  "🔍 [Content Script] Background response:",
+                  response
+                );
                 resolve(response);
               }
             );
           });
 
-          if (uuidData && uuidData.uuid) {
+          console.log("🔍 [Content Script] uuidData:", uuidData);
+          console.log("🔍 [Content Script] uuidData.uuid:", uuidData?.uuid);
+          console.log("🔍 [Content Script] uuidData.data:", uuidData?.data);
+          console.log(
+            "🔍 [Content Script] uuidData.data?.uuid:",
+            uuidData?.data?.uuid
+          );
+
+          if (uuidData && (uuidData.uuid || uuidData.data?.uuid)) {
+            const actualUuid = uuidData.uuid || uuidData.data?.uuid;
             console.log(
               "🔍 [Content Script] UUID alındı, API request başlatılıyor:",
-              uuidData.uuid
+              actualUuid
             );
             console.log(
               "🔍 [Content Script] Ürün bilgileri:",
@@ -931,7 +944,7 @@ function showGuestWarningPopup() {
             // Guest UUID ile ürün ekle
             const result = await apiRequest("POST", "add-product", {
               ...pendingProductInfo,
-              user_id: uuidData.uuid,
+              user_id: actualUuid,
             });
 
             console.log("🔍 [Content Script] API Response:", result);
