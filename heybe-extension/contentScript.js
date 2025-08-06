@@ -526,7 +526,7 @@ async function addProductToMyList(productInfo) {
         const addButton = document.getElementById("tum-listem-ekle-btn");
         if (addButton) {
           addButton.disabled = true;
-          addButton.style.background = "white !important"; // Beyaz arka plan - !important ekle
+          addButton.style.background = "#f8f9fa !important"; // Kırık beyaz arka plan - !important ekle
           addButton.style.color = "#10b981"; // Yeşil metin
 
           const spanElement = addButton.querySelector("span");
@@ -564,7 +564,7 @@ async function addProductToMyList(productInfo) {
           // 2 saniye sonra butonu geri döndür
           setTimeout(() => {
             addButton.disabled = false;
-            addButton.style.background = "white";
+            addButton.style.background = "#f8f9fa";
             addButton.style.color = "#374151";
 
             if (spanElement) {
@@ -696,7 +696,7 @@ async function addPendingProductWithUUID(uuid) {
         const addButton = document.getElementById("tum-listem-ekle-btn");
         if (addButton) {
           addButton.disabled = true;
-          addButton.style.background = "white !important"; // Beyaz arka plan - !important ekle
+          addButton.style.background = "#f8f9fa !important"; // Kırık beyaz arka plan - !important ekle
           addButton.style.color = "#10b981"; // Yeşil metin
 
           const spanElement = addButton.querySelector("span");
@@ -734,7 +734,7 @@ async function addPendingProductWithUUID(uuid) {
           // 2 saniye sonra butonu geri döndür
           setTimeout(() => {
             addButton.disabled = false;
-            addButton.style.background = "white";
+            addButton.style.background = "#f8f9fa";
             addButton.style.color = "#374151";
 
             if (spanElement) {
@@ -793,7 +793,7 @@ function showGuestWarningPopup() {
     // Popup content
     const content = document.createElement("div");
     content.style.cssText = `
-                  background: white;
+                  background: #f8f9fa;
                   border-radius: 12px;
                   padding: 24px;
                   max-width: 400px;
@@ -959,7 +959,7 @@ function showGuestWarningPopup() {
               const addButton = document.getElementById("tum-listem-ekle-btn");
               if (addButton) {
                 addButton.disabled = true;
-                addButton.style.background = "white !important"; // Beyaz arka plan - !important ekle
+                addButton.style.background = "#f8f9fa !important"; // Kırık beyaz arka plan - !important ekle
                 addButton.style.color = "#10b981"; // Yeşil metin
 
                 const spanElement = addButton.querySelector("span");
@@ -997,7 +997,7 @@ function showGuestWarningPopup() {
                 // 2 saniye sonra butonu geri döndür
                 setTimeout(() => {
                   addButton.disabled = false;
-                  addButton.style.background = "white";
+                  addButton.style.background = "#f8f9fa";
                   addButton.style.color = "#374151";
 
                   if (spanElement) {
@@ -1104,7 +1104,7 @@ function showLoginOrRegisterForm() {
     // Popup content
     const content = document.createElement("div");
     content.style.cssText = `
-      background: white;
+      background: #f8f9fa;
       border-radius: 12px;
       padding: 32px;
       max-width: 400px;
@@ -1858,7 +1858,7 @@ function createAddToListButton() {
   `;
 
   addButton.style.cssText = `
-    background: white;
+    background: #f8f9fa;
     color: #374151;
     padding: 0 24px 0 12px;
     border: none;
@@ -1931,7 +1931,7 @@ function createAddToListButton() {
         // console.log removed
         // Ürün başarıyla eklendiyse buton durumunu güncelle
         addButton.disabled = true;
-        addButton.style.background = "white !important"; // Beyaz arka plan - !important ekle
+        addButton.style.background = "#f8f9fa !important"; // Kırık beyaz arka plan - !important ekle
         addButton.style.color = "#10b981"; // Yeşil metin
 
         const spanElement = addButton.querySelector("span");

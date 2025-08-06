@@ -941,90 +941,57 @@ function App() {
             </div>
           )}
 
-          {/* Arama Kutusu ve Tümünü Sil */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between gap-4">
-              {/* Arama Kutusu - Sol */}
-              <div className="w-80">
-                <input
-                  type="text"
-                  placeholder="Ürün adı, site adı veya fiyat ile ara..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                />
-                {searchTerm && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    {filteredProducts.length} ürün bulundu
-                  </p>
-                )}
-              </div>
+          {/* Arama Kutusu ve Tümünü Sil - Sadece ürün varsa göster */}
+          {products.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* Arama Kutusu - Sol */}
+                <div className="w-80">
+                  <input
+                    type="text"
+                    placeholder="Ürün adı, site adı veya fiyat ile ara..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                  />
+                  {searchTerm && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {filteredProducts.length} ürün bulundu
+                    </p>
+                  )}
+                </div>
 
-              {/* Tümünü Sil Butonu - Sağ */}
-              <div className="flex-shrink-0">
-                <button
-                  onClick={handleClearAll}
-                  className="bg-red-500/80 hover:bg-red-600/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 backdrop-blur-sm"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {/* Tümünü Sil Butonu - Sağ */}
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={handleClearAll}
+                    className="bg-red-500/80 hover:bg-red-600/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 backdrop-blur-sm"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Tümünü Sil
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Tümünü Sil
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Loading State */}
           {status === "loading" ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
               <p className="text-gray-500 mt-2">Ürünler yükleniyor...</p>
-            </div>
-          ) : status === "no-extension" ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Eklenti Henüz Kurulmadı
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Ürünlerinizi görmek için önce Chrome eklentisini kurmanız
-                gerekiyor.
-              </p>
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("install")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
-              >
-                Kurulum Talimatlarına Git
-              </button>
             </div>
           ) : status === "error" ? (
             <div className="text-center py-8">
