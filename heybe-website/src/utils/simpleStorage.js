@@ -87,6 +87,36 @@ class SimpleStorageHelper {
     }
   }
 
+  // DEBUG: Tüm durumları kontrol et
+  async debugStatus() {
+    console.log("🔍 [DEBUG] Storage durumu kontrol ediliyor...");
+
+    // 1. Extension durumu
+    const hasExtension = await this.isExtensionAvailable();
+    console.log("🔍 [DEBUG] Extension mevcut:", hasExtension);
+
+    // 2. Extension storage
+    if (hasExtension) {
+      const extensionData = await this.getFromExtension();
+      console.log("🔍 [DEBUG] Extension storage:", extensionData);
+    }
+
+    // 3. LocalStorage
+    const localData = this.getFromLocal();
+    console.log("🔍 [DEBUG] LocalStorage:", localData);
+
+    // 4. getCurrentUUID sonucu
+    const currentData = await this.getCurrentUUID();
+    console.log("🔍 [DEBUG] getCurrentUUID sonucu:", currentData);
+
+    return {
+      hasExtension,
+      extensionData: hasExtension ? await this.getFromExtension() : null,
+      localData,
+      currentData,
+    };
+  }
+
   // LocalStorage'dan oku
   getFromLocal() {
     try {

@@ -160,6 +160,13 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
+        // DEBUG: Storage durumunu kontrol et
+        console.log(
+          "🔍 [DEBUG] Sayfa yüklendi, storage durumu kontrol ediliyor..."
+        );
+        const debugInfo = await storageHelper.debugStatus();
+        console.log("🔍 [DEBUG] Tam rapor:", debugInfo);
+
         const uuid = await getActiveUUID(); // UUID hazırla (storage.local öncelik)
 
         // UUID varsa ürünleri çek
