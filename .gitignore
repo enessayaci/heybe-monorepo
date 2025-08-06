@@ -29,3 +29,12 @@ yarn-error.log*
 
 # extension.js
 extension-env.d.ts
+
+# cache files
+.vite/
+*.cache
+.cache/
+
+# system files
+.DS_Store
+Thumbs.db
