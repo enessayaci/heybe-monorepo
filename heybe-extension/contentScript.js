@@ -919,11 +919,22 @@ function showGuestWarningPopup() {
           });
 
           if (uuidData && uuidData.uuid) {
+            console.log(
+              "🔍 [Content Script] UUID alındı, API request başlatılıyor:",
+              uuidData.uuid
+            );
+            console.log(
+              "🔍 [Content Script] Ürün bilgileri:",
+              pendingProductInfo
+            );
+
             // Guest UUID ile ürün ekle
             const result = await apiRequest("POST", "add-product", {
               ...pendingProductInfo,
               user_id: uuidData.uuid,
             });
+
+            console.log("🔍 [Content Script] API Response:", result);
 
             if (result && result.success) {
               console.log(

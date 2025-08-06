@@ -130,6 +130,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Async response
   }
 
+  // API Request (CORS bypass için)
+  if (request.action === "apiRequest") {
+    const { method, endpoint, data } = request;
+    const url = `https://my-heybe.vercel.app/api/${endpoint}`;
+
+    console.log(`🌐 [Background] API Request: ${method} ${url}`, data);
+
+    const fetchOptions = {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    if (data && (method === "POST" || method === "PUT")) {
+      fetchOptions.body = JSON.stringify(data);
+    }
+
+    fetch(url, fetchOptions)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        console.log(`✅ [Background] API Success:`, result);
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        console.error(`❌ [Background] API Error:`, error);
+        sendResponse({ success: false, error: error.message });
+      });
+
+    return true; // Async response
+  }
+
   // Test mesajı (Extension detection için)
   if (request.action === "test") {
     sendResponse({ success: true, message: "Extension aktif" });
