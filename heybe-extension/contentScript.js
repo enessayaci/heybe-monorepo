@@ -1980,6 +1980,11 @@ window.addEventListener("message", async (event) => {
 
   const { action, data } = event.data;
 
+  // Kendi gönderdiğimiz _RESPONSE mesajlarını görmezden gel (sonsuz döngü önlemi)
+  if (!action || action.endsWith("_RESPONSE")) {
+    return;
+  }
+
   console.log("📨 [Content Script] PostMessage alındı:", action, data);
 
   try {
