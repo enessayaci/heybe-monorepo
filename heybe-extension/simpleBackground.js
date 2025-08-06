@@ -15,11 +15,17 @@ function generateUUID() {
 // UUID kaydet (GUEST veya USER)
 async function setCurrentUUID(uuid, role = "GUEST") {
   try {
+    console.log(`🔄 [Background] UUID kaydediliyor: ${uuid}, Role: ${role}`);
     await chrome.storage.local.set({
       [UUID_KEY]: uuid,
       [ROLE_KEY]: role,
     });
     console.log(`✅ [Background] UUID kaydedildi: ${uuid}, Role: ${role}`);
+    
+    // Doğrulama için tekrar oku
+    const verification = await chrome.storage.local.get([UUID_KEY, ROLE_KEY]);
+    console.log(`🔍 [Background] Doğrulama - Storage'da:`, verification);
+    
     return true;
   } catch (error) {
     console.log("❌ [Background] UUID kaydetme hatası:", error);
@@ -108,7 +114,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // UUID kaydet (Giriş/Kayıt sonrası - Madde 4, 9, 10, 11)
   if (request.action === "setUserUUID") {
+    console.log("🔄 [Background] setUserUUID çağrıldı:", request.uuid);
     setCurrentUUID(request.uuid, "USER").then((success) => {
+      console.log("✅ [Background] setUserUUID sonucu:", success);
       sendResponse({ success });
     });
     return true; // Async response

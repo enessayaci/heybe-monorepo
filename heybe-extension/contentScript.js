@@ -390,7 +390,7 @@ async function sendUUIDToExtension(uuid, type = "guest") {
       type,
     });
 
-    const action = type === "permanent" ? "setPermanentUUID" : "setGuestUUID";
+    const action = type === "permanent" ? "setUserUUID" : "createGuestUUID";
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         {
@@ -1317,6 +1317,12 @@ function showLoginOrRegisterForm() {
             result.uuid
           );
 
+          // Website'e de bildir (Madde 4 - login sonrası sync)
+          sendActiveUUIDToPage({
+            uuid: result.uuid,
+            type: "permanent",
+          });
+
           document.body.removeChild(popup);
 
           // Login işlemi tamamlandı, bekleyen ürünü ekle
@@ -1406,6 +1412,12 @@ function showLoginOrRegisterForm() {
             "✅ [Content Script] Kayıt başarılı, permanent UUID set edildi:",
             result.uuid
           );
+
+          // Website'e de bildir (Madde 4 - kayıt sonrası sync)
+          sendActiveUUIDToPage({
+            uuid: result.uuid,
+            type: "permanent",
+          });
 
           document.body.removeChild(popup);
 
