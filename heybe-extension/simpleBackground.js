@@ -72,15 +72,27 @@ async function clearStorage() {
 // Extension yüklendiğinde misafir UUID oluştur (Madde 2)
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("🚀 [Background] Extension yüklendi");
+  await initializeUUID();
+});
 
+// Extension başladığında UUID kontrolü (Madde 2)
+chrome.runtime.onStartup.addListener(async () => {
+  console.log("🚀 [Background] Extension başlatıldı");
+  await initializeUUID();
+});
+
+// UUID initialize fonksiyonu
+async function initializeUUID() {
   // Mevcut UUID var mı kontrol et
   const existing = await getCurrentUUID();
   if (!existing) {
     // Yoksa misafir UUID oluştur
     const guestUuid = await createGuestUUID();
     console.log("🆕 [Background] Misafir UUID oluşturuldu:", guestUuid);
+  } else {
+    console.log("✅ [Background] Mevcut UUID:", existing);
   }
-});
+}
 
 // Mesaj handler'ları
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
