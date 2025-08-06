@@ -20,20 +20,50 @@ class SimpleStorageHelper {
   // Extension mevcut mu kontrol et
   async isExtensionAvailable() {
     if (typeof chrome === "undefined" || !chrome.runtime) {
+      console.log("🔍 [Extension Check] Chrome runtime mevcut değil");
       return false;
     }
 
     try {
       return await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: "test" }, (response) => {
-          if (chrome.runtime.lastError) {
-            resolve(false);
-          } else {
-            resolve(!!response?.success);
+        // Timeout ekle (extension yanıt vermezse)
+        const timeout = setTimeout(() => {
+          console.log("🔍 [Extension Check] Timeout - extension yanıt vermedi");
+          resolve(false);
+        }, 1000);
+
+        // Extension ID'sini manuel olarak belirt (Chrome development)
+        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd"; // Content script'ten alınan ID
+        chrome.runtime.sendMessage(
+          extensionId,
+          { action: "test" },
+          (response) => {
+            clearTimeout(timeout);
+
+            if (chrome.runtime.lastError) {
+              console.log(
+                "🔍 [Extension Check] Runtime error:",
+                chrome.runtime.lastError.message
+              );
+              resolve(false);
+            } else if (response?.success) {
+              console.log(
+                "🔍 [Extension Check] Extension yanıtı alındı:",
+                response
+              );
+              resolve(true);
+            } else {
+              console.log(
+                "🔍 [Extension Check] Extension yanıtı geçersiz:",
+                response
+              );
+              resolve(false);
+            }
           }
-        });
+        );
       });
     } catch (error) {
+      console.log("🔍 [Extension Check] Hata:", error);
       return false;
     }
   }
@@ -42,13 +72,18 @@ class SimpleStorageHelper {
   async getFromExtension() {
     try {
       return await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: "getCurrentUUID" }, (response) => {
-          if (chrome.runtime.lastError || !response?.success) {
-            resolve(null);
-          } else {
-            resolve(response.data);
+        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
+        chrome.runtime.sendMessage(
+          extensionId,
+          { action: "getCurrentUUID" },
+          (response) => {
+            if (chrome.runtime.lastError || !response?.success) {
+              resolve(null);
+            } else {
+              resolve(response.data);
+            }
           }
-        });
+        );
       });
     } catch (error) {
       return null;
@@ -59,7 +94,9 @@ class SimpleStorageHelper {
   async setToExtension(uuid, role) {
     try {
       return await new Promise((resolve) => {
+        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
         chrome.runtime.sendMessage(
+          extensionId,
           {
             action: role === "USER" ? "setUserUUID" : "createGuestUUID",
             uuid,
@@ -78,9 +115,14 @@ class SimpleStorageHelper {
   async clearExtension() {
     try {
       return await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: "clearStorage" }, (response) => {
-          resolve(response?.success || false);
-        });
+        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
+        chrome.runtime.sendMessage(
+          extensionId,
+          { action: "clearStorage" },
+          (response) => {
+            resolve(response?.success || false);
+          }
+        );
       });
     } catch (error) {
       return false;
