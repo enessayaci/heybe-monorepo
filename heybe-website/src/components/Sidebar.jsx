@@ -1,9 +1,33 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LogIn,
+  UserPlus,
+  LogOut,
+} from "lucide-react";
 
-function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
+function Sidebar({
+  onScrollToSection,
+  onToggle,
+  currentUserId,
+  userRole,
+  isLoggedIn,
+  onLogin,
+  onRegister,
+  onLogout,
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showAuthForm, setShowAuthForm] = useState(false);
+  const [authMode, setAuthMode] = useState("login"); // "login" veya "register"
+  const [authData, setAuthData] = useState({
+    email: "",
+    password: "",
+    name: "",
+  });
+  const [authError, setAuthError] = useState("");
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -20,6 +44,43 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
     setIsCollapsed(newCollapsed);
     if (onToggle) {
       onToggle(newCollapsed);
+    }
+  };
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setIsAuthLoading(true);
+    setAuthError("");
+
+    try {
+      let result;
+      if (authMode === "login") {
+        result = await onLogin(authData.email, authData.password);
+      } else {
+        result = await onRegister(
+          authData.email,
+          authData.password,
+          authData.name
+        );
+      }
+
+      if (result.success) {
+        setShowAuthForm(false);
+        setAuthData({ email: "", password: "", name: "" });
+      } else {
+        setAuthError(result.message);
+      }
+    } catch (error) {
+      setAuthError("Bir hata oluştu");
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const result = await onLogout();
+    if (result.success) {
+      setShowAuthForm(false);
     }
   };
 
@@ -125,6 +186,142 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
         ))}
       </nav>
 
+      {/* Auth Section */}
+      <div
+        className={`p-4 border-t border-gray-200 bg-gray-50 ${
+          isCollapsed ? "px-2" : "px-4"
+        }`}
+      >
+        {!isLoggedIn ? (
+          // Login/Register Buttons
+          <div
+            className={`space-y-2 ${
+              isCollapsed ? "flex flex-col items-center" : ""
+            }`}
+          >
+            {!showAuthForm ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setShowAuthForm(true);
+                  }}
+                  className={`w-full ${isCollapsed ? "w-10 h-10 p-0" : ""}`}
+                >
+                  {isCollapsed ? (
+                    <LogIn className="w-4 h-4" />
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Giriş Yap
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAuthMode("register");
+                    setShowAuthForm(true);
+                  }}
+                  className={`w-full ${isCollapsed ? "w-10 h-10 p-0" : ""}`}
+                >
+                  {isCollapsed ? (
+                    <UserPlus className="w-4 h-4" />
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Kayıt Ol
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              // Auth Form
+              <form onSubmit={handleAuthSubmit} className="space-y-3">
+                <input
+                  type="email"
+                  placeholder="E-posta"
+                  value={authData.email}
+                  onChange={(e) =>
+                    setAuthData({ ...authData, email: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Şifre"
+                  value={authData.password}
+                  onChange={(e) =>
+                    setAuthData({ ...authData, password: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  required
+                />
+                {authMode === "register" && (
+                  <input
+                    type="text"
+                    placeholder="Ad (opsiyonel)"
+                    value={authData.name}
+                    onChange={(e) =>
+                      setAuthData({ ...authData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                )}
+                {authError && (
+                  <p className="text-red-500 text-xs">{authError}</p>
+                )}
+                <div className="flex space-x-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={isAuthLoading}
+                    className="flex-1"
+                  >
+                    {isAuthLoading
+                      ? "..."
+                      : authMode === "login"
+                      ? "Giriş"
+                      : "Kayıt"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAuthForm(false)}
+                  >
+                    İptal
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        ) : (
+          // Logout Button
+          <div className={`${isCollapsed ? "flex justify-center" : ""}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className={`w-full ${isCollapsed ? "w-10 h-10 p-0" : ""}`}
+            >
+              {isCollapsed ? (
+                <LogOut className="w-4 h-4" />
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Çıkış Yap
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
       {/* Aktif Kullanıcı - En alt */}
       <div
         className={`p-4 border-t border-gray-200 bg-gray-50 ${
@@ -140,7 +337,7 @@ function Sidebar({ onScrollToSection, onToggle, currentUserId, userRole }) {
           {!isCollapsed && (
             <div className="ml-2 flex-1 min-w-0">
               <p className="text-xs text-gray-500 font-medium">
-                Aktif Kullanıcı
+                {isLoggedIn ? "Giriş Yapıldı" : "Misafir"}
               </p>
               <p className="text-xs text-gray-700 truncate font-mono">
                 {currentUserId ? `${currentUserId.substring(0, 8)}...` : "N/A"}

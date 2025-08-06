@@ -96,9 +96,24 @@ async function ensureGuestUUID() {
     const result = await getActiveUUID();
 
     if (!result.uuid || result.type === "none") {
+      // Önce localStorage'dan kontrol et (website'den gelmiş olabilir)
+      try {
+        const localUUID = localStorage.getItem("tum_listem_guest_uuid");
+        if (localUUID) {
+          console.log(
+            "🔄 [Background] localStorage'dan Guest UUID alındı:",
+            localUUID
+          );
+          await setGuestUUID(localUUID);
+          return localUUID;
+        }
+      } catch (e) {
+        // localStorage erişilemez (extension context)
+      }
+
       const guestUUID = generateUUID();
       await setGuestUUID(guestUUID);
-      // console.log removed
+      console.log("✅ [Background] Yeni Guest UUID oluşturuldu:", guestUUID);
       return guestUUID;
     } else if (result.type === "guest") {
       console.log(
@@ -114,7 +129,7 @@ async function ensureGuestUUID() {
       return result.uuid;
     }
   } catch (error) {
-    // console.error removed
+    console.error("❌ [Background] ensureGuestUUID hatası:", error);
     return null;
   }
 }
@@ -162,7 +177,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       data
     );
 
-            fetch(`https://my-heybe.vercel.app/api/${endpoint}`, {
+    fetch(`https://my-heybe.vercel.app/api/${endpoint}`, {
       method: method || "GET",
       headers: {
         "Content-Type": "application/json",

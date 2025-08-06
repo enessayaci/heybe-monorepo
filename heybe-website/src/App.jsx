@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import ProductCard from "./components/ProductCard";
 import StatsCard from "./components/StatsCard";
 import Sidebar from "./components/Sidebar";
+import CrossBrowserStorageHelper from "./utils/storageHelper";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -22,6 +23,10 @@ function App() {
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showGuestWarning, setShowGuestWarning] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Cross-browser storage helper
+  const storageHelper = new CrossBrowserStorageHelper();
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-heybe.vercel.app/api";
@@ -579,19 +584,126 @@ function App() {
 
   const stats = calculateStats();
 
-  // UUID oluşturma fonksiyonu
-  function generateUUID() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-      /[xy]/g,
-      function (c) {
-        const r = (Math.random() * 16) | 0;
-        const v = c == "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      }
-    );
-  }
+  // Login fonksiyonu
+  const handleLogin = async (email, password) => {
+    try {
+      console.log("🔐 [Website] Giriş yapılıyor:", email);
 
-  // Aktif UUID'yi al veya oluştur - Chrome Extension Storage API
+      const response = await fetch(`${API_BASE}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          guest_user_id: currentUserId, // Mevcut guest UUID'yi gönder
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.uuid) {
+        console.log("✅ [Website] Giriş başarılı:", result);
+
+        // Permanent UUID'yi storage'a kaydet
+        await storageHelper.setUserId(result.uuid, "permanent");
+
+        // State'i güncelle
+        setCurrentUserId(result.uuid);
+        setUuidType("permanent");
+        setIsLoggedIn(true);
+
+        // Ürünleri yeniden yükle
+        await fetchProducts();
+
+        return { success: true, message: "Giriş başarılı!" };
+      } else {
+        console.log("❌ [Website] Giriş başarısız:", result);
+        return { success: false, message: result.error || "Giriş başarısız" };
+      }
+    } catch (error) {
+      console.error("❌ [Website] Giriş hatası:", error);
+      return { success: false, message: "Bağlantı hatası" };
+    }
+  };
+
+  // Register fonksiyonu
+  const handleRegister = async (email, password, name) => {
+    try {
+      console.log("📝 [Website] Kayıt yapılıyor:", email);
+
+      const response = await fetch(`${API_BASE}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          guest_user_id: currentUserId, // Mevcut guest UUID'yi gönder
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.uuid) {
+        console.log("✅ [Website] Kayıt başarılı:", result);
+
+        // Permanent UUID'yi storage'a kaydet
+        await storageHelper.setUserId(result.uuid, "permanent");
+
+        // State'i güncelle
+        setCurrentUserId(result.uuid);
+        setUuidType("permanent");
+        setIsLoggedIn(true);
+
+        // Ürünleri yeniden yükle
+        await fetchProducts();
+
+        return { success: true, message: "Kayıt başarılı!" };
+      } else {
+        console.log("❌ [Website] Kayıt başarısız:", result);
+        return { success: false, message: result.error || "Kayıt başarısız" };
+      }
+    } catch (error) {
+      console.error("❌ [Website] Kayıt hatası:", error);
+      return { success: false, message: "Bağlantı hatası" };
+    }
+  };
+
+  // Logout fonksiyonu
+  const handleLogout = async () => {
+    try {
+      console.log("🚪 [Website] Çıkış yapılıyor");
+
+      // Storage'dan tüm UUID'leri temizle
+      await storageHelper.logout();
+
+      // State'i sıfırla
+      setCurrentUserId(null);
+      setUuidType(null);
+      setIsLoggedIn(false);
+      setProducts([]);
+      setFilteredProducts([]);
+
+      // Yeni guest UUID oluştur
+      const newUUIDData = await storageHelper.getOrCreateActiveUUID();
+      if (newUUIDData) {
+        setCurrentUserId(newUUIDData.uuid);
+        setUuidType(newUUIDData.type);
+      }
+
+      console.log("✅ [Website] Çıkış başarılı");
+      return { success: true, message: "Çıkış yapıldı" };
+    } catch (error) {
+      console.error("❌ [Website] Çıkış hatası:", error);
+      return { success: false, message: "Çıkış hatası" };
+    }
+  };
+
+  // Aktif UUID'yi al veya oluştur - Cross-browser storage
   async function getActiveUUID() {
     // Eğer zaten UUID varsa, onu kullan (değiştirme!)
     if (currentUserId) {
@@ -615,159 +727,21 @@ function App() {
     setIsGettingUserId(true);
 
     try {
-      let uuidData = null;
+      // Cross-browser storage'dan UUID al veya oluştur
+      const uuidData = await storageHelper.getOrCreateActiveUUID();
 
-      // 1. Extension'dan aktif UUID'yi al (Chrome Storage API)
-      let extensionUUIDReceived = false; // Extension'dan UUID alındı mı?
-
-      if (
-        typeof chrome !== "undefined" &&
-        chrome.runtime &&
-        chrome.runtime.id
-      ) {
-        console.log("🔍 [Web Site] Extension mevcut, aktif UUID isteniyor...");
-        console.log("🔍 [Web Site] Extension ID:", chrome.runtime.id);
-
-        try {
-          const response = await new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage(
-              { action: "getActiveUUID" },
-              (response) => {
-                console.log("🔍 [Web Site] Extension response:", response);
-                console.log(
-                  "🔍 [Web Site] Chrome runtime error:",
-                  chrome.runtime.lastError
-                );
-
-                if (chrome.runtime.lastError) {
-                  console.log(
-                    "❌ [Web Site] Extension mesaj hatası:",
-                    chrome.runtime.lastError
-                  );
-                  reject(new Error("Extension bulunamadı"));
-                  return;
-                }
-
-                if (response && response.uuid) {
-                  console.log(
-                    "✅ [Web Site] Extension'dan aktif UUID alındı:",
-                    response
-                  );
-                  extensionUUIDReceived = true; // Extension'dan UUID alındı!
-                  resolve(response);
-                } else {
-                  console.log("❌ [Web Site] Extension'dan UUID alınamadı");
-                  reject(new Error("UUID bulunamadı"));
-                }
-              }
-            );
-          });
-
-          uuidData = response;
-        } catch (error) {
-          console.log(
-            "❌ [Web Site] Extension mesajlaşma hatası:",
-            error.message
-          );
-        }
+      if (uuidData) {
+        console.log("✅ [getActiveUUID] UUID alındı:", uuidData);
+        setCurrentUserId(uuidData.uuid);
+        setUuidType(uuidData.type);
+        setIsLoggedIn(uuidData.isLoggedIn);
+        setIsGettingUserId(false);
+        return uuidData.uuid;
+      } else {
+        console.log("❌ [getActiveUUID] UUID alınamadı");
+        setIsGettingUserId(false);
+        return null;
       }
-
-      // 2. Extension'dan UUID alınmadıysa localStorage'a bak
-      if (!extensionUUIDReceived && (!uuidData || !uuidData.uuid)) {
-        console.log(
-          "⚠️ [Web Site] Extension'dan UUID alınamadı, localStorage kontrol ediliyor..."
-        );
-        const backupUserId = localStorage.getItem("tum_listem_user_id");
-        if (backupUserId) {
-          console.log(
-            "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
-            backupUserId
-          );
-          uuidData = { uuid: backupUserId, type: "guest" };
-        }
-      }
-
-      // 3. Hiç UUID yoksa extension kontrolü yap
-      if (!uuidData || !uuidData.uuid) {
-        // Extension kurulu mu kontrol et
-        const hasExtension =
-          typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
-
-        if (!hasExtension) {
-          console.log(
-            "❌ [Web Site] Extension kurulu değil, UUID oluşturulamıyor"
-          );
-          setIsGettingUserId(false);
-          return null; // Extension yoksa null döndür
-        }
-
-        const newUUID = generateUUID();
-        console.log("👤 [Web Site] Yeni Guest UUID oluşturuldu:", newUUID);
-
-        // Extension varsa oraya da yaz
-        if (hasExtension) {
-          try {
-            await new Promise((resolve, reject) => {
-              chrome.runtime.sendMessage(
-                {
-                  action: "setGuestUUID",
-                  uuid: newUUID,
-                },
-                (response) => {
-                  if (chrome.runtime.lastError) {
-                    console.log(
-                      "❌ [Web Site] Extension mesaj hatası:",
-                      chrome.runtime.lastError
-                    );
-                    reject(new Error("Extension bulunamadı"));
-                    return;
-                  }
-
-                  if (response && response.success) {
-                    console.log(
-                      "✅ [Web Site] Guest UUID extension'a yazıldı:",
-                      newUUID
-                    );
-                    resolve(true);
-                  } else {
-                    console.log(
-                      "❌ [Web Site] Guest UUID extension'a yazılamadı"
-                    );
-                    reject(new Error("UUID kaydedilemedi"));
-                  }
-                }
-              );
-            });
-          } catch (error) {
-            console.log(
-              "❌ [Web Site] Extension'a yazma hatası:",
-              error.message
-            );
-          }
-        }
-
-        // localStorage'a da yaz (sadece extension yoksa)
-        if (!hasExtension) {
-          localStorage.setItem("tum_listem_user_id", newUUID);
-          console.log(
-            "✅ [Web Site] Guest UUID localStorage'a yazıldı (extension yok):",
-            newUUID
-          );
-        } else {
-          console.log(
-            "⚠️ [Web Site] Extension mevcut, localStorage'a yazılmadı:",
-            newUUID
-          );
-        }
-
-        uuidData = { uuid: newUUID, type: "guest" };
-      }
-
-      setCurrentUserId(uuidData.uuid);
-      setUuidType(uuidData.type);
-
-      setIsGettingUserId(false);
-      return uuidData.uuid;
     } catch (error) {
       console.error("❌ [getActiveUUID] Hata:", error);
       setIsGettingUserId(false);
@@ -782,6 +756,10 @@ function App() {
         onToggle={handleSidebarToggle}
         currentUserId={currentUserId}
         userRole={userRole}
+        isLoggedIn={isLoggedIn}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        onLogout={handleLogout}
       />
 
       {/* Main Content - Sidebar için dinamik margin */}
