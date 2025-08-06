@@ -1973,4 +1973,80 @@ window.postMessage(
   "*"
 );
 
-// console.log removed
+// PostMessage listener - Website'den gelen mesajları dinle
+window.addEventListener("message", async (event) => {
+  // Sadece aynı origin'den gelen mesajları kabul et
+  if (event.source !== window) return;
+
+  const { action, data } = event.data;
+
+  console.log("📨 [Content Script] PostMessage alındı:", action, data);
+
+  try {
+    let response;
+
+    switch (action) {
+      case "EXTENSION_TEST":
+        response = { success: true, message: "Extension aktif" };
+        break;
+
+      case "GET_CURRENT_UUID":
+        response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ action: "getCurrentUUID" }, (res) => {
+            resolve(res);
+          });
+        });
+        break;
+
+      case "SET_USER_UUID":
+        response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { action: "setUserUUID", uuid: data.uuid },
+            (res) => {
+              resolve(res);
+            }
+          );
+        });
+        break;
+
+      case "CREATE_GUEST_UUID":
+        response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ action: "createGuestUUID" }, (res) => {
+            resolve(res);
+          });
+        });
+        break;
+
+      case "CLEAR_STORAGE":
+        response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ action: "clearStorage" }, (res) => {
+            resolve(res);
+          });
+        });
+        break;
+
+      default:
+        response = { success: false, message: "Unknown action" };
+    }
+
+    // Website'e yanıt gönder
+    window.postMessage(
+      {
+        action: `${action}_RESPONSE`,
+        data: response,
+      },
+      "*"
+    );
+  } catch (error) {
+    console.error("❌ [Content Script] PostMessage error:", error);
+    window.postMessage(
+      {
+        action: `${action}_RESPONSE`,
+        data: { success: false, error: error.message },
+      },
+      "*"
+    );
+  }
+});
+
+console.log("🚀 [Content Script] PostMessage listener eklendi");

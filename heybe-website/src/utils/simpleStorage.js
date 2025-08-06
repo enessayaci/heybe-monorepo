@@ -17,49 +17,48 @@ class SimpleStorageHelper {
     );
   }
 
-  // Extension mevcut mu kontrol et
+  // Extension mevcut mu kontrol et (PostMessage ile)
   async isExtensionAvailable() {
-    if (typeof chrome === "undefined" || !chrome.runtime) {
-      console.log("🔍 [Extension Check] Chrome runtime mevcut değil");
-      return false;
-    }
-
     try {
       return await new Promise((resolve) => {
         // Timeout ekle (extension yanıt vermezse)
         const timeout = setTimeout(() => {
           console.log("🔍 [Extension Check] Timeout - extension yanıt vermedi");
           resolve(false);
-        }, 1000);
+        }, 2000);
 
-        // Extension ID'sini manuel olarak belirt (Chrome development)
-        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd"; // Content script'ten alınan ID
-        chrome.runtime.sendMessage(
-          extensionId,
-          { action: "test" },
-          (response) => {
+        // Response listener
+        const handleResponse = (event) => {
+          if (event.data.action === "EXTENSION_TEST_RESPONSE") {
             clearTimeout(timeout);
+            window.removeEventListener("message", handleResponse);
 
-            if (chrome.runtime.lastError) {
-              console.log(
-                "🔍 [Extension Check] Runtime error:",
-                chrome.runtime.lastError.message
-              );
-              resolve(false);
-            } else if (response?.success) {
+            if (event.data.data?.success) {
               console.log(
                 "🔍 [Extension Check] Extension yanıtı alındı:",
-                response
+                event.data.data
               );
               resolve(true);
             } else {
               console.log(
                 "🔍 [Extension Check] Extension yanıtı geçersiz:",
-                response
+                event.data.data
               );
               resolve(false);
             }
           }
+        };
+
+        // Response listener'ını ekle
+        window.addEventListener("message", handleResponse);
+
+        // Content script'e mesaj gönder
+        window.postMessage(
+          {
+            action: "EXTENSION_TEST",
+            data: {},
+          },
+          "*"
         );
       });
     } catch (error) {
@@ -68,21 +67,35 @@ class SimpleStorageHelper {
     }
   }
 
-  // Extension storage'dan oku
+  // Extension storage'dan oku (PostMessage ile)
   async getFromExtension() {
     try {
       return await new Promise((resolve) => {
-        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
-        chrome.runtime.sendMessage(
-          extensionId,
-          { action: "getCurrentUUID" },
-          (response) => {
-            if (chrome.runtime.lastError || !response?.success) {
-              resolve(null);
+        const timeout = setTimeout(() => {
+          resolve(null);
+        }, 2000);
+
+        const handleResponse = (event) => {
+          if (event.data.action === "GET_CURRENT_UUID_RESPONSE") {
+            clearTimeout(timeout);
+            window.removeEventListener("message", handleResponse);
+
+            if (event.data.data?.success) {
+              resolve(event.data.data.data);
             } else {
-              resolve(response.data);
+              resolve(null);
             }
           }
+        };
+
+        window.addEventListener("message", handleResponse);
+
+        window.postMessage(
+          {
+            action: "GET_CURRENT_UUID",
+            data: {},
+          },
+          "*"
         );
       });
     } catch (error) {
@@ -90,20 +103,33 @@ class SimpleStorageHelper {
     }
   }
 
-  // Extension storage'a yaz
+  // Extension storage'a yaz (PostMessage ile)
   async setToExtension(uuid, role) {
     try {
       return await new Promise((resolve) => {
-        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
-        chrome.runtime.sendMessage(
-          extensionId,
-          {
-            action: role === "USER" ? "setUserUUID" : "createGuestUUID",
-            uuid,
-          },
-          (response) => {
-            resolve(response?.success || false);
+        const timeout = setTimeout(() => {
+          resolve(false);
+        }, 2000);
+
+        const action = role === "USER" ? "SET_USER_UUID" : "CREATE_GUEST_UUID";
+
+        const handleResponse = (event) => {
+          if (event.data.action === `${action}_RESPONSE`) {
+            clearTimeout(timeout);
+            window.removeEventListener("message", handleResponse);
+
+            resolve(event.data.data?.success || false);
           }
+        };
+
+        window.addEventListener("message", handleResponse);
+
+        window.postMessage(
+          {
+            action,
+            data: { uuid },
+          },
+          "*"
         );
       });
     } catch (error) {
@@ -111,17 +137,31 @@ class SimpleStorageHelper {
     }
   }
 
-  // Extension storage'ı temizle
+  // Extension storage'ı temizle (PostMessage ile)
   async clearExtension() {
     try {
       return await new Promise((resolve) => {
-        const extensionId = "lgkmfgfbaligldlokdbfpodfnjdkjdfd";
-        chrome.runtime.sendMessage(
-          extensionId,
-          { action: "clearStorage" },
-          (response) => {
-            resolve(response?.success || false);
+        const timeout = setTimeout(() => {
+          resolve(false);
+        }, 2000);
+
+        const handleResponse = (event) => {
+          if (event.data.action === "CLEAR_STORAGE_RESPONSE") {
+            clearTimeout(timeout);
+            window.removeEventListener("message", handleResponse);
+
+            resolve(event.data.data?.success || false);
           }
+        };
+
+        window.addEventListener("message", handleResponse);
+
+        window.postMessage(
+          {
+            action: "CLEAR_STORAGE",
+            data: {},
+          },
+          "*"
         );
       });
     } catch (error) {
