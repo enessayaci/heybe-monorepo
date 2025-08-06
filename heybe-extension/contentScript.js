@@ -5,7 +5,10 @@
 
 class CrossBrowserStorageHelper {
   constructor() {
-    this.storageKey = "tum_listem_user_id";
+    // TEK SİSTEM - Background script ile tamamen uyumlu
+    this.guestUUIDKey = "tum_listem_guest_uuid";
+    this.permanentUUIDKey = "tum_listem_permanent_uuid";
+    this.loginStatusKey = "tum_listem_login_status";
     this.isExtension =
       typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
     this.browserType = this.detectBrowser();
@@ -46,69 +49,90 @@ class CrossBrowserStorageHelper {
     }
   }
 
-  // UUID'yi kaydet - Cross-browser
-  async setUserId(userId) {
-    try {
-      if (this.isExtension) {
-        // Extension'da cross-browser storage API kullan
-        const storage = this.getStorageAPI();
-        await storage.set({ [this.storageKey]: userId });
-        console.log(
-          `✅ [${this.browserType.toUpperCase()}] UUID kaydedildi:`,
-          userId
-        );
-
-        // Web sitesine event gönder
-        this.notifyWebSite(userId);
-      } else {
-        // Web sitesinde localStorage'a yazma (extension UUID'si ezilmesin!)
-        // Sadece extension yoksa localStorage'a yaz
-        if (
-          typeof chrome === "undefined" ||
-          !chrome.runtime ||
-          !chrome.runtime.id
-        ) {
-          localStorage.setItem(this.storageKey, userId);
-          console.log(
-            "✅ [Web Site] UUID localStorage'a yazıldı (extension yok):",
-            userId
-          );
-        } else {
-          // console.log removed
-        }
-      }
-      return true;
-    } catch (error) {
-      console.error(
-        `❌ [${this.browserType.toUpperCase()}] UUID yazma hatası:`,
-        error
+  // UUID'yi kaydet - Background script'e yönlendir
+  async setUserId(userId, type = "guest") {
+    if (!this.isExtension) {
+      console.log(
+        "⚠️ [Content Script] Extension ortamında değil, setUserId çalışmaz"
       );
+      return false;
+    }
+
+    try {
+      console.log(
+        "📤 [Content Script] Background script'e UUID gönderiliyor:",
+        userId,
+        type
+      );
+
+      const action = type === "permanent" ? "setPermanentUUID" : "setGuestUUID";
+
+      return await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action, uuid: userId }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(
+              "❌ [Content Script] Background mesaj hatası:",
+              chrome.runtime.lastError
+            );
+            resolve(false);
+            return;
+          }
+
+          if (response && response.success) {
+            console.log("✅ [Content Script] UUID background'a kaydedildi");
+            resolve(true);
+          } else {
+            console.log("❌ [Content Script] UUID kaydetme başarısız");
+            resolve(false);
+          }
+        });
+      });
+    } catch (error) {
+      console.error("❌ [Content Script] UUID kaydetme hatası:", error);
       return false;
     }
   }
 
-  // UUID'yi oku - Cross-browser
+  // UUID'yi oku - Background script'ten al (YENİ SİSTEM)
   async getUserId() {
     try {
       if (this.isExtension) {
-        // Extension'da cross-browser storage API kullan
-        const storage = this.getStorageAPI();
-        const result = await storage.get([this.storageKey]);
-        const userId = result[this.storageKey];
+        // Background script'ten aktif UUID'yi iste
         console.log(
-          `✅ [${this.browserType.toUpperCase()}] UUID okundu:`,
-          userId
+          "📖 [Content Script] Background script'ten UUID isteniyor..."
         );
-        return userId;
+        return await new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage(
+            { action: "getActiveUUID" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.log(
+                  "❌ [Content Script] Background mesaj hatası:",
+                  chrome.runtime.lastError
+                );
+                reject(new Error("Background script bulunamadı"));
+                return;
+              }
+
+              if (response && response.uuid) {
+                console.log(
+                  "✅ [Content Script] Background'dan UUID alındı:",
+                  response
+                );
+                resolve(response.uuid);
+              } else {
+                console.log("❌ [Content Script] UUID bulunamadı");
+                reject(new Error("UUID bulunamadı"));
+              }
+            }
+          );
+        });
       } else {
         // Web sitesinde extension'dan mesaj gönder
         return await this.requestFromExtension();
       }
     } catch (error) {
-      console.error(
-        `❌ [${this.browserType.toUpperCase()}] UUID okuma hatası:`,
-        error
-      );
+      console.error("❌ [Content Script] UUID okuma hatası:", error);
       return null;
     }
   }
@@ -151,17 +175,6 @@ class CrossBrowserStorageHelper {
       return response;
     } catch (error) {
       console.log("❌ [Web Site] Extension'dan UUID alma hatası:", error);
-
-      // Fallback: localStorage'dan oku (eski sistem)
-      const backupUserId = localStorage.getItem(this.storageKey);
-      if (backupUserId) {
-        console.log(
-          "🔄 [Web Site] Fallback: localStorage'dan UUID okundu:",
-          backupUserId
-        );
-        return backupUserId;
-      }
-
       return null;
     }
   }
@@ -187,23 +200,42 @@ class CrossBrowserStorageHelper {
     }
   }
 
-  // UUID'yi sil - Cross-browser
+  // UUID'yi sil - Background script'e yönlendir
   async deleteUserId() {
-    try {
-      if (this.isExtension) {
-        const storage = this.getStorageAPI();
-        await storage.remove([this.storageKey]);
-        console.log(`✅ [${this.browserType.toUpperCase()}] UUID silindi`);
-      } else {
-        localStorage.removeItem(this.storageKey);
-        console.log("✅ [Web Site] UUID localStorage'dan silindi");
-      }
-      return true;
-    } catch (error) {
-      console.error(
-        `❌ [${this.browserType.toUpperCase()}] UUID silme hatası:`,
-        error
+    if (!this.isExtension) {
+      console.log(
+        "⚠️ [Content Script] Extension ortamında değil, deleteUserId çalışmaz"
       );
+      return false;
+    }
+
+    try {
+      console.log(
+        "📤 [Content Script] Background script'e clear storage mesajı gönderiliyor"
+      );
+
+      return await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: "clearStorage" }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(
+              "❌ [Content Script] Background mesaj hatası:",
+              chrome.runtime.lastError
+            );
+            resolve(false);
+            return;
+          }
+
+          if (response && response.success) {
+            console.log("✅ [Content Script] Storage temizlendi");
+            resolve(true);
+          } else {
+            console.log("❌ [Content Script] Storage temizleme başarısız");
+            resolve(false);
+          }
+        });
+      });
+    } catch (error) {
+      console.error("❌ [Content Script] Storage temizleme hatası:", error);
       return false;
     }
   }
@@ -242,7 +274,9 @@ class CrossBrowserStorageHelper {
     return {
       type: this.browserType,
       isExtension: this.isExtension,
-      storageKey: this.storageKey,
+      guestUUIDKey: this.guestUUIDKey,
+      permanentUUIDKey: this.permanentUUIDKey,
+      loginStatusKey: this.loginStatusKey,
     };
   }
 }
@@ -415,9 +449,9 @@ async function addProductToMyList(productInfo) {
       return true;
     }
 
-    // Önce aktif UUID'yi al
+    // Önce aktif UUID'yi al (Yeni basit sistem)
     const uuidData = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ action: "getActiveUUID" }, (response) => {
+      chrome.runtime.sendMessage({ action: "getCurrentUUID" }, (response) => {
         if (chrome.runtime.lastError) {
           console.log(
             "❌ [Content Script] Extension mesaj hatası:",
@@ -427,18 +461,21 @@ async function addProductToMyList(productInfo) {
           return;
         }
 
-        if (response && response.uuid) {
-          // console.log removed
-          resolve(response);
+        if (response && response.success && response.data) {
+          console.log(
+            "✅ [Content Script] Background'dan UUID alındı:",
+            response.data
+          );
+          resolve(response.data);
         } else {
-          // console.log removed
+          console.log("❌ [Content Script] UUID bulunamadı");
           reject(new Error("UUID bulunamadı"));
         }
       });
     });
 
-    // Guest kullanıcı ise uyarı göster (permanent kullanıcı değilse)
-    if (uuidData.type === "guest") {
+    // Guest kullanıcı ise uyarı göster (USER değilse)
+    if (uuidData.role === "GUEST") {
       console.log(
         "👤 [Content Script] Guest kullanıcı, uyarı popup'ı açılıyor..."
       );
@@ -1024,20 +1061,6 @@ function showGuestWarningPopup() {
 // Login veya Register form popup'ı
 function showLoginOrRegisterForm() {
   return new Promise((resolve) => {
-    // Popup kapatma fonksiyonu
-    const closePopup = (success = false) => {
-      if (document.body.contains(popup)) {
-        document.body.removeChild(popup);
-      }
-      if (!success) {
-        // İptal edildiğinde registration progress'i sıfırla
-        isRegistrationInProgress = false;
-        console.log(
-          "❌ [Content Script] Popup kapatıldı, isRegistrationInProgress = false"
-        );
-      }
-      resolve(success);
-    };
     // Popup container oluştur
     const popup = document.createElement("div");
     popup.style.cssText = `
@@ -1214,7 +1237,8 @@ function showLoginOrRegisterForm() {
       (cancelButton.style.background = "#e5e7eb");
     cancelButton.onmouseout = () => (cancelButton.style.background = "#f3f4f6");
     cancelButton.onclick = () => {
-      closePopup(false);
+      document.body.removeChild(popup);
+      resolve(false);
     };
 
     // Login button click handler
@@ -1238,18 +1262,26 @@ function showLoginOrRegisterForm() {
       isRegistrationInProgress = true;
 
       try {
-        // Misafir UUID'yi al
-        const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
-            resolve(result.tum_listem_guest_uuid);
-          });
+        // Mevcut UUID ve role'ü al (Yeni basit sistem)
+        const currentData = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { action: "getCurrentUUID" },
+            (response) => {
+              if (response && response.success && response.data) {
+                resolve(response.data);
+              } else {
+                resolve({ uuid: null, role: "GUEST" });
+              }
+            }
+          );
         });
 
         // Background script üzerinden API'ye giriş isteği gönder (CORS bypass)
         const result = await apiRequest("POST", "login", {
           email: email,
           password: password,
-          guest_user_id: guestUUID || null,
+          guest_user_id: currentData.uuid || null,
+          role: currentData.role || "GUEST", // Role bilgisini gönder (Madde 1)
         });
 
         if (result && result.uuid) {
@@ -1261,11 +1293,13 @@ function showLoginOrRegisterForm() {
             result.uuid
           );
 
-          closePopup(true);
+          document.body.removeChild(popup);
 
           // Login işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
+
+          resolve(true);
         } else {
           console.log("❌ [API Response] Login başarısız:", result);
           errorMessage.textContent = result.error || "Giriş başarısız";
@@ -1318,18 +1352,26 @@ function showLoginOrRegisterForm() {
       // Kayıt işlemi zaten başladı (showGuestWarningPopup'ta set edildi)
 
       try {
-        // Misafir UUID'yi al
-        const guestUUID = await new Promise((resolve) => {
-          chrome.storage.local.get(["tum_listem_guest_uuid"], (result) => {
-            resolve(result.tum_listem_guest_uuid);
-          });
+        // Mevcut UUID ve role'ü al (Yeni basit sistem)
+        const currentData = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { action: "getCurrentUUID" },
+            (response) => {
+              if (response && response.success && response.data) {
+                resolve(response.data);
+              } else {
+                resolve({ uuid: null, role: "GUEST" });
+              }
+            }
+          );
         });
 
         // Background script üzerinden API'ye kayıt isteği gönder (CORS bypass)
         const result = await apiRequest("POST", "register", {
           email: email,
           password: password,
-          guest_user_id: guestUUID || null,
+          guest_user_id: currentData.uuid || null,
+          role: currentData.role || "GUEST", // Role bilgisini gönder (Madde 2)
         });
 
         if (result && result.uuid) {
@@ -1341,11 +1383,13 @@ function showLoginOrRegisterForm() {
             result.uuid
           );
 
-          closePopup(true);
+          document.body.removeChild(popup);
 
           // Kayıt işlemi tamamlandı, bekleyen ürünü ekle
           isRegistrationInProgress = false;
           await addPendingProductWithUUID(result.uuid);
+
+          return true;
         } else if (result && result.error && result.error.includes("409")) {
           console.log(
             "🔄 [API Response] Kullanıcı zaten var, login deneniyor:",
@@ -1360,7 +1404,8 @@ function showLoginOrRegisterForm() {
             const loginResult = await apiRequest("POST", "login", {
               email: email,
               password: password,
-              guest_user_id: guestUUID || null,
+              guest_user_id: currentData.uuid || null,
+              role: currentData.role || "GUEST", // Role bilgisini gönder (Madde 2)
             });
 
             if (loginResult && loginResult.uuid) {
@@ -1375,11 +1420,13 @@ function showLoginOrRegisterForm() {
                 loginResult.uuid
               );
 
-              closePopup(true);
+              document.body.removeChild(popup);
 
               // Login işlemi tamamlandı, bekleyen ürünü ekle
               isRegistrationInProgress = false;
               await addPendingProductWithUUID(loginResult.uuid);
+
+              return true;
             } else {
               console.log(
                 "❌ [API Response] Auto-login başarısız:",

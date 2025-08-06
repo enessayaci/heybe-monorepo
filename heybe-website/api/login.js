@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Database configuration error" });
     }
 
-    const { email, password, guest_user_id } = req.body;
+    const { email, password, guest_user_id, role } = req.body;
 
     // Validation
     if (!email || !password) {
@@ -66,8 +66,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Email veya şifre hatalı" });
     }
 
-    // Transfer guest products to permanent user if guest_user_id provided
-    if (guest_user_id && guest_user_id !== user.uuid) {
+    // Transfer guest products to permanent user if guest_user_id provided (Madde 1, 3)
+    if (guest_user_id && guest_user_id !== user.uuid && role === "GUEST") {
       try {
         console.log(
           `🔄 Starting product transfer from ${guest_user_id} to ${user.uuid}`

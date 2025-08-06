@@ -17,6 +17,7 @@ function Sidebar({
   onLogin,
   onRegister,
   onLogout,
+  checkExtensionAvailability,
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -75,6 +76,13 @@ function Sidebar({
     } finally {
       setIsAuthLoading(false);
     }
+  };
+
+  // Auth butonları - extension kontrolü yok (extension olmadan da giriş yapılabilir)
+  const handleAuthButtonClick = async (mode) => {
+    // Direkt formu göster
+    setAuthMode(mode);
+    setShowAuthForm(true);
   };
 
   const handleLogout = async () => {
@@ -204,10 +212,7 @@ function Sidebar({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setAuthMode("login");
-                    setShowAuthForm(true);
-                  }}
+                  onClick={() => handleAuthButtonClick("login")}
                   className={`w-full ${isCollapsed ? "w-10 h-10 p-0" : ""}`}
                 >
                   {isCollapsed ? (
@@ -222,10 +227,7 @@ function Sidebar({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setAuthMode("register");
-                    setShowAuthForm(true);
-                  }}
+                  onClick={() => handleAuthButtonClick("register")}
                   className={`w-full ${isCollapsed ? "w-10 h-10 p-0" : ""}`}
                 >
                   {isCollapsed ? (

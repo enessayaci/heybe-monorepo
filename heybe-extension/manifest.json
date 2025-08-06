@@ -22,7 +22,7 @@
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "simpleBackground.js"
   },
   "action": {
     "default_title": "Heybe Extension",

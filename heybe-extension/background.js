@@ -1,10 +1,9 @@
 // Background Script - Guest & Permanent UUID Storage
 // console.log removed
 
-// Extension storage keys
-const GUEST_UUID_KEY = "tum_listem_guest_uuid";
-const PERMANENT_UUID_KEY = "tum_listem_permanent_uuid";
-const USER_LOGIN_STATUS = "tum_listem_login_status";
+// BASİT STORAGE SİSTEMİ - Sadece 2 key
+const UUID_KEY = "currentUuid";
+const ROLE_KEY = "role"; // "GUEST" veya "USER"
 
 // UUID oluştur
 function generateUUID() {
@@ -15,35 +14,17 @@ function generateUUID() {
   });
 }
 
-// Guest UUID'yi kaydet
-async function setGuestUUID(uuid) {
+// UUID kaydet (GUEST veya USER)
+async function setCurrentUUID(uuid, role = "GUEST") {
   try {
-    await chrome.storage.local.set({ [GUEST_UUID_KEY]: uuid });
-    // console.log removed
+    await chrome.storage.local.set({
+      [UUID_KEY]: uuid,
+      [ROLE_KEY]: role,
+    });
+    console.log(`✅ [Background] UUID kaydedildi: ${uuid}, Role: ${role}`);
     return true;
   } catch (error) {
-    // console.error removed
-    return false;
-  }
-}
-
-// Permanent UUID'yi kaydet
-async function setPermanentUUID(uuid) {
-  try {
-    // Local storage'a yaz
-    await chrome.storage.local.set({ [PERMANENT_UUID_KEY]: uuid });
-
-    // Sync storage'a da yaz (cloud sync için)
-    await chrome.storage.sync.set({ [PERMANENT_UUID_KEY]: uuid });
-
-    // Login status'u güncelle
-    await chrome.storage.local.set({ [USER_LOGIN_STATUS]: true });
-    await chrome.storage.sync.set({ [USER_LOGIN_STATUS]: true });
-
-    // console.log removed
-    return true;
-  } catch (error) {
-    // console.error removed
+    console.log("❌ [Background] UUID kaydetme hatası:", error);
     return false;
   }
 }
@@ -51,42 +32,89 @@ async function setPermanentUUID(uuid) {
 // Aktif UUID'yi oku (Guest veya Permanent)
 async function getActiveUUID() {
   try {
-    // Önce permanent UUID'yi kontrol et
-    let result = await chrome.storage.local.get([PERMANENT_UUID_KEY]);
-    let permanentUUID = result[PERMANENT_UUID_KEY];
+    // Sadece local storage'dan oku
+    const result = await chrome.storage.local.get([
+      PERMANENT_UUID_KEY,
+      GUEST_UUID_KEY,
+      USER_LOGIN_STATUS,
+    ]);
 
-    // Local storage'da yoksa sync storage'dan dene
-    if (!permanentUUID) {
-      result = await chrome.storage.sync.get([PERMANENT_UUID_KEY]);
-      permanentUUID = result[PERMANENT_UUID_KEY];
-
-      if (permanentUUID) {
-        // Sync'ten bulduysa local'a da yaz
-        await chrome.storage.local.set({
-          [PERMANENT_UUID_KEY]: permanentUUID,
-        });
-        console.log(
-          "🔄 [Background] Permanent UUID sync storage'dan restore edildi:",
-          permanentUUID
-        );
-      }
-    }
+    const permanentUUID = result[PERMANENT_UUID_KEY];
+    const guestUUID = result[GUEST_UUID_KEY];
+    const isLoggedIn = result[USER_LOGIN_STATUS] || false;
 
     // Permanent UUID varsa onu kullan
     if (permanentUUID) {
-      // console.log removed
-      return { uuid: permanentUUID, type: "permanent" };
+      console.log("✅ [Background] Permanent UUID okundu:", permanentUUID);
+      return {
+        uuid: permanentUUID,
+        type: "permanent",
+        isLoggedIn: isLoggedIn,
+      };
     }
 
-    // Permanent UUID yoksa guest UUID'yi oku
-    const guestResult = await chrome.storage.local.get([GUEST_UUID_KEY]);
-    const guestUUID = guestResult[GUEST_UUID_KEY];
+    // Permanent UUID yoksa guest UUID'yi kullan
+    if (guestUUID) {
+      console.log("✅ [Background] Guest UUID okundu:", guestUUID);
+      return {
+        uuid: guestUUID,
+        type: "guest",
+        isLoggedIn: false,
+      };
+    }
 
-    // console.log removed
-    return { uuid: guestUUID, type: "guest" };
+    console.log("❌ [Background] UUID bulunamadı");
+    return { uuid: null, type: "none", isLoggedIn: false };
   } catch (error) {
-    // console.error removed
-    return { uuid: null, type: "none" };
+    console.error("❌ [Background] UUID okuma hatası:", error);
+    return { uuid: null, type: "none", isLoggedIn: false };
+  }
+}
+
+// Extension yüklendiğinde localStorage'ı kontrol et
+async function checkLocalStorageOnInstall() {
+  try {
+    // Tüm açık tab'ları bul
+    const tabs = await chrome.tabs.query({});
+    console.log("🔍 [Background] Kontrol edilecek tab sayısı:", tabs.length);
+
+    for (const tab of tabs) {
+      try {
+        // Her tab'da localStorage'ı kontrol et
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          function: () => {
+            const localPermanentUUID = localStorage.getItem(
+              "tum_listem_permanent_uuid"
+            );
+            const localGuestUUID = localStorage.getItem(
+              "tum_listem_guest_uuid"
+            );
+
+            if (localPermanentUUID || localGuestUUID) {
+              console.log("🔄 [Install] localStorage'dan UUID bulundu:", {
+                permanent: localPermanentUUID,
+                guest: localGuestUUID,
+                url: window.location.href,
+              });
+
+              // Extension'a mesaj gönder
+              chrome.runtime.sendMessage({
+                action: "localStorageUUIDFound",
+                permanentUUID: localPermanentUUID,
+                guestUUID: localGuestUUID,
+                tabUrl: window.location.href,
+              });
+            }
+          },
+        });
+      } catch (error) {
+        // Bu tab'da script çalıştırılamaz (chrome://, chrome-extension:// gibi)
+        console.log("⚠️ [Background] Tab'da script çalıştırılamadı:", tab.url);
+      }
+    }
+  } catch (error) {
+    console.error("❌ [Background] localStorage kontrol hatası:", error);
   }
 }
 
@@ -96,21 +124,7 @@ async function ensureGuestUUID() {
     const result = await getActiveUUID();
 
     if (!result.uuid || result.type === "none") {
-      // Önce localStorage'dan kontrol et (website'den gelmiş olabilir)
-      try {
-        const localUUID = localStorage.getItem("tum_listem_guest_uuid");
-        if (localUUID) {
-          console.log(
-            "🔄 [Background] localStorage'dan Guest UUID alındı:",
-            localUUID
-          );
-          await setGuestUUID(localUUID);
-          return localUUID;
-        }
-      } catch (e) {
-        // localStorage erişilemez (extension context)
-      }
-
+      // Yeni guest UUID oluştur
       const guestUUID = generateUUID();
       await setGuestUUID(guestUUID);
       console.log("✅ [Background] Yeni Guest UUID oluşturuldu:", guestUUID);
@@ -134,6 +148,22 @@ async function ensureGuestUUID() {
   }
 }
 
+// Extension yüklendiğinde localStorage'ı kontrol et ve guest UUID oluştur
+chrome.runtime.onInstalled.addListener(async () => {
+  console.log(
+    "🚀 [Background] Extension yüklendi, localStorage kontrol ediliyor..."
+  );
+
+  // Önce localStorage'ı kontrol et
+  await checkLocalStorageOnInstall();
+
+  // Sonra guest UUID'nin var olduğundan emin ol
+  setTimeout(async () => {
+    await ensureGuestUUID();
+    console.log("✅ [Background] Extension kurulumu tamamlandı");
+  }, 1000); // 1 saniye bekle ki localStorage kontrolü bitsin
+});
+
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // console.log removed
@@ -148,9 +178,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "setGuestUUID") {
-    // Guest UUID'yi kaydet
-    setGuestUUID(request.uuid).then((success) => {
-      // console.log removed
+    // Guest UUID'yi kaydet ve login status'u false yap
+    Promise.all([
+      setGuestUUID(request.uuid),
+      chrome.storage.local.set({ [USER_LOGIN_STATUS]: false }),
+      chrome.storage.local.remove(PERMANENT_UUID_KEY), // Permanent UUID'yi temizle
+    ]).then(([success]) => {
+      console.log(
+        "✅ [Background] Website'den yeni Guest UUID set edildi:",
+        request.uuid
+      );
       sendResponse({ success: success });
     });
     return true; // Async response
@@ -159,13 +196,77 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "setPermanentUUID") {
     // Permanent UUID'yi kaydet
     setPermanentUUID(request.uuid).then((success) => {
-      // console.log removed
-      // Login status'u true yap
-      chrome.storage.local.set({ [USER_LOGIN_STATUS]: true });
-      chrome.storage.sync.set({ [USER_LOGIN_STATUS]: true });
+      console.log("✅ [Background] Permanent UUID set edildi:", request.uuid);
       sendResponse({ success: success });
     });
     return true; // Async response
+  }
+
+  // Storage debug için handler
+  if (request.action === "debugStorage") {
+    chrome.storage.local
+      .get(null)
+      .then((result) => {
+        console.log("🔍 [Background] Chrome Storage Local:", result);
+        sendResponse({
+          storage: result,
+          success: true,
+        });
+      })
+      .catch((error) => {
+        sendResponse({
+          error: error.message,
+          success: false,
+        });
+      });
+    return true;
+  }
+
+  // Test handler
+  if (request.action === "test") {
+    sendResponse({ success: true, message: "Extension çalışıyor" });
+    return true;
+  }
+
+  // localStorage'dan UUID bulundu handler
+  if (request.action === "localStorageUUIDFound") {
+    const { permanentUUID, guestUUID } = request;
+
+    if (permanentUUID) {
+      setPermanentUUID(permanentUUID).then(() => {
+        console.log(
+          "✅ [Background] localStorage'dan Permanent UUID kaydedildi:",
+          permanentUUID
+        );
+      });
+    } else if (guestUUID) {
+      setGuestUUID(guestUUID).then(() => {
+        console.log(
+          "✅ [Background] localStorage'dan Guest UUID kaydedildi:",
+          guestUUID
+        );
+      });
+    }
+
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Storage temizleme için handler
+  if (request.action === "clearStorage") {
+    chrome.storage.local
+      .clear()
+      .then(() => {
+        console.log("🧹 [Background] Chrome Storage Local temizlendi");
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        sendResponse({
+          error: error.message,
+          success: false,
+        });
+      });
+    return true;
   }
 
   // API istekleri için handler

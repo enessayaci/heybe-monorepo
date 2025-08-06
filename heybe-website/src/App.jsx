@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import ProductCard from "./components/ProductCard";
 import StatsCard from "./components/StatsCard";
 import Sidebar from "./components/Sidebar";
-import CrossBrowserStorageHelper from "./utils/storageHelper";
+import SimpleStorageHelper from "./utils/simpleStorage";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -25,8 +25,49 @@ function App() {
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // AbortController için ref
+  const abortControllerRef = React.useRef(null);
+
   // Cross-browser storage helper
-  const storageHelper = new CrossBrowserStorageHelper();
+  const storageHelper = new SimpleStorageHelper();
+
+  // Extension kontrol fonksiyonu
+  const checkExtensionAvailability = async () => {
+    try {
+      // Chrome extension kontrolü
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.runtime.id &&
+        chrome.runtime.id
+      ) {
+        // Extension'a test mesajı gönder
+        const response = await new Promise((resolve, reject) => {
+          chrome.runtime.id.sendMessage({ action: "test" }, (response) => {
+            if (chrome.runtime.id.lastError) {
+              reject(new Error("Extension yanıt vermiyor"));
+            } else {
+              resolve(response);
+            }
+          });
+        });
+        return { available: true, type: "chrome" };
+      }
+
+      // Firefox extension kontrolü
+      if (
+        typeof browser !== "undefined" &&
+        browser.runtime &&
+        browser.runtime.id
+      ) {
+        return { available: true, type: "firefox" };
+      }
+
+      return { available: false, type: "none" };
+    } catch (error) {
+      console.log("❌ [Extension Check] Extension kontrol hatası:", error);
+      return { available: false, type: "none" };
+    }
+  };
 
   // API endpoint'leri - Vercel + Neon DB
   const API_BASE = "https://my-heybe.vercel.app/api";
@@ -72,6 +113,9 @@ function App() {
   const handleDebug = () => {
     console.log("🔧 Debug butonu tıklandı");
     console.log("📦 Mevcut ürünler:", products);
+    console.log("👤 Current User ID:", currentUserId);
+    console.log("🔐 isLoggedIn:", isLoggedIn);
+    console.log("📋 UUID Type:", uuidType);
     alert("Debug bilgileri console'da görünüyor!");
   };
 
@@ -113,8 +157,16 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        await getActiveUUID(); // UUID hazırla / IndexedDB hazır
-        await fetchProducts();
+        const uuid = await getActiveUUID(); // UUID hazırla (storage.local öncelik)
+
+        // UUID varsa ürünleri çek
+        if (uuid) {
+          console.log("✅ [useEffect] UUID mevcut, ürünler çekiliyor...");
+          await fetchProducts();
+        } else {
+          console.log("⚠️ [useEffect] UUID alınamadı, ürünler çekilemiyor");
+          setStatus("no-extension");
+        }
       } catch (e) {
         console.error("Initial fetch error", e);
       }
@@ -135,42 +187,37 @@ function App() {
         return;
       }
 
+      // Extension'dan gelen UUID'yi storage'a kaydet
+      if (type === "permanent") {
+        storageHelper.setUserId(uuid, "permanent").then(() => {
+          console.log("✅ [Event] Extension UUID storage'a kaydedildi:", uuid);
+        });
+      }
+
       setCurrentUserId(uuid);
       setUuidType(type);
+      // isLoggedIn state'ini doğru şekilde set et
+      setIsLoggedIn(type === "permanent");
 
       // Guest kullanıcı ise uyarı göster
       if (type === "guest") {
         setShowGuestWarning(true);
       }
 
-      console.log("✅ [Event] Aktif UUID set edildi:", { uuid, type });
+      console.log("✅ [Event] Aktif UUID set edildi:", {
+        uuid,
+        type,
+        isLoggedIn: type === "permanent",
+      });
     };
 
     // Extension'dan login status event'ini dinle
 
-    // Extension'dan permanent UUID isteği dinle
+    // Extension'dan permanent UUID isteği dinle - Şimdilik devre dışı
     const handleExtensionPermanentUUIDRequest = (event) => {
-      console.log("📨 [Web Site] Extension'dan permanent UUID isteği alındı");
-
-      // Eğer currentUserId varsa extension'a gönder
-      if (currentUserId) {
-        console.log(
-          "✅ [Web Site] UUID extension'a gönderiliyor:",
-          currentUserId
-        );
-
-        // Extension'a UUID'yi gönder
-        window.postMessage(
-          {
-            type: "SEND_PERMANENT_UUID",
-            uuid: currentUserId,
-            source: "web-site",
-          },
-          "*"
-        );
-      } else {
-        console.log("⚠️ [Web Site] UUID yok");
-      }
+      // Bu fonksiyon şimdilik devre dışı bırakıldı
+      // Extension zaten extensionActiveUUIDSet event'i ile UUID gönderiyor
+      return;
     };
 
     window.addEventListener(
@@ -178,6 +225,7 @@ function App() {
       handleExtensionActiveUUID
     );
 
+    // Sadece extension'dan gelen mesajları dinle
     window.addEventListener("message", handleExtensionPermanentUUIDRequest);
 
     // Basit: UUID hazır olduğunda ürünleri çek
@@ -188,7 +236,7 @@ function App() {
       return new Promise((resolve) => {
         if (
           typeof chrome !== "undefined" &&
-          chrome.runtime &&
+          chrome.runtime.id &&
           chrome.runtime.id
         ) {
           console.log("✅ [Basit] Extension zaten mevcut");
@@ -202,7 +250,7 @@ function App() {
         const checkExtension = () => {
           if (
             typeof chrome !== "undefined" &&
-            chrome.runtime &&
+            chrome.runtime.id &&
             chrome.runtime.id
           ) {
             console.log("✅ [Basit] Extension hazır oldu");
@@ -250,14 +298,15 @@ function App() {
       );
       fetchProducts();
     } else {
-      // currentUserId yoksa extension kontrolü yap
-      const hasExtension =
-        typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
-      if (!hasExtension) {
-        console.log("❌ [useEffect] Extension kurulu değil");
-        setStatus("no-extension");
-      }
     }
+
+    // Cleanup: Component unmount olduğunda isteği iptal et
+    return () => {
+      if (abortControllerRef.current) {
+        console.log("🛑 [useEffect] Component unmount, istek iptal ediliyor");
+        abortControllerRef.current.abort();
+      }
+    };
   }, [currentUserId]);
 
   // Test fonksiyonu
@@ -280,24 +329,24 @@ function App() {
     console.log("🔍 [Storage Debug] Başlatılıyor...");
     console.log(
       "🔍 [Storage Debug] Chrome API:",
-      typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id
+      typeof chrome !== "undefined" && chrome.runtime.id && chrome.runtime.id
     );
 
     try {
       // Extension'dan storage bilgisi al
       if (
         typeof chrome !== "undefined" &&
-        chrome.runtime &&
+        chrome.runtime.id &&
         chrome.runtime.id
       ) {
         const response = await new Promise((resolve, reject) => {
-          chrome.runtime.sendMessage(
+          chrome.runtime.id.sendMessage(
             { action: "getActiveUUID" },
             (response) => {
-              if (chrome.runtime.lastError) {
+              if (chrome.runtime.id.lastError) {
                 console.log(
                   "❌ [Storage Debug] Extension mesaj hatası:",
-                  chrome.runtime.lastError
+                  chrome.runtime.id.lastError
                 );
                 reject(new Error("Extension bulunamadı"));
                 return;
@@ -427,21 +476,17 @@ function App() {
       console.log(
         "⏳ [fetchProducts] userId yok, extension kontrol ediliyor..."
       );
-
-      // Extension kurulu mu kontrol et
-      const hasExtension =
-        typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
-
-      if (!hasExtension) {
-        console.log("❌ [fetchProducts] Extension kurulu değil");
-        setStatus("no-extension");
-        return;
-      }
-
-      // Extension var ama UUID yoksa bekle
-      console.log("⏳ [fetchProducts] Extension var, UUID bekleniyor...");
       return;
     }
+
+    // Önceki isteği iptal et
+    if (abortControllerRef.current) {
+      console.log("🛑 [fetchProducts] Önceki istek iptal ediliyor...");
+      abortControllerRef.current.abort();
+    }
+
+    // Yeni AbortController oluştur
+    abortControllerRef.current = new AbortController();
 
     try {
       setStatus("loading");
@@ -450,7 +495,10 @@ function App() {
       const url = `${GET_PRODUCTS_ENDPOINT}?user_id=${currentUserId}`;
       console.log("🚀 [fetchProducts] API URL:", url);
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        signal: abortControllerRef.current.signal,
+      });
+
       console.log("🚀 [fetchProducts] Response status:", response.status);
 
       if (response.ok) {
@@ -465,6 +513,11 @@ function App() {
         setStatus("error");
       }
     } catch (error) {
+      // AbortError ise iptal edilmiş demektir, hata gösterme
+      if (error.name === "AbortError") {
+        console.log("🛑 [fetchProducts] İstek iptal edildi");
+        return;
+      }
       console.error("❌ [fetchProducts] Error:", error);
       setError("Network hatası");
       setStatus("error");
@@ -597,7 +650,8 @@ function App() {
         body: JSON.stringify({
           email,
           password,
-          guest_user_id: currentUserId, // Mevcut guest UUID'yi gönder
+          guest_user_id: oldData?.uuid || currentUserId, // Eski UUID'yi gönder
+          role: oldData?.role || "GUEST", // Role bilgisini gönder (Madde 1, 3)
         }),
       });
 
@@ -606,8 +660,20 @@ function App() {
       if (response.ok && result.uuid) {
         console.log("✅ [Website] Giriş başarılı:", result);
 
-        // Permanent UUID'yi storage'a kaydet
-        await storageHelper.setUserId(result.uuid, "permanent");
+        // Eski misafir UUID'yi al (transfer için - Madde 9)
+        const oldData = await storageHelper.getCurrentUUID();
+        const oldUuid = oldData?.uuid;
+
+        // Yeni USER UUID'yi kaydet (Madde 4, 9, 11)
+        await storageHelper.setUserUUID(result.uuid);
+
+        // Misafir ürünleri transfer et (Madde 9)
+        if (oldUuid && oldData?.role === "GUEST") {
+          console.log(
+            `🔄 [Website] Misafir ürünleri transfer ediliyor: ${oldUuid} → ${result.uuid}`
+          );
+          await storageHelper.transferGuestProducts(oldUuid, result.uuid);
+        }
 
         // State'i güncelle
         setCurrentUserId(result.uuid);
@@ -642,7 +708,8 @@ function App() {
           email,
           password,
           name,
-          guest_user_id: currentUserId, // Mevcut guest UUID'yi gönder
+          guest_user_id: oldData?.uuid || currentUserId, // Eski UUID'yi gönder
+          role: oldData?.role || "GUEST", // Role bilgisini gönder (Madde 2, 3)
         }),
       });
 
@@ -651,8 +718,20 @@ function App() {
       if (response.ok && result.uuid) {
         console.log("✅ [Website] Kayıt başarılı:", result);
 
-        // Permanent UUID'yi storage'a kaydet
-        await storageHelper.setUserId(result.uuid, "permanent");
+        // Eski misafir UUID'yi al (transfer için - Madde 10)
+        const oldData = await storageHelper.getCurrentUUID();
+        const oldUuid = oldData?.uuid;
+
+        // Yeni USER UUID'yi kaydet (Madde 4, 10, 11)
+        await storageHelper.setUserUUID(result.uuid);
+
+        // Misafir ürünleri transfer et (Madde 10)
+        if (oldUuid && oldData?.role === "GUEST") {
+          console.log(
+            `🔄 [Website] Misafir ürünleri transfer ediliyor: ${oldUuid} → ${result.uuid}`
+          );
+          await storageHelper.transferGuestProducts(oldUuid, result.uuid);
+        }
 
         // State'i güncelle
         setCurrentUserId(result.uuid);
@@ -673,29 +752,35 @@ function App() {
     }
   };
 
-  // Logout fonksiyonu
+  // Logout fonksiyonu (Madde 7, 14, 15, 16)
   const handleLogout = async () => {
     try {
       console.log("🚪 [Website] Çıkış yapılıyor");
 
-      // Storage'dan tüm UUID'leri temizle
-      await storageHelper.logout();
+      // SimpleStorage logout (temizle + yeni misafir UUID) (Madde 7, 14, 15, 16)
+      const newGuestData = await storageHelper.logout();
 
       // State'i sıfırla
-      setCurrentUserId(null);
-      setUuidType(null);
-      setIsLoggedIn(false);
       setProducts([]);
       setFilteredProducts([]);
 
-      // Yeni guest UUID oluştur
-      const newUUIDData = await storageHelper.getOrCreateActiveUUID();
-      if (newUUIDData) {
-        setCurrentUserId(newUUIDData.uuid);
-        setUuidType(newUUIDData.type);
+      if (newGuestData) {
+        // Extension varsa yeni misafir UUID setlendi (Madde 7, 14, 16)
+        setCurrentUserId(newGuestData.uuid);
+        setUuidType("guest");
+        setIsLoggedIn(false);
+        console.log(
+          "✅ [Website] Çıkış sonrası misafir UUID:",
+          newGuestData.uuid
+        );
+      } else {
+        // Extension yoksa sadece temizleme (Madde 15)
+        setCurrentUserId(null);
+        setUuidType(null);
+        setIsLoggedIn(false);
+        console.log("✅ [Website] Çıkış tamamlandı (extension yok)");
       }
 
-      console.log("✅ [Website] Çıkış başarılı");
       return { success: true, message: "Çıkış yapıldı" };
     } catch (error) {
       console.error("❌ [Website] Çıkış hatası:", error);
@@ -703,7 +788,7 @@ function App() {
     }
   };
 
-  // Aktif UUID'yi al veya oluştur - Cross-browser storage
+  // Aktif UUID'yi al - SimpleStorage (16 maddelik akış)
   async function getActiveUUID() {
     // Eğer zaten UUID varsa, onu kullan (değiştirme!)
     if (currentUserId) {
@@ -727,14 +812,14 @@ function App() {
     setIsGettingUserId(true);
 
     try {
-      // Cross-browser storage'dan UUID al veya oluştur
-      const uuidData = await storageHelper.getOrCreateActiveUUID();
+      // SimpleStorage ile UUID al (Madde 3, 12, 13)
+      const uuidData = await storageHelper.getCurrentUUID();
 
       if (uuidData) {
         console.log("✅ [getActiveUUID] UUID alındı:", uuidData);
         setCurrentUserId(uuidData.uuid);
-        setUuidType(uuidData.type);
-        setIsLoggedIn(uuidData.isLoggedIn);
+        setUuidType(uuidData.role === "USER" ? "permanent" : "guest");
+        setIsLoggedIn(uuidData.role === "USER");
         setIsGettingUserId(false);
         return uuidData.uuid;
       } else {
@@ -760,6 +845,7 @@ function App() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onLogout={handleLogout}
+        checkExtensionAvailability={checkExtensionAvailability}
       />
 
       {/* Main Content - Sidebar için dinamik margin */}
@@ -1190,8 +1276,8 @@ function App() {
             </div>
           </div>
 
-          {/* Teknik Bilgiler Section - En alta - Sadece admin kullanıcılar için */}
-          {userRole === "admin" && (
+          {/* Teknik Bilgiler Section - En alta - Herkes için görünür */}
+          {true && (
             <div id="technical" className="mb-8">
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">
@@ -1258,36 +1344,40 @@ function App() {
                   </div>
 
                   {/* Debug Butonları - Geliştirici section'ında */}
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <h5 className="font-medium text-blue-700 mb-3">
-                      🛠️ Geliştirici Araçları:
+                  <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+                    <h5 className="font-medium text-red-700 mb-3 text-lg">
+                      🛠️ DEBUG ARAÇLARI (Geliştirici İçin):
                     </h5>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       <button
                         onClick={handleDebug}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        Debug
+                        🔧 Debug
                       </button>
                       <button
                         onClick={handleRefresh}
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        Yenile
+                        🔄 Yenile
                       </button>
                       <button
                         onClick={handleTest}
-                        className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        Test
+                        🧪 Test
                       </button>
                       <button
                         onClick={handleStorageDebug}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        Storage Debug
+                        💾 Storage Debug
                       </button>
                     </div>
+                    <p className="text-xs text-red-600 mt-2">
+                      Bu butonlar sadece geliştirme amaçlıdır. Normal
+                      kullanıcılar için gizlidir.
+                    </p>
                   </div>
                 </div>
               </div>
