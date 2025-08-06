@@ -73,7 +73,10 @@ function App() {
   const API_BASE = "https://my-heybe.vercel.app/api";
   const GET_PRODUCTS_ENDPOINT = `${API_BASE}/get-products`;
   const DELETE_PRODUCT_ENDPOINT = `${API_BASE}/delete-product`;
+  const DELETE_ALL_PRODUCTS_ENDPOINT = `${API_BASE}/delete-all-products`;
   const ADD_PRODUCT_ENDPOINT = `${API_BASE}/add-product`;
+  const LOGIN_ENDPOINT = `${API_BASE}/login`;
+  const REGISTER_ENDPOINT = `${API_BASE}/register`;
 
   // Sidebar toggle handler
   const handleSidebarToggle = (collapsed) => {
@@ -592,15 +595,15 @@ function App() {
       }
 
       // Tek bir API çağrısı ile tüm ürünleri sil
-      const response = await fetch("/api/clear-all", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: currentUserId,
-        }),
-      });
+      const response = await fetch(
+        `${DELETE_ALL_PRODUCTS_ENDPOINT}?user_id=${currentUserId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -642,7 +645,7 @@ function App() {
     try {
       console.log("🔐 [Website] Giriş yapılıyor:", email);
 
-      const response = await fetch(`${API_BASE}/login`, {
+      const response = await fetch(LOGIN_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -699,7 +702,7 @@ function App() {
     try {
       console.log("📝 [Website] Kayıt yapılıyor:", email);
 
-      const response = await fetch(`${API_BASE}/register`, {
+      const response = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
