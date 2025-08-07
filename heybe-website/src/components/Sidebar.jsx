@@ -18,6 +18,9 @@ function Sidebar({
   onRegister,
   onLogout,
   checkExtensionAvailability,
+  currentLanguage,
+  onLanguageChange,
+  t,
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -96,13 +99,13 @@ function Sidebar({
     {
       id: "products",
       icon: "📦",
-      label: "Ürünlerim",
+      label: t("products"),
       action: () => scrollToSection("products"),
     },
     {
       id: "install",
       icon: "📋",
-      label: "Kurulum",
+      label: t("install"),
       action: () => scrollToSection("install"),
     },
     // Sadece admin kullanıcılar için "Geliştirici" menüsü
@@ -111,7 +114,7 @@ function Sidebar({
           {
             id: "technical",
             icon: "🔧",
-            label: "Geliştirici",
+            label: t("developer"),
             action: () => scrollToSection("technical"),
           },
         ]
@@ -214,7 +217,7 @@ function Sidebar({
                   ) : (
                     <>
                       <LogIn className="w-4 h-4 mr-2" />
-                      Giriş Yap
+                      {t("login")}
                     </>
                   )}
                 </Button>
@@ -229,7 +232,7 @@ function Sidebar({
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4 mr-2" />
-                      Kayıt Ol
+                      {t("register")}
                     </>
                   )}
                 </Button>
@@ -239,7 +242,7 @@ function Sidebar({
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input
                   type="email"
-                  placeholder="E-posta"
+                  placeholder={t("emailPlaceholder")}
                   value={authData.email}
                   onChange={(e) =>
                     setAuthData({ ...authData, email: e.target.value })
@@ -249,7 +252,7 @@ function Sidebar({
                 />
                 <input
                   type="password"
-                  placeholder="Şifre"
+                  placeholder={t("passwordPlaceholder")}
                   value={authData.password}
                   onChange={(e) =>
                     setAuthData({ ...authData, password: e.target.value })
@@ -260,7 +263,7 @@ function Sidebar({
                 {authMode === "register" && (
                   <input
                     type="text"
-                    placeholder="Ad (opsiyonel)"
+                    placeholder={t("namePlaceholder")}
                     value={authData.name}
                     onChange={(e) =>
                       setAuthData({ ...authData, name: e.target.value })
@@ -281,8 +284,8 @@ function Sidebar({
                     {isAuthLoading
                       ? "..."
                       : authMode === "login"
-                      ? "Giriş"
-                      : "Kayıt"}
+                      ? t("loginShort")
+                      : t("registerShort")}
                   </Button>
                   <Button
                     type="button"
@@ -290,7 +293,7 @@ function Sidebar({
                     size="sm"
                     onClick={() => setShowAuthForm(false)}
                   >
-                    İptal
+                    {t("cancel")}
                   </Button>
                 </div>
               </form>
@@ -324,6 +327,42 @@ function Sidebar({
           isCollapsed ? "px-2" : "px-4"
         }`}
       >
+        {/* Language Selector */}
+        <div className={`mb-4 ${isCollapsed ? "px-2" : "px-3"}`}>
+          {!isCollapsed && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                {t("language")}
+              </label>
+              <select
+                value={currentLanguage}
+                onChange={(e) => onLanguageChange(e.target.value)}
+                className="w-full text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="tr">🇹🇷 {t("turkish")}</option>
+                <option value="en">🇬🇧 {t("english")}</option>
+              </select>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="relative group">
+              <button
+                onClick={() =>
+                  onLanguageChange(currentLanguage === "tr" ? "en" : "tr")
+                }
+                className="w-8 h-8 flex items-center justify-center text-sm hover:bg-gray-100 rounded-md transition-colors"
+                title={t("language")}
+              >
+                {currentLanguage === "tr" ? "🇹🇷" : "🇬🇧"}
+              </button>
+              <div className="absolute left-full ml-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
+                {t("language")}:{" "}
+                {currentLanguage === "tr" ? t("turkish") : t("english")}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div
           className={`flex items-center ${
             isCollapsed ? "justify-center" : ""
@@ -333,7 +372,7 @@ function Sidebar({
           {!isCollapsed && (
             <div className="ml-2 flex-1 min-w-0">
               <p className="text-xs text-gray-500 font-medium">
-                {isLoggedIn ? "Giriş Yapıldı" : "Misafir"}
+                {isLoggedIn ? t("loggedIn") : t("guest")}
               </p>
               <p className="text-xs text-gray-700 truncate font-mono">
                 {currentUserId ? `${currentUserId.substring(0, 8)}...` : "N/A"}

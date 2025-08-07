@@ -3,6 +3,127 @@
 // Cross-Browser Storage Helper - Extension.js ile tüm tarayıcılarda çalışır
 // console.log removed
 
+// ==========================================
+// INTERNATIONALIZATION (i18n) SYSTEM
+// ==========================================
+
+// Çeviriler objesi
+const translations = {
+  tr: {
+    // Buttons
+    addToHeybe: "Heybeye Ekle",
+    productAdded: "Ürün Eklendi",
+    adding: "Ekleniyor...",
+    viewList: "Listeyi Gör",
+    login: "Giriş Yap",
+    register: "Kayıt Ol",
+    cancel: "İptal",
+    continueAsGuest: "Misafir Olarak Devam Et",
+    loggingIn: "Giriş yapılıyor...",
+    registering: "Kayıt yapılıyor...",
+
+    // Form Labels & Placeholders
+    email: "E-posta",
+    password: "Şifre",
+    emailPlaceholder: "E-posta adresinizi girin",
+    passwordPlaceholder: "Şifrenizi girin",
+
+    // Dialog Titles
+    guestUser: "Misafir Kullanıcı",
+    loginRegisterTitle: "Giriş Yap / Kayıt Ol",
+
+    // Messages
+    guestMessage:
+      "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.",
+    productAddedToHeybe: "Ürün Heybeye eklendi!",
+    productAddedToMyList: "Ürün Tüm Listeme eklendi!",
+    productAddError: "Ürün eklenirken hata oluştu!",
+    uuidNotFoundError: "UUID bulunamadı, ürün eklenemedi!",
+    registrationCompleteAddProduct:
+      "Kayıt işlemi tamamlandıktan sonra ürün eklenecek!",
+    processCompleteAddProduct: "İşlem tamamlandıktan sonra ürün eklenecek!",
+
+    // Validation Messages
+    enterEmailPassword: "Lütfen email ve şifre girin",
+    enterValidEmail: "Geçerli bir email adresi girin",
+    passwordMinLength: "Şifre en az 6 karakter olmalı",
+    emailPasswordIncorrect: "Email veya şifre hatalı",
+    connectionError: "Bağlantı hatası",
+    loginFailed: "Giriş başarısız",
+    registerFailed: "Kayıt başarısız",
+    userAlreadyExists: "Bu kullanıcı zaten var",
+  },
+  en: {
+    // Buttons
+    addToHeybe: "Add to Heybe",
+    productAdded: "Product Added",
+    adding: "Adding...",
+    viewList: "View List",
+    login: "Log In",
+    register: "Sign Up",
+    cancel: "Cancel",
+    continueAsGuest: "Continue as Guest",
+    loggingIn: "Logging in...",
+    registering: "Signing up...",
+
+    // Form Labels & Placeholders
+    email: "Email",
+    password: "Password",
+    emailPlaceholder: "Enter your email address",
+    passwordPlaceholder: "Enter your password",
+
+    // Dialog Titles
+    guestUser: "Guest User",
+    loginRegisterTitle: "Log In / Sign Up",
+
+    // Messages
+    guestMessage:
+      "You haven't logged in yet. Your products will be stored temporarily with limited features. Log in to create a permanent account or continue as a guest.",
+    productAddedToHeybe: "Product added to Heybe!",
+    productAddedToMyList: "Product added to My List!",
+    productAddError: "Error adding product!",
+    uuidNotFoundError: "UUID not found, product could not be added!",
+    registrationCompleteAddProduct:
+      "Product will be added after registration is complete!",
+    processCompleteAddProduct:
+      "Product will be added after process is complete!",
+
+    // Validation Messages
+    enterEmailPassword: "Please enter email and password",
+    enterValidEmail: "Please enter a valid email address",
+    passwordMinLength: "Password must be at least 6 characters",
+    emailPasswordIncorrect: "Email or password incorrect",
+    connectionError: "Connection error",
+    loginFailed: "Login failed",
+    registerFailed: "Registration failed",
+    userAlreadyExists: "This user already exists",
+  },
+};
+
+// Mevcut dil (varsayılan İngilizce)
+let currentLanguage = "en";
+
+// Tarayıcı dilini algıla ve ayarla
+function detectAndSetLanguage() {
+  const browserLang = navigator.language || navigator.userLanguage;
+  if (browserLang.startsWith("tr")) {
+    currentLanguage = "tr";
+  } else {
+    currentLanguage = "en";
+  }
+  console.log(
+    `🌍 [Content Script] Dil algılandı: ${currentLanguage} (Browser: ${browserLang})`
+  );
+}
+
+// Çeviri fonksiyonu
+function t(key) {
+  return translations[currentLanguage]?.[key] || translations.en[key] || key;
+}
+
+// Dil algılamayı başlat
+detectAndSetLanguage();
+
 class CrossBrowserStorageHelper {
   constructor() {
     // TEK SİSTEM - Background script ile tamamen uyumlu
@@ -445,7 +566,7 @@ async function addProductToMyList(productInfo) {
         isRegistrationInProgress
       );
       pendingProductInfo = productInfo;
-      showSuccessMessage("Kayıt işlemi tamamlandıktan sonra ürün eklenecek!");
+      showSuccessMessage(t("registrationCompleteAddProduct"));
       return true;
     }
 
@@ -497,7 +618,7 @@ async function addProductToMyList(productInfo) {
         console.log(
           "⏳ [Content Script] Kayıt/Giriş işlemi devam ediyor, ürün bekletiliyor..."
         );
-        showSuccessMessage("İşlem tamamlandıktan sonra ürün eklenecek!");
+        showSuccessMessage(t("processCompleteAddProduct"));
         return true;
       }
 
@@ -520,7 +641,7 @@ async function addProductToMyList(productInfo) {
 
       if (result && result.success) {
         // console.log removed
-        showSuccessMessage("Ürün Heybeye eklendi!");
+        showSuccessMessage(t("productAddedToHeybe"));
 
         // Buton durumunu güncelle
         const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -531,7 +652,7 @@ async function addProductToMyList(productInfo) {
 
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
-            spanElement.textContent = "Ürün Eklendi";
+            spanElement.textContent = t("productAdded");
             spanElement.style.color = "#10b981"; // Yeşil metin
           }
 
@@ -568,7 +689,7 @@ async function addProductToMyList(productInfo) {
             addButton.style.color = "#374151";
 
             if (spanElement) {
-              spanElement.textContent = "Heybeye Ekle";
+              spanElement.textContent = t("addToHeybe");
               spanElement.style.color = "#374151"; // Normal renk
             }
 
@@ -586,7 +707,7 @@ async function addProductToMyList(productInfo) {
         return true;
       } else {
         // console.log removed
-        showErrorMessage("Ürün eklenirken hata oluştu!");
+        showErrorMessage(t("productAddError"));
         return false;
       }
     } catch (error) {
@@ -644,16 +765,16 @@ async function addPendingProduct() {
           "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
           result
         );
-        showSuccessMessage("Ürün Tüm Listeme eklendi!");
+        showSuccessMessage(t("productAddedToMyList"));
       } else {
         // console.log removed
-        showErrorMessage("Ürün eklenirken hata oluştu!");
+        showErrorMessage(t("productAddError"));
       }
     } else {
       console.log(
         "❌ [Content Script] UUID bulunamadı, bekleyen ürün eklenemedi"
       );
-      showErrorMessage("UUID bulunamadı, ürün eklenemedi!");
+      showErrorMessage(t("uuidNotFoundError"));
     }
   }
 }
@@ -690,7 +811,7 @@ async function addPendingProductWithUUID(uuid) {
           "✅ [Content Script] Bekleyen ürün başarıyla eklendi:",
           result
         );
-        showSuccessMessage("Ürün Heybeye eklendi!");
+        showSuccessMessage(t("productAddedToHeybe"));
 
         // Buton durumunu güncelle
         const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -701,7 +822,7 @@ async function addPendingProductWithUUID(uuid) {
 
           const spanElement = addButton.querySelector("span");
           if (spanElement) {
-            spanElement.textContent = "Ürün Eklendi";
+            spanElement.textContent = t("productAdded");
             spanElement.style.color = "#10b981"; // Yeşil metin
           }
 
@@ -738,7 +859,7 @@ async function addPendingProductWithUUID(uuid) {
             addButton.style.color = "#374151";
 
             if (spanElement) {
-              spanElement.textContent = "Heybeye Ekle";
+              spanElement.textContent = t("addToHeybe");
               spanElement.style.color = "#374151"; // Normal renk
             }
 
@@ -755,7 +876,7 @@ async function addPendingProductWithUUID(uuid) {
         }
       } else {
         // console.log removed
-        showErrorMessage("Ürün eklenirken hata oluştu!");
+        showErrorMessage(t("productAddError"));
       }
     } catch (error) {
       console.error(
@@ -828,7 +949,7 @@ function showGuestWarningPopup() {
                   color: #1f2937;
                   margin: 0 0 12px;
                 `;
-    title.textContent = "Misafir Kullanıcı";
+    title.textContent = t("guestUser");
 
     // Message
     const message = document.createElement("p");
@@ -838,8 +959,7 @@ function showGuestWarningPopup() {
                   margin: 0 0 24px;
                   line-height: 1.5;
                 `;
-    message.textContent =
-      "Henüz giriş yapmadınız. Ürünleriniz geçici olarak saklanacak ve kısıtlı özellikler mevcut. Kalıcı hesap oluşturmak için giriş yapın veya misafir olarak devam edin.";
+    message.textContent = t("guestMessage");
 
     // Buttons container
     const buttonsContainer = document.createElement("div");
@@ -862,7 +982,7 @@ function showGuestWarningPopup() {
                   cursor: pointer;
                   transition: background 0.2s;
                 `;
-    loginButton.textContent = "Giriş Yap";
+    loginButton.textContent = t("login");
     loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
     loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
     loginButton.onclick = () => {
@@ -891,7 +1011,7 @@ function showGuestWarningPopup() {
                   cursor: pointer;
                   transition: background 0.2s;
                 `;
-    guestButton.textContent = "Misafir Olarak Devam Et";
+    guestButton.textContent = t("continueAsGuest");
     guestButton.onmouseover = () => (guestButton.style.background = "#e5e7eb");
     guestButton.onmouseout = () => (guestButton.style.background = "#f3f4f6");
     guestButton.onclick = async () => {
@@ -953,7 +1073,7 @@ function showGuestWarningPopup() {
               console.log(
                 "✅ [Content Script] Misafir kullanıcı ürünü başarıyla eklendi"
               );
-              showSuccessMessage("Ürün Heybeye eklendi!");
+              showSuccessMessage(t("productAddedToHeybe"));
 
               // Buton durumunu güncelle
               const addButton = document.getElementById("tum-listem-ekle-btn");
@@ -964,7 +1084,7 @@ function showGuestWarningPopup() {
 
                 const spanElement = addButton.querySelector("span");
                 if (spanElement) {
-                  spanElement.textContent = "Ürün Eklendi";
+                  spanElement.textContent = t("productAdded");
                   spanElement.style.color = "#10b981"; // Yeşil metin
                 }
 
@@ -1001,7 +1121,7 @@ function showGuestWarningPopup() {
                   addButton.style.color = "#374151";
 
                   if (spanElement) {
-                    spanElement.textContent = "Heybeye Ekle";
+                    spanElement.textContent = t("addToHeybe");
                     spanElement.style.color = "#374151"; // Normal renk
                   }
 
@@ -1017,7 +1137,7 @@ function showGuestWarningPopup() {
                 }, 2000);
               }
             } else {
-              showErrorMessage("Ürün eklenirken hata oluştu!");
+              showErrorMessage(t("productAddError"));
             }
           }
         } catch (error) {
@@ -1025,7 +1145,7 @@ function showGuestWarningPopup() {
             "❌ [Content Script] Misafir ürün ekleme hatası:",
             error
           );
-          showErrorMessage("Ürün eklenirken hata oluştu!");
+          showErrorMessage(t("productAddError"));
         }
 
         // Bekleyen ürünü temizle
@@ -1049,7 +1169,7 @@ function showGuestWarningPopup() {
                   margin-top: 12px;
                   transition: background 0.2s;
                 `;
-    cancelButton.textContent = "İptal";
+    cancelButton.textContent = t("cancel");
     cancelButton.onmouseover = () =>
       (cancelButton.style.background = "#f9fafb");
     cancelButton.onmouseout = () =>
@@ -1122,7 +1242,7 @@ function showLoginOrRegisterForm() {
       margin: 0 0 24px;
       text-align: center;
     `;
-    title.textContent = "Giriş Yap / Kayıt Ol";
+    title.textContent = t("loginRegisterTitle");
 
     // Form
     const form = document.createElement("form");
@@ -1140,7 +1260,7 @@ function showLoginOrRegisterForm() {
       color: #374151;
       margin-bottom: 4px;
     `;
-    emailLabel.textContent = "E-posta";
+    emailLabel.textContent = t("email");
 
     const emailInput = document.createElement("input");
     emailInput.type = "email";
@@ -1153,7 +1273,7 @@ function showLoginOrRegisterForm() {
       transition: border-color 0.2s;
       outline: none;
     `;
-    emailInput.placeholder = "ornek@email.com";
+    emailInput.placeholder = t("emailPlaceholder");
     emailInput.onfocus = () => (emailInput.style.borderColor = "#2563eb");
     emailInput.onblur = () => (emailInput.style.borderColor = "#d1d5db");
 
@@ -1165,7 +1285,7 @@ function showLoginOrRegisterForm() {
       color: #374151;
       margin-bottom: 4px;
     `;
-    passwordLabel.textContent = "Şifre";
+    passwordLabel.textContent = t("password");
 
     const passwordInput = document.createElement("input");
     passwordInput.type = "password";
@@ -1178,7 +1298,7 @@ function showLoginOrRegisterForm() {
       transition: border-color 0.2s;
       outline: none;
     `;
-    passwordInput.placeholder = "Şifrenizi girin";
+    passwordInput.placeholder = t("passwordPlaceholder");
     passwordInput.onfocus = () => (passwordInput.style.borderColor = "#2563eb");
     passwordInput.onblur = () => (passwordInput.style.borderColor = "#d1d5db");
 
@@ -1215,7 +1335,7 @@ function showLoginOrRegisterForm() {
       cursor: pointer;
       transition: background 0.2s;
     `;
-    loginButton.textContent = "Giriş Yap";
+    loginButton.textContent = t("login");
     loginButton.onmouseover = () => (loginButton.style.background = "#1d4ed8");
     loginButton.onmouseout = () => (loginButton.style.background = "#2563eb");
 
@@ -1234,7 +1354,7 @@ function showLoginOrRegisterForm() {
       cursor: pointer;
       transition: background 0.2s;
     `;
-    registerButton.textContent = "Kayıt Ol";
+    registerButton.textContent = t("register");
     registerButton.onmouseover = () =>
       (registerButton.style.background = "#047857");
     registerButton.onmouseout = () =>
@@ -1256,7 +1376,7 @@ function showLoginOrRegisterForm() {
       transition: background 0.2s;
       margin-top: 12px;
     `;
-    cancelButton.textContent = "İptal";
+    cancelButton.textContent = t("cancel");
     cancelButton.onmouseover = () =>
       (cancelButton.style.background = "#e5e7eb");
     cancelButton.onmouseout = () => (cancelButton.style.background = "#f3f4f6");
@@ -1271,13 +1391,13 @@ function showLoginOrRegisterForm() {
       const password = passwordInput.value;
 
       if (!email || !password) {
-        errorMessage.textContent = "Lütfen email ve şifre girin";
+        errorMessage.textContent = t("enterEmailPassword");
         errorMessage.style.display = "block";
         return;
       }
 
       // Loading state
-      loginButton.textContent = "Giriş yapılıyor...";
+      loginButton.textContent = t("loggingIn");
       loginButton.disabled = true;
       registerButton.disabled = true;
       errorMessage.style.display = "none";
@@ -1332,9 +1452,9 @@ function showLoginOrRegisterForm() {
           resolve(true);
         } else {
           console.log("❌ [API Response] Login başarısız:", result);
-          errorMessage.textContent = result.error || "Giriş başarısız";
+          errorMessage.textContent = result.error || t("loginFailed");
           errorMessage.style.display = "block";
-          loginButton.textContent = "Giriş Yap";
+          loginButton.textContent = t("login");
           loginButton.disabled = false;
           registerButton.disabled = false;
           isRegistrationInProgress = false;
@@ -1342,14 +1462,14 @@ function showLoginOrRegisterForm() {
       } catch (error) {
         console.log("❌ [API Error] Login hatası:", error.message);
         if (error.message && error.message.includes("400")) {
-          errorMessage.textContent = "Geçerli bir email adresi girin";
+          errorMessage.textContent = t("enterValidEmail");
         } else if (error.message && error.message.includes("401")) {
-          errorMessage.textContent = "Email veya şifre hatalı";
+          errorMessage.textContent = t("emailPasswordIncorrect");
         } else {
-          errorMessage.textContent = "Bağlantı hatası";
+          errorMessage.textContent = t("connectionError");
         }
         errorMessage.style.display = "block";
-        loginButton.textContent = "Giriş Yap";
+        loginButton.textContent = t("login");
         loginButton.disabled = false;
         registerButton.disabled = false;
         isRegistrationInProgress = false;
@@ -1362,20 +1482,20 @@ function showLoginOrRegisterForm() {
       const password = passwordInput.value;
 
       if (!email || !password) {
-        errorMessage.textContent = "Lütfen email ve şifre girin";
+        errorMessage.textContent = t("enterEmailPassword");
         errorMessage.style.display = "block";
         return;
       }
 
       if (password.length < 6) {
-        errorMessage.textContent = "Şifre en az 6 karakter olmalı";
+        errorMessage.textContent = t("passwordMinLength");
         errorMessage.style.display = "block";
         return;
       }
 
       // Loading state
       loginButton.disabled = true;
-      registerButton.textContent = "Kayıt yapılıyor...";
+      registerButton.textContent = t("registering");
       registerButton.disabled = true;
       errorMessage.style.display = "none";
 
@@ -1468,10 +1588,10 @@ function showLoginOrRegisterForm() {
                 "❌ [API Response] Auto-login başarısız:",
                 loginResult
               );
-              errorMessage.textContent = "Email veya şifre hatalı";
+              errorMessage.textContent = t("emailPasswordIncorrect");
               errorMessage.style.display = "block";
               loginButton.disabled = false;
-              registerButton.textContent = "Kayıt Ol";
+              registerButton.textContent = t("register");
               registerButton.disabled = false;
               isRegistrationInProgress = false;
               return false;
@@ -1481,20 +1601,20 @@ function showLoginOrRegisterForm() {
               "❌ [API Error] Auto-login hatası:",
               loginError.message
             );
-            errorMessage.textContent = "Email veya şifre hatalı";
+            errorMessage.textContent = t("emailPasswordIncorrect");
             errorMessage.style.display = "block";
             loginButton.disabled = false;
-            registerButton.textContent = "Kayıt Ol";
+            registerButton.textContent = t("register");
             registerButton.disabled = false;
             isRegistrationInProgress = false;
             return false;
           }
         } else {
           console.log("❌ [API Response] Register başarısız:", result);
-          errorMessage.textContent = result.error || "Kayıt başarısız";
+          errorMessage.textContent = result.error || t("registerFailed");
           errorMessage.style.display = "block";
           loginButton.disabled = false;
-          registerButton.textContent = "Kayıt Ol";
+          registerButton.textContent = t("register");
           registerButton.disabled = false;
           isRegistrationInProgress = false;
           return false;
@@ -1502,17 +1622,17 @@ function showLoginOrRegisterForm() {
       } catch (error) {
         console.log("❌ [API Error] Register hatası:", error.message);
         if (error.message && error.message.includes("400")) {
-          errorMessage.textContent = "Geçerli bir email adresi girin";
+          errorMessage.textContent = t("enterValidEmail");
         } else if (error.message && error.message.includes("409")) {
-          errorMessage.textContent = "Bu kullanıcı zaten var";
+          errorMessage.textContent = t("userAlreadyExists");
         } else if (error.message && error.message.includes("401")) {
-          errorMessage.textContent = "Email veya şifre hatalı";
+          errorMessage.textContent = t("emailPasswordIncorrect");
         } else {
-          errorMessage.textContent = "Bağlantı hatası";
+          errorMessage.textContent = t("connectionError");
         }
         errorMessage.style.display = "block";
         loginButton.disabled = false;
-        registerButton.textContent = "Kayıt Ol";
+        registerButton.textContent = t("register");
         registerButton.disabled = false;
         isRegistrationInProgress = false;
         return false;
@@ -1853,7 +1973,7 @@ function createAddToListButton() {
   addButton.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
       <img src="https://my-heybe.vercel.app/logo.png" width="20" height="20" style="object-fit: contain;">
-      <span>Heybeye Ekle</span>
+      <span>${t("addToHeybe")}</span>
     </div>
   `;
 
@@ -1884,7 +2004,7 @@ function createAddToListButton() {
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
-      <span>Listeyi Gör</span>
+              <span>${t("viewList")}</span>
     </div>
   `;
 
@@ -1918,7 +2038,7 @@ function createAddToListButton() {
     try {
       // Buton durumunu güncelle
       addButton.disabled = true;
-      addButton.querySelector("span").textContent = "Ekleniyor...";
+      addButton.querySelector("span").textContent = t("adding");
 
       // Ürün bilgilerini al
       const productInfo = getProductInfo();
@@ -1936,7 +2056,7 @@ function createAddToListButton() {
 
         const spanElement = addButton.querySelector("span");
         if (spanElement) {
-          spanElement.textContent = "Ürün Eklendi";
+          spanElement.textContent = t("productAdded");
         }
 
         const svgElement = addButton.querySelector("svg");

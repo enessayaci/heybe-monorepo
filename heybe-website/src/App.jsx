@@ -25,6 +25,222 @@ function App() {
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeInstallTab, setActiveInstallTab] = useState("chrome"); // 'chrome' veya 'safari'
+  const [currentLanguage, setCurrentLanguage] = useState("en"); // 'tr' veya 'en'
+  const [showExtensionWarning, setShowExtensionWarning] = useState(false); // Extension uyarısı
+  const [extensionWarningDismissed, setExtensionWarningDismissed] =
+    useState(false); // Uyarı kapatıldı mı?
+
+  // Çeviriler
+  const translations = {
+    tr: {
+      // Header & Navigation
+      products: "Ürünlerim",
+      install: "Kurulum",
+      developer: "Geliştirici",
+
+      // Main Content
+      title: "Heybe - Alışveriş Sepeti",
+      subtitle: "E-ticaret sitelerinden ürünleri kaydet ve karşılaştır",
+      installInstructions: "Kurulum Talimatları",
+      chromeInstall: "Chrome / Brave Kurulumu",
+      safariInstall: "Safari Kurulumu",
+      downloadExtension: "Extension dosyalarını indirin",
+      chromeDownload: "Chrome İndir",
+      safariDownload: "Safari İndir",
+
+      // Installation Steps
+      step1Chrome: "Chrome/Brave'de chrome://extensions/ adresine gidin",
+      step2Chrome: 'Sağ üst köşeden "Developer mode" açın',
+      step3Chrome: '"Load unpacked" butonuna tıklayın',
+      step4Chrome: "İndirdiğiniz ve açtığınız chrome klasörünü seçin",
+      step5Chrome: "✅ Extension aktif olacak ve kullanıma hazır!",
+
+      step1Safari: "Safari menüsünden Ayarlar açın",
+      step2Safari: "Geliştirici sekmesine gidin",
+      step3Safari: '"İmzalanmamış Genişletmelere İzin Ver" işaretleyin',
+      step4Safari: 'Altında çıkan "Genişletici Yükle" butonuna tıklayın',
+      step5Safari: "İndirdiğiniz ve açtığınız safari klasörünü seçin",
+      step6Safari: '"Tüm Sitelerde İzin Ver" seçin',
+      step7Safari: "✅ Extension aktif olacak ve kullanıma hazır!",
+
+      // Usage Guide
+      usageGuide: "Kurulum Sonrası Kullanım Kılavuzu",
+      usageStep1: "Herhangi bir e-ticaret sitesine gidin",
+      usageStep2: 'Ürün sayfasında "Heybeye Ekle" butonunu görürsünüz',
+
+      // Developer Info
+      developerInfo: "Geliştirici Bilgileri",
+      technicalSpecs: "Teknik Özellikler",
+      technicalInfra: "Teknik Altyapı",
+
+      // Buttons
+      refresh: "Yenile",
+      test: "Test",
+      storageDebug: "Storage Debug",
+
+      // Messages
+      noProducts: "Henüz ürün eklenmemiş",
+      loading: "Yükleniyor...",
+      error: "Hata oluştu",
+
+      // Status Messages
+      productsCount: "ürün",
+      sitesCount: "farklı site",
+      lastUpdate: "Son güncelleme:",
+      noProductsYet: "Henüz ürün yok",
+      extensionNotInstalled: "Eklenti Kurulu Değil",
+      installExtensionMessage:
+        "Ürünlerinizi görmek ve yönetmek için önce browser eklentisini kurmanız gerekiyor.",
+      viewInstallInstructions: "Kurulum Talimatlarını Gör",
+      refreshPageAfterInstall: "Eklentiyi kurduysanız sayfayı yenileyin",
+      warning:
+        "Dikkat! Bazı bilgiler kaynak siteyi tarama sırasında yanlış alınabilir.",
+
+      // Extension Warning
+      extensionNotFoundWarning:
+        "Eklenti bulunamadı! Yeni ürün eklemek için eklentiyi kurmanız gerekiyor.",
+      installExtension: "Eklentiyi Kur",
+
+      // Language
+      language: "Dil",
+      turkish: "Türkçe",
+      english: "English",
+
+      // Auth
+      login: "Giriş Yap",
+      register: "Kayıt Ol",
+      loginShort: "Giriş",
+      registerShort: "Kayıt",
+      cancel: "İptal",
+      loggedIn: "Giriş Yapıldı",
+      guest: "Misafir",
+
+      // Form Placeholders
+      emailPlaceholder: "E-posta",
+      passwordPlaceholder: "Şifre",
+      namePlaceholder: "Ad (opsiyonel)",
+      searchPlaceholder: "Ürün adı, site adı veya fiyat ile ara...",
+
+      // Safari Note
+      safariNote:
+        'Güncel Safari sürümlerinde "İmzalanmamış Genişletmelere İzin Ver" seçeneği görünmüyorsa, önce Safari > Ayarlar > Gelişmiş > "Geliştir menüsünü göster" aktif edin.',
+    },
+    en: {
+      // Header & Navigation
+      products: "My Products",
+      install: "Installation",
+      developer: "Developer",
+
+      // Main Content
+      title: "Heybe - Shopping Basket",
+      subtitle: "Save and compare products from e-commerce sites",
+      installInstructions: "Installation Instructions",
+      chromeInstall: "Chrome / Brave Installation",
+      safariInstall: "Safari Installation",
+      downloadExtension: "Download extension files",
+      chromeDownload: "Download Chrome",
+      safariDownload: "Download Safari",
+
+      // Installation Steps
+      step1Chrome: "Go to chrome://extensions/ in Chrome/Brave",
+      step2Chrome: 'Enable "Developer mode" from the top right corner',
+      step3Chrome: 'Click "Load unpacked" button',
+      step4Chrome: "Select the downloaded and extracted chrome folder",
+      step5Chrome: "✅ Extension will be active and ready to use!",
+
+      step1Safari: "Open Settings from Safari menu",
+      step2Safari: "Go to Developer tab",
+      step3Safari: 'Check "Allow Unsigned Extensions"',
+      step4Safari: 'Click "Load Extension" button that appears below',
+      step5Safari: "Select the downloaded and extracted safari folder",
+      step6Safari: 'Select "Allow on All Websites"',
+      step7Safari: "✅ Extension will be active and ready to use!",
+
+      // Usage Guide
+      usageGuide: "Post-Installation Usage Guide",
+      usageStep1: "Go to any e-commerce website",
+      usageStep2: 'You will see "Add to Heybe" button on product pages',
+
+      // Developer Info
+      developerInfo: "Developer Information",
+      technicalSpecs: "Technical Specifications",
+      technicalInfra: "Technical Infrastructure",
+
+      // Buttons
+      refresh: "Refresh",
+      test: "Test",
+      storageDebug: "Storage Debug",
+
+      // Messages
+      noProducts: "No products added yet",
+      loading: "Loading...",
+      error: "An error occurred",
+
+      // Status Messages
+      productsCount: "products",
+      sitesCount: "different sites",
+      lastUpdate: "Last update:",
+      noProductsYet: "No products yet",
+      extensionNotInstalled: "Extension Not Installed",
+      installExtensionMessage:
+        "You need to install the browser extension first to view and manage your products.",
+      viewInstallInstructions: "View Installation Instructions",
+      refreshPageAfterInstall:
+        "Refresh the page if you have installed the extension",
+      warning:
+        "Warning! Some information may be incorrectly retrieved while scanning the source site.",
+
+      // Extension Warning
+      extensionNotFoundWarning:
+        "Extension not found! You need to install the extension to add new products.",
+      installExtension: "Install Extension",
+
+      // Language
+      language: "Language",
+      turkish: "Türkçe",
+      english: "English",
+
+      // Auth
+      login: "Log In",
+      register: "Sign Up",
+      loginShort: "Log In",
+      registerShort: "Sign Up",
+      cancel: "Cancel",
+      loggedIn: "Logged In",
+      guest: "Guest",
+
+      // Form Placeholders
+      emailPlaceholder: "Email",
+      passwordPlaceholder: "Password",
+      namePlaceholder: "Name (optional)",
+      searchPlaceholder: "Search by product name, site name or price...",
+
+      // Safari Note
+      safariNote:
+        'If you don\'t see the "Allow Unsigned Extensions" option in current Safari versions, first enable Safari > Settings > Advanced > "Show Develop menu in menu bar".',
+    },
+  };
+
+  // Çeviri fonksiyonu
+  const t = (key) => {
+    return translations[currentLanguage]?.[key] || translations.en[key] || key;
+  };
+
+  // Tarayıcı dilini algıla
+  const detectBrowserLanguage = () => {
+    const browserLang = navigator.language || navigator.userLanguage;
+    if (browserLang.startsWith("tr")) {
+      return "tr";
+    }
+    return "en"; // Varsayılan İngilizce
+  };
+
+  // Dil değiştirme fonksiyonu
+  const changeLanguage = (lang) => {
+    setCurrentLanguage(lang);
+    localStorage.setItem("heybe_language", lang);
+    console.log(`🌍 Dil değiştirildi: ${lang}`);
+  };
 
   // AbortController için ref
   const abortControllerRef = React.useRef(null);
@@ -35,23 +251,78 @@ function App() {
   // Extension kontrol fonksiyonu
   const checkExtensionAvailability = async () => {
     try {
-      // Chrome extension kontrolü
+      // İlk olarak PostMessage ile kontrol et (en güvenilir yöntem)
+      const postMessageTest = await new Promise((resolve) => {
+        let resolved = false;
+
+        const messageHandler = (event) => {
+          if (event.data.action === "EXTENSION_TEST_RESPONSE" && !resolved) {
+            resolved = true;
+            window.removeEventListener("message", messageHandler);
+            console.log(
+              "✅ [Extension Check] PostMessage ile extension bulundu"
+            );
+            resolve({ available: true, type: "postmessage" });
+          }
+        };
+
+        window.addEventListener("message", messageHandler);
+
+        // Test mesajı gönder
+        window.postMessage({ action: "EXTENSION_TEST", data: {} }, "*");
+
+        // 500ms timeout
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            window.removeEventListener("message", messageHandler);
+            resolve({ available: false, type: "none" });
+          }
+        }, 500);
+      });
+
+      if (postMessageTest.available) {
+        return postMessageTest;
+      }
+
+      // Chrome extension kontrolü (fallback)
       if (
         typeof chrome !== "undefined" &&
         chrome.runtime &&
         chrome.runtime.id
       ) {
-        // Extension'a test mesajı gönder
-        const response = await new Promise((resolve, reject) => {
-          chrome.runtime.sendMessage({ action: "test" }, (response) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error("Extension yanıt vermiyor"));
-            } else {
-              resolve(response);
-            }
+        try {
+          // Extension'a test mesajı gönder
+          const response = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error("Extension timeout"));
+            }, 1000); // 1 saniye timeout
+
+            chrome.runtime.sendMessage({ action: "test" }, (response) => {
+              clearTimeout(timeout);
+              if (chrome.runtime.lastError) {
+                console.log(
+                  "🔍 [Extension Check] Chrome runtime error:",
+                  chrome.runtime.lastError
+                );
+                reject(new Error("Extension yanıt vermiyor"));
+              } else {
+                resolve(response);
+              }
+            });
           });
-        });
-        return { available: true, type: "chrome" };
+          console.log(
+            "✅ [Extension Check] Chrome extension mevcut ve yanıt veriyor"
+          );
+          return { available: true, type: "chrome" };
+        } catch (msgError) {
+          console.log(
+            "⚠️ [Extension Check] Chrome extension mevcut ama yanıt vermiyor:",
+            msgError
+          );
+          // Extension API'si var ama yanıt vermiyor - yine de mevcut sayalım
+          return { available: true, type: "chrome" };
+        }
       }
 
       // Firefox extension kontrolü
@@ -60,9 +331,11 @@ function App() {
         browser.runtime &&
         browser.runtime.id
       ) {
+        console.log("✅ [Extension Check] Firefox extension mevcut");
         return { available: true, type: "firefox" };
       }
 
+      console.log("❌ [Extension Check] Extension bulunamadı");
       return { available: false, type: "none" };
     } catch (error) {
       console.log("❌ [Extension Check] Extension kontrol hatası:", error);
@@ -159,6 +432,66 @@ function App() {
 
   // Sayfa ilk yüklendiğinde ürünleri çek
   useEffect(() => {
+    // Dil algılama ve ayarlama
+    const savedLanguage = localStorage.getItem("heybe_language");
+    if (savedLanguage && (savedLanguage === "tr" || savedLanguage === "en")) {
+      setCurrentLanguage(savedLanguage);
+    } else {
+      // Tarayıcı dilini algıla
+      const detectedLang = detectBrowserLanguage();
+      setCurrentLanguage(detectedLang);
+      localStorage.setItem("heybe_language", detectedLang);
+    }
+
+    // Extension kontrolü - biraz gecikme ile yap (extension yüklensin diye)
+    const checkExtensionStatus = async () => {
+      try {
+        // İlk kontrol
+        const extensionStatus = await checkExtensionAvailability();
+        console.log("🔍 [Extension Check] İlk durum:", extensionStatus);
+
+        if (!extensionStatus.available) {
+          // Extension bulunamadıysa, 2 saniye bekleyip tekrar kontrol et
+          console.log(
+            "⏳ [Extension Check] Extension bulunamadı, 2 saniye bekleyip tekrar kontrol ediliyor..."
+          );
+          setTimeout(async () => {
+            try {
+              const secondCheck = await checkExtensionAvailability();
+              console.log("🔍 [Extension Check] İkinci durum:", secondCheck);
+
+              if (!secondCheck.available && !extensionWarningDismissed) {
+                console.log(
+                  "❌ [Extension Check] Extension hala bulunamadı, uyarı gösteriliyor"
+                );
+                setShowExtensionWarning(true);
+              } else {
+                console.log(
+                  "✅ [Extension Check] Extension ikinci kontrolde bulundu"
+                );
+                setShowExtensionWarning(false);
+              }
+            } catch (error) {
+              console.error(
+                "❌ [Extension Check] İkinci kontrol hatası:",
+                error
+              );
+              setShowExtensionWarning(true);
+            }
+          }, 2000);
+        } else {
+          console.log("✅ [Extension Check] Extension ilk kontrolde bulundu");
+          setShowExtensionWarning(false);
+        }
+      } catch (error) {
+        console.error("❌ [Extension Check] İlk kontrol hatası:", error);
+        setShowExtensionWarning(true);
+      }
+    };
+
+    // Extension kontrolünü hemen yap
+    checkExtensionStatus();
+
     (async () => {
       try {
         // DEBUG: Storage durumunu kontrol et
@@ -185,7 +518,8 @@ function App() {
 
           if (!extensionStatus.available) {
             console.log("❌ [useEffect] Extension kurulu değil");
-            setStatus("no-extension");
+            // Extension uyarısı zaten gösteriliyor, sadece loading'i durdur
+            setStatus("ready");
           } else {
             console.log(
               "⚠️ [useEffect] Extension kurulu ama UUID alınamadı, error durumu"
@@ -879,6 +1213,9 @@ function App() {
         isLoggedIn={isLoggedIn}
         onLogin={handleLogin}
         onRegister={handleRegister}
+        currentLanguage={currentLanguage}
+        onLanguageChange={changeLanguage}
+        t={t}
         onLogout={handleLogout}
         checkExtensionAvailability={checkExtensionAvailability}
       />
@@ -902,15 +1239,17 @@ function App() {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500 flex items-center gap-4">
                 <span>
-                  {status === "error" ? "N/A" : stats.totalProducts} ürün
+                  {status === "error" ? "N/A" : stats.totalProducts}{" "}
+                  {t("productsCount")}
                 </span>
                 <span>•</span>
                 <span>
-                  {status === "error" ? "N/A" : stats.uniqueSites} farklı site
+                  {status === "error" ? "N/A" : stats.uniqueSites}{" "}
+                  {t("sitesCount")}
                 </span>
               </div>
               <div className="text-sm text-gray-500">
-                Son güncelleme: {new Date().toLocaleTimeString()}
+                {t("lastUpdate")} {new Date().toLocaleTimeString()}
               </div>
             </div>
           </div>
@@ -935,8 +1274,7 @@ function App() {
                   </div>
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-yellow-800">
-                      Dikkat! Bazı bilgiler kaynak siteyi tarama sırasında
-                      yanlış alınabilir.
+                      {t("warning")}
                     </h3>
                   </div>
                 </div>
@@ -962,6 +1300,66 @@ function App() {
             </div>
           )}
 
+          {/* Extension Uyarısı */}
+          {showExtensionWarning && (
+            <div className="relative bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 pr-12">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-blue-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    {t("extensionNotFoundWarning")}
+                  </h3>
+                </div>
+                <div className="ml-4 mr-4">
+                  <button
+                    onClick={() => {
+                      const installSection = document.getElementById("install");
+                      if (installSection) {
+                        installSection.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200"
+                  >
+                    {t("installExtension")}
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowExtensionWarning(false);
+                    setExtensionWarningDismissed(true);
+                  }}
+                  className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-100"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Arama Kutusu ve Tümünü Sil - Sadece ürün varsa göster */}
           {products.length > 0 && (
             <div className="mb-6">
@@ -970,7 +1368,7 @@ function App() {
                 <div className="w-80">
                   <input
                     type="text"
-                    placeholder="Ürün adı, site adı veya fiyat ile ara..."
+                    placeholder={t("searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
@@ -1012,50 +1410,7 @@ function App() {
           {status === "loading" ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-gray-500 mt-2">Ürünler yükleniyor...</p>
-            </div>
-          ) : status === "no-extension" ? (
-            <div className="text-center py-12">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-8 max-w-md mx-auto">
-                <div className="text-6xl mb-4">🚨</div>
-                <h3 className="text-xl font-semibold text-amber-800 mb-4">
-                  Eklenti Kurulu Değil
-                </h3>
-                <p className="text-amber-700 mb-6">
-                  Ürünlerinizi görmek ve yönetmek için önce browser eklentisini
-                  kurmanız gerekiyor.
-                </p>
-                <button
-                  onClick={() => {
-                    const installSection = document.getElementById("install");
-                    if (installSection) {
-                      installSection.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                  className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 mx-auto"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Kurulum Talimatlarını Gör
-                </button>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-3 text-amber-600 hover:text-amber-800 text-sm underline"
-                >
-                  Eklentiyi kurduysanız sayfayı yenileyin
-                </button>
-              </div>
+              <p className="text-gray-500 mt-2">{t("loading")}</p>
             </div>
           ) : status === "error" ? (
             <div className="text-center py-8">
@@ -1070,7 +1425,11 @@ function App() {
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                {searchTerm ? "Arama sonucu bulunamadı" : "Henüz ürün yok"}
+                {searchTerm
+                  ? currentLanguage === "tr"
+                    ? "Arama sonucu bulunamadı"
+                    : "No search results found"
+                  : t("noProductsYet")}
               </p>
             </div>
           ) : (
@@ -1094,7 +1453,7 @@ function App() {
           <div id="install" className="mb-8">
             <div className="bg-white rounded-lg border p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-6">
-                📋 Kurulum Talimatları
+                📋 {t("installInstructions")}
               </h3>
 
               {/* Browser Tabs */}
@@ -1129,13 +1488,13 @@ function App() {
                   <div>
                     <div className="mb-4">
                       <h5 className="font-medium text-blue-600 text-lg">
-                        Chrome / Brave Kurulumu
+                        {t("chromeInstall")}
                       </h5>
                     </div>
 
                     <ol className="list-decimal list-inside ml-2 space-y-2">
                       <li className="flex items-center gap-2">
-                        <span>Extension dosyalarını indirin</span>
+                        <span>{t("downloadExtension")}</span>
                         <button
                           onClick={() =>
                             window.open(
@@ -1150,27 +1509,14 @@ function App() {
                             alt="Google Drive"
                             className="w-3 h-3"
                           />
-                          Chrome İndir
+                          {t("chromeDownload")}
                         </button>
                       </li>
-                      <li>
-                        Chrome/Brave'de{" "}
-                        <code className="bg-gray-200 px-2 py-1 rounded text-xs">
-                          chrome://extensions/
-                        </code>{" "}
-                        adresine gidin
-                      </li>
-                      <li>
-                        Sağ üst köşeden <strong>"Developer mode"</strong> açın
-                      </li>
-                      <li>
-                        <strong>"Load unpacked"</strong> butonuna tıklayın
-                      </li>
-                      <li>
-                        İndirdiğiniz ve açtığınız <strong>chrome</strong>{" "}
-                        klasörünü seçin
-                      </li>
-                      <li>✅ Extension aktif olacak ve kullanıma hazır!</li>
+                      <li>{t("step1Chrome")}</li>
+                      <li>{t("step2Chrome")}</li>
+                      <li>{t("step3Chrome")}</li>
+                      <li>{t("step4Chrome")}</li>
+                      <li>{t("step5Chrome")}</li>
                     </ol>
                   </div>
                 )}
@@ -1179,13 +1525,13 @@ function App() {
                   <div>
                     <div className="mb-4">
                       <h5 className="font-medium text-blue-600 text-lg">
-                        Safari Kurulumu
+                        {t("safariInstall")}
                       </h5>
                     </div>
 
                     <ol className="list-decimal list-inside ml-2 space-y-2">
                       <li className="flex items-center gap-2">
-                        <span>Safari extension dosyalarını indirin</span>
+                        <span>{t("downloadExtension")}</span>
                         <button
                           onClick={() =>
                             window.open(
@@ -1200,42 +1546,30 @@ function App() {
                             alt="Google Drive"
                             className="w-3 h-3"
                           />
-                          Safari İndir
+                          {t("safariDownload")}
                         </button>
                       </li>
                       <li>
-                        Safari menüsünden <strong>Ayarlar</strong> açın
+                        {t("step1Safari")}
                         <div className="ml-4 mt-1 text-xs text-gray-600">
                           (Sol üst köşedeki Safari menüsü)
                         </div>
                       </li>
-                      <li>
-                        <strong>Geliştirici</strong> sekmesine gidin
-                      </li>
-                      <li>
-                        <strong>"İmzalanmamış Genişletmelere İzin Ver"</strong>{" "}
-                        işaretleyin
-                      </li>
-                      <li>
-                        Altında çıkan <strong>"Genişletici Yükle"</strong>{" "}
-                        butonuna tıklayın
-                      </li>
-                      <li>
-                        İndirdiğiniz ve açtığınız <strong>safari</strong>{" "}
-                        klasörünü seçin
-                      </li>
-                      <li>
-                        <strong>"Tüm Sitelerde İzin Ver"</strong> seçin
-                      </li>
-                      <li>✅ Extension aktif olacak ve kullanıma hazır!</li>
+                      <li>{t("step2Safari")}</li>
+                      <li>{t("step3Safari")}</li>
+                      <li>{t("step4Safari")}</li>
+                      <li>{t("step5Safari")}</li>
+                      <li>{t("step6Safari")}</li>
+                      <li>{t("step7Safari")}</li>
                     </ol>
 
                     <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-amber-800 text-xs">
-                        <strong>💡 Safari Notu:</strong> Güncel Safari
-                        sürümlerinde "İmzalanmamış Genişletmelere İzin Ver"
-                        seçeneği görünmüyorsa, önce Safari {">"} Ayarlar {">"}{" "}
-                        Gelişmiş {">"} "Geliştir menüsünü göster" aktif edin.
+                        <strong>
+                          💡 Safari {currentLanguage === "tr" ? "Notu" : "Note"}
+                          :
+                        </strong>{" "}
+                        {t("safariNote")}
                       </p>
                     </div>
                   </div>
@@ -1244,13 +1578,15 @@ function App() {
                 {/* Kurulum Sonrası Kullanım Kılavuzu */}
                 <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h6 className="font-medium text-blue-800 mb-3">
-                    🎯 Kurulum Sonrası Kullanım Kılavuzu
+                    🎯 {t("usageGuide")}
                   </h6>
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-blue-700 mb-2">
-                        <strong>Adım 1:</strong> Herhangi bir e-ticaret sitesine
-                        gidin
+                        <strong>
+                          {currentLanguage === "tr" ? "Adım" : "Step"} 1:
+                        </strong>{" "}
+                        {t("usageStep1")}
                       </p>
                       <img
                         src="/images/guide-1.png"
@@ -1260,8 +1596,10 @@ function App() {
                     </div>
                     <div>
                       <p className="text-sm text-blue-700 mb-2">
-                        <strong>Adım 2:</strong> Ürün sayfasında "Heybeye Ekle"
-                        butonunu görürsünüz
+                        <strong>
+                          {currentLanguage === "tr" ? "Adım" : "Step"} 2:
+                        </strong>{" "}
+                        {t("usageStep2")}
                       </p>
                       <img
                         src="/images/guide-2.png"
@@ -1282,7 +1620,7 @@ function App() {
             <div id="technical" className="mb-8">
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  🔧 Geliştirici Bilgileri
+                  🔧 {t("developerInfo")}
                 </h3>
 
                 <div className="space-y-4 text-sm">
@@ -1360,24 +1698,25 @@ function App() {
                         onClick={handleRefresh}
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        🔄 Yenile
+                        🔄 {t("refresh")}
                       </button>
                       <button
                         onClick={handleTest}
                         className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        🧪 Test
+                        🧪 {t("test")}
                       </button>
                       <button
                         onClick={handleStorageDebug}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors duration-200"
                       >
-                        💾 Storage Debug
+                        💾 {t("storageDebug")}
                       </button>
                     </div>
                     <p className="text-xs text-red-600 mt-2">
-                      Bu butonlar sadece geliştirme amaçlıdır. Normal
-                      kullanıcılar için gizlidir.
+                      {currentLanguage === "tr"
+                        ? "Bu butonlar sadece geliştirme amaçlıdır. Normal kullanıcılar için gizlidir."
+                        : "These buttons are for development purposes only. They are hidden from normal users."}
                     </p>
                   </div>
                 </div>
