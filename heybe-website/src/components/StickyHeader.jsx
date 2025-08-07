@@ -85,16 +85,6 @@ function StickyHeader({ onScrollToSection }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => scrollToSection("uninstall")}
-              className="text-xs px-2 py-1 h-8"
-            >
-              <Trash2 className="w-3 h-3 mr-1" />
-              Kaldırma
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={handleDownloadExtension}
               className="text-xs px-2 py-1 h-8"
             >

@@ -105,12 +105,6 @@ function Sidebar({
       label: "Kurulum",
       action: () => scrollToSection("install"),
     },
-    {
-      id: "uninstall",
-      icon: "🗑️",
-      label: "Kaldırma",
-      action: () => scrollToSection("uninstall"),
-    },
     // Sadece admin kullanıcılar için "Geliştirici" menüsü
     ...(userRole === "admin"
       ? [

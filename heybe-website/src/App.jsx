@@ -24,6 +24,7 @@ function App() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showGuestWarning, setShowGuestWarning] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeInstallTab, setActiveInstallTab] = useState("chrome"); // 'chrome' veya 'safari'
 
   // AbortController için ref
   const abortControllerRef = React.useRef(null);
@@ -556,13 +557,15 @@ function App() {
     setDeletingProductId(productId);
     setIsDeleting(true);
     try {
-      const response = await fetch(DELETE_PRODUCT_ENDPOINT, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: productId, user_id: currentUserId }),
-      });
+      const response = await fetch(
+        `${DELETE_PRODUCT_ENDPOINT}?product_id=${productId}&user_id=${currentUserId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         console.log("✅ Ürün silindi:", productId);
@@ -1090,236 +1093,192 @@ function App() {
           {/* Kurulum Talimatları Section */}
           <div id="install" className="mb-8">
             <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">
                 📋 Kurulum Talimatları
               </h3>
 
-              <div className="space-y-4 text-sm">
-                <div>
-                  <h5 className="font-medium text-blue-600">Chrome/Brave:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>
-                      Extension dosyalarını indirin{" "}
-                      <button
-                        onClick={() =>
-                          window.open(
-                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
-                            "_blank"
-                          )
-                        }
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2 flex items-center gap-1"
-                      >
-                        <img
-                          src="/images/google-drive.png"
-                          alt="Google Drive"
-                          className="w-3 h-3"
-                        />
-                        İndir
-                      </button>
-                    </li>
-                    <li>
-                      Chrome'da{" "}
-                      <code className="bg-gray-200 px-1 rounded">
-                        chrome://extensions/
-                      </code>{" "}
-                      adresine gidin
-                    </li>
-                    <li>"Developer mode"u açın</li>
-                    <li>"Load unpacked" butonuna tıklayın</li>
-                    <li>İndirdiğiniz klasörü seçin</li>
-                  </ol>
+              {/* Browser Tabs */}
+              <div className="border-b border-gray-200 mb-6">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setActiveInstallTab("chrome")}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeInstallTab === "chrome"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Chrome / Brave
+                  </button>
+                  <button
+                    onClick={() => setActiveInstallTab("safari")}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeInstallTab === "safari"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Safari
+                  </button>
+                </nav>
+              </div>
 
-                  {/* Kurulum Sonrası Kullanım Kılavuzu */}
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h6 className="font-medium text-blue-800 mb-3">
-                      🎯 Kurulum Sonrası Kullanım Kılavuzu
-                    </h6>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-blue-700 mb-2">
-                          <strong>Adım 1:</strong> Herhangi bir e-ticaret
-                          sitesine gidin
-                        </p>
-                        <img
-                          src="/images/guide-1.png"
-                          alt="E-ticaret sitesi örneği"
-                          className="w-full max-w-md rounded border shadow-sm"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-700 mb-2">
-                          <strong>Adım 2:</strong> Ürün sayfasında "Heybeye
-                          Ekle" butonunu görürsünüz
-                        </p>
-                        <img
-                          src="/images/guide-2.png"
-                          alt="Heybeye Ekle butonu örneği"
-                          className="w-full max-w-md rounded border shadow-sm"
-                        />
-                      </div>
+              {/* Tab Content */}
+              <div className="space-y-4 text-sm">
+                {activeInstallTab === "chrome" && (
+                  <div>
+                    <div className="mb-4">
+                      <h5 className="font-medium text-blue-600 text-lg">
+                        Chrome / Brave Kurulumu
+                      </h5>
+                    </div>
+
+                    <ol className="list-decimal list-inside ml-2 space-y-2">
+                      <li className="flex items-center gap-2">
+                        <span>Extension dosyalarını indirin</span>
+                        <button
+                          onClick={() =>
+                            window.open(
+                              "https://drive.google.com/file/d/1bqPwzoUleB16plc97ALNqtfpZiPL1vIu/view?usp=drive_link",
+                              "_blank"
+                            )
+                          }
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                        >
+                          <img
+                            src="/images/google-drive.png"
+                            alt="Google Drive"
+                            className="w-3 h-3"
+                          />
+                          Chrome İndir
+                        </button>
+                      </li>
+                      <li>
+                        Chrome/Brave'de{" "}
+                        <code className="bg-gray-200 px-2 py-1 rounded text-xs">
+                          chrome://extensions/
+                        </code>{" "}
+                        adresine gidin
+                      </li>
+                      <li>
+                        Sağ üst köşeden <strong>"Developer mode"</strong> açın
+                      </li>
+                      <li>
+                        <strong>"Load unpacked"</strong> butonuna tıklayın
+                      </li>
+                      <li>
+                        İndirdiğiniz ve açtığınız <strong>chrome</strong>{" "}
+                        klasörünü seçin
+                      </li>
+                      <li>✅ Extension aktif olacak ve kullanıma hazır!</li>
+                    </ol>
+                  </div>
+                )}
+
+                {activeInstallTab === "safari" && (
+                  <div>
+                    <div className="mb-4">
+                      <h5 className="font-medium text-blue-600 text-lg">
+                        Safari Kurulumu
+                      </h5>
+                    </div>
+
+                    <ol className="list-decimal list-inside ml-2 space-y-2">
+                      <li className="flex items-center gap-2">
+                        <span>Safari extension dosyalarını indirin</span>
+                        <button
+                          onClick={() =>
+                            window.open(
+                              "https://drive.google.com/file/d/1MsRfPKFm1KArdO0tdGIys4z0BpjQuX05/view?usp=drive_link",
+                              "_blank"
+                            )
+                          }
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                        >
+                          <img
+                            src="/images/google-drive.png"
+                            alt="Google Drive"
+                            className="w-3 h-3"
+                          />
+                          Safari İndir
+                        </button>
+                      </li>
+                      <li>
+                        Safari menüsünden <strong>Ayarlar</strong> açın
+                        <div className="ml-4 mt-1 text-xs text-gray-600">
+                          (Sol üst köşedeki Safari menüsü)
+                        </div>
+                      </li>
+                      <li>
+                        <strong>Geliştirici</strong> sekmesine gidin
+                      </li>
+                      <li>
+                        <strong>"İmzalanmamış Genişletmelere İzin Ver"</strong>{" "}
+                        işaretleyin
+                      </li>
+                      <li>
+                        Altında çıkan <strong>"Genişletici Yükle"</strong>{" "}
+                        butonuna tıklayın
+                      </li>
+                      <li>
+                        İndirdiğiniz ve açtığınız <strong>safari</strong>{" "}
+                        klasörünü seçin
+                      </li>
+                      <li>
+                        <strong>"Tüm Sitelerde İzin Ver"</strong> seçin
+                      </li>
+                      <li>✅ Extension aktif olacak ve kullanıma hazır!</li>
+                    </ol>
+
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-amber-800 text-xs">
+                        <strong>💡 Safari Notu:</strong> Güncel Safari
+                        sürümlerinde "İmzalanmamış Genişletmelere İzin Ver"
+                        seçeneği görünmüyorsa, önce Safari {">"} Ayarlar {">"}{" "}
+                        Gelişmiş {">"} "Geliştir menüsünü göster" aktif edin.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Kurulum Sonrası Kullanım Kılavuzu */}
+                <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h6 className="font-medium text-blue-800 mb-3">
+                    🎯 Kurulum Sonrası Kullanım Kılavuzu
+                  </h6>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-blue-700 mb-2">
+                        <strong>Adım 1:</strong> Herhangi bir e-ticaret sitesine
+                        gidin
+                      </p>
+                      <img
+                        src="/images/guide-1.png"
+                        alt="E-ticaret sitesi örneği"
+                        className="w-full max-w-md rounded border shadow-sm"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-700 mb-2">
+                        <strong>Adım 2:</strong> Ürün sayfasında "Heybeye Ekle"
+                        butonunu görürsünüz
+                      </p>
+                      <img
+                        src="/images/guide-2.png"
+                        alt="Heybeye Ekle butonu örneği"
+                        className="w-full max-w-md rounded border shadow-sm"
+                      />
                     </div>
                   </div>
                 </div>
-
-                {/* Firefox ve Safari desteği şimdilik gizli
-                <div>
-                  <h5 className="font-medium text-orange-600">Firefox:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>
-                      Extension dosyalarını indirin{" "}
-                      <button
-                        onClick={() => {
-                          try {
-                            const link = document.createElement("a");
-                            link.href = "/extension-files.zip";
-                            link.download = "my-list-sepet-extension.zip";
-                            link.target = "_blank";
-                            link.onerror = () => {
-                              alert(
-                                "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                              );
-                            };
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            console.log(
-                              "📦 Extension dosyaları indiriliyor..."
-                            );
-                          } catch (error) {
-                            console.error("❌ Dosya indirme hatası:", error);
-                            alert(
-                              "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                            );
-                          }
-                        }}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
-                      >
-                        İndir
-                      </button>
-                      <button
-                        onClick={() =>
-                          window.open(
-                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
-                            "_blank"
-                          )
-                        }
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2 flex items-center gap-1"
-                      >
-                        <img src="/images/google-drive.png" alt="Google Drive" className="w-3 h-3" />
-                        İndir
-                      </button>
-                    </li>
-                    <li>
-                      Firefox'ta{" "}
-                      <code className="bg-gray-200 px-1 rounded">
-                        about:debugging
-                      </code>{" "}
-                      adresine gidin
-                    </li>
-                    <li>"This Firefox" sekmesine tıklayın</li>
-                    <li>"Load Temporary Add-on" butonuna tıklayın</li>
-                    <li>
-                      İndirdiğiniz <code>manifest.json</code> dosyasını seçin
-                    </li>
-                  </ol>
-                </div>
-
-                <div>
-                  <h5 className="font-medium text-green-600">Safari:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>
-                      Extension dosyalarını indirin{" "}
-                      <button
-                        onClick={() => {
-                          try {
-                            const link = document.createElement("a");
-                            link.href = "/extension-files.zip";
-                            link.download = "my-list-sepet-extension.zip";
-                            link.target = "_blank";
-                            link.onerror = () => {
-                              alert(
-                                "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                              );
-                            };
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            console.log(
-                              "📦 Extension dosyaları indiriliyor..."
-                            );
-                          } catch (error) {
-                            console.error("❌ Dosya indirme hatası:", error);
-                            alert(
-                              "Dosya indirme başarısız. Lütfen manuel kurulum talimatlarını takip edin."
-                            );
-                          }
-                        }}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2"
-                      >
-                        İndir
-                      </button>
-                      <button
-                        onClick={() =>
-                          window.open(
-                            "https://drive.google.com/file/d/1od3THFjoZpTJW7il8GBNQwEkUK4Wvb3S/view?usp=sharing",
-                            "_blank"
-                          )
-                        }
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 ml-2 flex items-center gap-1"
-                      >
-                        <img src="/images/google-drive.png" alt="Google Drive" className="w-3 h-3" />
-                        İndir
-                      </button>
-                    </li>
-                    <li>Safari'de "Develop" menüsünü açın</li>
-                    <li>"Show Extension Builder" seçin</li>
-                    <li>"+" butonuna tıklayın</li>
-                    <li>"Add Extension" seçin</li>
-                    <li>İndirdiğiniz klasörü seçin</li>
-                  </ol>
-                </div>
-                */}
               </div>
             </div>
           </div>
 
-          {/* Kaldırma Talimatları Section */}
-          <div id="uninstall" className="mb-8">
-            <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                🗑️ Kaldırma Talimatları
-              </h3>
-
-              <div className="space-y-4 text-sm">
-                <div>
-                  <h5 className="font-medium text-blue-600">Chrome/Brave:</h5>
-                  <ol className="list-decimal list-inside ml-2 space-y-1">
-                    <li>
-                      Chrome'da{" "}
-                      <code className="bg-gray-200 px-1 rounded">
-                        chrome://extensions/
-                      </code>{" "}
-                      adresine gidin
-                    </li>
-                    <li>"Heybe Extension"ı bulun</li>
-                    <li>"Remove" butonuna tıklayın</li>
-                    <li>Onay penceresinde "Remove" seçin</li>
-                  </ol>
-                </div>
-
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-yellow-800 text-xs">
-                    <strong>Not:</strong> Extension kaldırıldıktan sonra
-                    kaydedilen ürünler veritabanında kalır. Tamamen silmek için
-                    web sayfasından ürünleri tek tek silebilirsiniz.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Teknik Bilgiler Section - En alta - Herkes için görünür */}
-          {true && (
+          {/* Teknik Bilgiler Section - Sadece geliştirici için görünür */}
+          {(currentUserId === "sayacienes@gmail.com" ||
+            localStorage.getItem("currentUserId") ===
+              "sayacienes@gmail.com") && (
             <div id="technical" className="mb-8">
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">
