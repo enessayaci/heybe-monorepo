@@ -6,9 +6,11 @@
   "scripts": {
     "build": "extension build",
     "build:chrome": "npx extension build --browser=chrome",
-    "build:firefox": "npx extension build --browser=firefox",
-    "build:safari": "npx extension build --browser=safari",
+    "build:firefox": "npx extension build --browser=firefox && npm run fix:firefox-manifest",
+    "build:safari": "npx extension build --browser=safari && npm run fix:safari-manifest",
     "build:all": "npm run build:chrome && npm run build:firefox && npm run build:safari",
+    "fix:firefox-manifest": "node -e \"const fs=require('fs');const manifest={manifest_version:2,version:'1.0.0',name:'Heybe Extension',description:'Farklı sitelerdeki ürünleri Heybe\\'de topla.',icons:{'48':'icons/logo.png'},permissions:['activeTab','storage','<all_urls>'],browser_specific_settings:{gecko:{id:'tum-listem@extension.js',strict_min_version:'55.0'}},content_scripts:[{matches:['<all_urls>'],js:['content_scripts/content-0.js'],run_at:'document_idle',css:[]}],background:{scripts:['background/service_worker.js'],persistent:false},browser_action:{default_title:'Heybe Extension',default_icon:'icons/logo.png'},web_accessible_resources:['images/*']};fs.writeFileSync('dist/firefox/manifest.json',JSON.stringify(manifest,null,2))\"",
+    "fix:safari-manifest": "node -e \"const fs=require('fs');const manifest={manifest_version:2,version:'1.0.0',name:'Heybe Extension',description:'Farklı sitelerdeki ürünleri Heybe\\'de topla.',icons:{'48':'icons/logo.png'},permissions:['activeTab','storage','<all_urls>'],content_scripts:[{matches:['<all_urls>'],js:['content_scripts/content-0.js'],run_at:'document_idle',css:[]}],background:{scripts:['background/service_worker.js'],persistent:false},browser_action:{default_title:'Heybe Extension',default_icon:'icons/logo.png'},web_accessible_resources:['images/*']};fs.writeFileSync('dist/safari/manifest.json',JSON.stringify(manifest,null,2))\"",
     "dev": "extension dev",
     "preview": "extension preview",
     "test:chrome": "extension dev --browser=chrome",

@@ -71,6 +71,54 @@ npm build
 - ✅ **Cross-Browser**: Chrome, Firefox, Edge uyumlu
 - ✅ **Clean API**: localStorage bağımlılığı yok
 
+## Cross-Browser Build Talimatları
+
+### 🔧 Extension Build Etme:
+
+Repoyu çektikten sonra extension'ı build etmek için:
+
+```bash
+cd heybe-extension
+npm install
+```
+
+**Tüm tarayıcılar için build:**
+```bash
+npm run build:all
+```
+
+**Tek tarayıcı için build:**
+```bash
+npm run build:chrome    # Chrome için (Manifest V3)
+npm run build:firefox   # Firefox için (Manifest V2)
+npm run build:safari    # Safari için (Manifest V2)
+```
+
+### 📁 Build Çıktıları:
+
+```
+heybe-extension/dist/
+├── chrome/     # Chrome için hazır extension
+├── firefox/    # Firefox için hazır extension  
+└── safari/     # Safari için hazır extension
+```
+
+### 🚀 Extension Kurulum:
+
+#### Chrome:
+1. `chrome://extensions/` aç
+2. "Developer mode" açın
+3. "Load unpacked" → `dist/chrome` klasörünü seçin
+
+#### Firefox:
+1. `about:debugging` aç  
+2. "This Firefox" → "Load Temporary Add-on"
+3. `dist/firefox/manifest.json` dosyasını seçin
+
+#### Safari:
+1. Safari > Geliştir > Web Extension'ları
+2. `dist/safari` klasörünü yükleyin
+
 ## API Endpoint
 
 Backend: https://my-heybe.vercel.app/api/add-product
