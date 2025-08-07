@@ -37,13 +37,13 @@ function App() {
       // Chrome extension kontrolü
       if (
         typeof chrome !== "undefined" &&
-        chrome.runtime.id &&
+        chrome.runtime &&
         chrome.runtime.id
       ) {
         // Extension'a test mesajı gönder
         const response = await new Promise((resolve, reject) => {
-          chrome.runtime.id.sendMessage({ action: "test" }, (response) => {
-            if (chrome.runtime.id.lastError) {
+          chrome.runtime.sendMessage({ action: "test" }, (response) => {
+            if (chrome.runtime.lastError) {
               reject(new Error("Extension yanıt vermiyor"));
             } else {
               resolve(response);
@@ -174,8 +174,26 @@ function App() {
           console.log("✅ [useEffect] UUID mevcut, ürünler çekiliyor...");
           await fetchProducts();
         } else {
-          console.log("⚠️ [useEffect] UUID alınamadı, ürünler çekilemiyor");
-          setStatus("no-extension");
+          console.log(
+            "⚠️ [useEffect] UUID alınamadı, extension durumu kontrol ediliyor..."
+          );
+
+          // Extension gerçekten kurulu mu kontrol et
+          const extensionStatus = await checkExtensionAvailability();
+          console.log("🔍 [useEffect] Extension durumu:", extensionStatus);
+
+          if (!extensionStatus.available) {
+            console.log("❌ [useEffect] Extension kurulu değil");
+            setStatus("no-extension");
+          } else {
+            console.log(
+              "⚠️ [useEffect] Extension kurulu ama UUID alınamadı, error durumu"
+            );
+            setStatus("error");
+            setError(
+              "Extension kurulu ama UUID alınamadı. Lütfen extension'ı yeniden yükleyin."
+            );
+          }
         }
       } catch (e) {
         console.error("Initial fetch error", e);
@@ -246,7 +264,7 @@ function App() {
       return new Promise((resolve) => {
         if (
           typeof chrome !== "undefined" &&
-          chrome.runtime.id &&
+          chrome.runtime &&
           chrome.runtime.id
         ) {
           console.log("✅ [Basit] Extension zaten mevcut");
@@ -350,13 +368,13 @@ function App() {
         chrome.runtime.id
       ) {
         const response = await new Promise((resolve, reject) => {
-          chrome.runtime.id.sendMessage(
+          chrome.runtime.sendMessage(
             { action: "getActiveUUID" },
             (response) => {
-              if (chrome.runtime.id.lastError) {
+              if (chrome.runtime.lastError) {
                 console.log(
                   "❌ [Storage Debug] Extension mesaj hatası:",
-                  chrome.runtime.id.lastError
+                  chrome.runtime.lastError
                 );
                 reject(new Error("Extension bulunamadı"));
                 return;
@@ -992,6 +1010,49 @@ function App() {
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
               <p className="text-gray-500 mt-2">Ürünler yükleniyor...</p>
+            </div>
+          ) : status === "no-extension" ? (
+            <div className="text-center py-12">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-8 max-w-md mx-auto">
+                <div className="text-6xl mb-4">🚨</div>
+                <h3 className="text-xl font-semibold text-amber-800 mb-4">
+                  Eklenti Kurulu Değil
+                </h3>
+                <p className="text-amber-700 mb-6">
+                  Ürünlerinizi görmek ve yönetmek için önce browser eklentisini
+                  kurmanız gerekiyor.
+                </p>
+                <button
+                  onClick={() => {
+                    const installSection = document.getElementById("install");
+                    if (installSection) {
+                      installSection.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 mx-auto"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Kurulum Talimatlarını Gör
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-3 text-amber-600 hover:text-amber-800 text-sm underline"
+                >
+                  Eklentiyi kurduysanız sayfayı yenileyin
+                </button>
+              </div>
             </div>
           ) : status === "error" ? (
             <div className="text-center py-8">

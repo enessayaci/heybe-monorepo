@@ -5,12 +5,15 @@
   "description": "Heybe Browser Extension - Cross-browser shopping list management",
   "scripts": {
     "build": "extension build",
+    "build:chrome": "npx extension build --browser=chrome",
+    "build:firefox": "npx extension build --browser=firefox",
+    "build:safari": "npx extension build --browser=safari",
+    "build:all": "npm run build:chrome && npm run build:firefox && npm run build:safari",
     "dev": "extension dev",
     "preview": "extension preview",
     "test:chrome": "extension dev --browser=chrome",
     "test:firefox": "extension dev --browser=firefox",
-    "test:edge": "extension dev --browser=edge",
-    "package:all": "extension build --all"
+    "test:edge": "extension dev --browser=edge"
   },
   "devDependencies": {
     "extension": "^2.0.0-rc.38"
