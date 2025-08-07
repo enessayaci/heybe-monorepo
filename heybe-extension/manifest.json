@@ -2,8 +2,9 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "1.0.0",
-  "name": "Heybe Extension",
-  "description": "Farklı sitelerdeki ürünleri Heybe'de topla.",
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "icons": {
     "48": "images/logo.png"
   },
@@ -25,7 +26,7 @@
     "service_worker": "simpleBackground.js"
   },
   "action": {
-    "default_title": "Heybe Extension",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": "images/logo.png"
   },
   "web_accessible_resources": [

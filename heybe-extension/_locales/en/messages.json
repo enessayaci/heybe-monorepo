@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Heybe Extension"
+  },
+  "extensionDescription": {
+    "message": "Collect products from different sites in Heybe."
+  },
+  "actionTitle": {
+    "message": "Heybe Extension"
+  }
+}
