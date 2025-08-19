@@ -1,0 +1,53 @@
+{
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "email": "E-posta",
+    "password": "Şifre",
+    "loginRegister": "Giriş / Kayıt",
+    "logout": "Çıkış Yap"
+  },
+  "products": {
+    "myProducts": "Ürünlerim",
+    "addProduct": "Ürün Ekle",
+    "deleteProduct": "Ürünü Sil",
+    "noProducts": "Henüz ürün eklenmemiş",
+    "noSearchResults": "Arama sonucu bulunamadı",
+    "tryDifferentKeywords": "Farklı anahtar kelimeler deneyin",
+    "addFirstProduct": "İlk ürününüzü eklemek için bir e-ticaret sitesini ziyaret edin",
+    "product": "ürün",
+    "site": "site",
+    "totalProducts": "Toplam Ürün",
+    "totalSites": "Toplam Site"
+  },
+  "extension": {
+    "notFound": "Eklenti bulunamadı!",
+    "installExtension": "Eklentiyi Yükle",
+    "addToHeybe": "Heybeye Ekle",
+    "adding": "Ekleniyor...",
+    "viewList": "Listeyi Gör",
+    "productAdded": "Ürün Eklendi",
+    "productAddedToHeybe": "Ürün listenize eklendi!",
+    "productAddError": "Ürün eklenirken hata oluştu",
+    "error": "Hata!",
+    "loading": "Yükleniyor...",
+    "notProductPage": "Bu sayfa bir ürün sayfası değil",
+    "noProductInfo": "Ürün bilgileri alınamadı",
+    "networkError": "Ağ bağlantısı hatası",
+    "serverError": "Sunucu hatası",
+    "loginRequired": "Giriş yapmanız gerekiyor"
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata oluştu",
+    "success": "Başarılı",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "search": "Ara...",
+    "language": "Dil",
+    "turkish": "Türkçe",
+    "english": "English"
+  }
+}

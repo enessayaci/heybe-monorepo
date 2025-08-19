@@ -1,0 +1,122 @@
+{
+  "extensionName": {
+    "message": "Heybe",
+    "description": "Eklenti adı"
+  },
+  "extensionDescription": {
+    "message": "Ürünleri istek listenize kaydedin",
+    "description": "Eklenti açıklaması"
+  },
+  "saveProduct": {
+    "message": "Ürünü Kaydet",
+    "description": "Ürün kaydet buton metni"
+  },
+  "saving": {
+    "message": "Kaydediliyor...",
+    "description": "Kaydetme durumu metni"
+  },
+  "saved": {
+    "message": "Kaydedildi!",
+    "description": "Kaydedildi başarı metni"
+  },
+  "error": {
+    "message": "Hata oluştu",
+    "description": "Hata durumu metni"
+  },
+  "productSaved": {
+    "message": "Ürün başarıyla kaydedildi!",
+    "description": "Ürün kaydedildi başarı mesajı"
+  },
+  "loginRequired": {
+    "message": "Ürün kaydetmek için giriş yapın",
+    "description": "Giriş gerekli mesajı"
+  },
+  "networkError": {
+    "message": "Ağ hatası. Lütfen tekrar deneyin.",
+    "description": "Ağ hatası mesajı"
+  },
+  "invalidPage": {
+    "message": "Bu sayfada ürün bulunamadı",
+    "description": "Geçersiz sayfa mesajı"
+  },
+  "guestMode": {
+    "message": "Misafir Modu",
+    "description": "Misafir modu metni"
+  },
+  "login": {
+    "message": "Giriş Yap",
+    "description": "Giriş yap buton metni"
+  },
+  "register": {
+    "message": "Kayıt Ol",
+    "description": "Kayıt ol buton metni"
+  },
+  "authLoginRegister": {
+    "message": "Giriş Yap / Kayıt Ol",
+    "description": "Auth modal başlığı"
+  },
+  "authEmail": {
+    "message": "E-posta",
+    "description": "E-posta etiketi"
+  },
+  "authPassword": {
+    "message": "Şifre",
+    "description": "Şifre etiketi"
+  },
+  "authEmailPlaceholder": {
+    "message": "E-posta adresinizi girin",
+    "description": "E-posta input placeholder"
+  },
+  "authPasswordPlaceholder": {
+    "message": "Şifrenizi girin",
+    "description": "Şifre input placeholder"
+  },
+  "authLoginFailed": {
+    "message": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+    "description": "Giriş başarısız hata mesajı"
+  },
+  "authRegisterFailed": {
+    "message": "Kayıt başarısız. Lütfen tekrar deneyin.",
+    "description": "Kayıt başarısız hata mesajı"
+  },
+  "authContinueAsGuest": {
+    "message": "Misafir Olarak Devam Et",
+    "description": "Misafir olarak devam et buton metni"
+  },
+  "commonLoading": {
+    "message": "Yükleniyor...",
+    "description": "Yükleme durumu metni"
+  },
+  "commonNetworkError": {
+    "message": "Ağ hatası. Lütfen tekrar deneyin.",
+    "description": "Ağ hatası mesajı"
+  },
+  "productAdding": {
+    "message": "Ekleniyor...",
+    "description": "Ürün ekleme durumu"
+  },
+  "productAdded": {
+    "message": "Ürün Eklendi",
+    "description": "Ürün eklendi başarı"
+  },
+  "productAddError": {
+    "message": "Hata Oluştu",
+    "description": "Ürün ekleme hatası"
+  },
+  "productAddToHeybe": {
+    "message": "Heybeye Ekle",
+    "description": "Heybeye ekle buton metni"
+  },
+  "productViewList": {
+    "message": "Listeyi Gör",
+    "description": "Listeyi gör buton metni"
+  },
+  "authLogin": {
+    "message": "Giriş Yap",
+    "description": "Giriş yap sekmesi metni"
+  },
+  "authRegister": {
+    "message": "Kayıt Ol",
+    "description": "Kayıt ol sekmesi metni"
+  }
+}

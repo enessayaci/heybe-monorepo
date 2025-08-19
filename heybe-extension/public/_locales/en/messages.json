@@ -1,0 +1,122 @@
+{
+  "extensionName": {
+    "message": "Heybe",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "Save products to your wishlist",
+    "description": "Extension description"
+  },
+  "saveProduct": {
+    "message": "Save Product",
+    "description": "Save product button text"
+  },
+  "saving": {
+    "message": "Saving...",
+    "description": "Saving state text"
+  },
+  "saved": {
+    "message": "Saved!",
+    "description": "Saved success text"
+  },
+  "error": {
+    "message": "Error occurred",
+    "description": "Error state text"
+  },
+  "productSaved": {
+    "message": "Product saved successfully!",
+    "description": "Product saved success message"
+  },
+  "loginRequired": {
+    "message": "Please login to save products",
+    "description": "Login required message"
+  },
+  "networkError": {
+    "message": "Network error. Please try again.",
+    "description": "Network error message"
+  },
+  "invalidPage": {
+    "message": "No product found on this page",
+    "description": "Invalid page message"
+  },
+  "guestMode": {
+    "message": "Guest Mode",
+    "description": "Guest mode text"
+  },
+  "login": {
+    "message": "Login",
+    "description": "Login button text"
+  },
+  "register": {
+    "message": "Register",
+    "description": "Register button text"
+  },
+  "authLoginRegister": {
+    "message": "Login / Register",
+    "description": "Auth modal title"
+  },
+  "authEmail": {
+    "message": "Email",
+    "description": "Email label"
+  },
+  "authPassword": {
+    "message": "Password",
+    "description": "Password label"
+  },
+  "authEmailPlaceholder": {
+    "message": "Enter your email",
+    "description": "Email input placeholder"
+  },
+  "authPasswordPlaceholder": {
+    "message": "Enter your password",
+    "description": "Password input placeholder"
+  },
+  "authLoginFailed": {
+    "message": "Login failed. Please check your credentials.",
+    "description": "Login failed error message"
+  },
+  "authRegisterFailed": {
+    "message": "Registration failed. Please try again.",
+    "description": "Registration failed error message"
+  },
+  "authContinueAsGuest": {
+    "message": "Continue as Guest",
+    "description": "Continue as guest button text"
+  },
+  "commonLoading": {
+    "message": "Loading...",
+    "description": "Loading state text"
+  },
+  "commonNetworkError": {
+    "message": "Network error. Please try again.",
+    "description": "Network error message"
+  },
+  "productAdding": {
+    "message": "Adding...",
+    "description": "Product adding state"
+  },
+  "productAdded": {
+    "message": "Product Added",
+    "description": "Product added success"
+  },
+  "productAddError": {
+    "message": "Error Occurred",
+    "description": "Product add error"
+  },
+  "productAddToHeybe": {
+    "message": "Add to Heybe",
+    "description": "Add to Heybe button text"
+  },
+  "productViewList": {
+    "message": "View List",
+    "description": "View list button text"
+  },
+  "authLogin": {
+    "message": "Login",
+    "description": "Login tab text"
+  },
+  "authRegister": {
+    "message": "Register",
+    "description": "Register tab text"
+  }
+}

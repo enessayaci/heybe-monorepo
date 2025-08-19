@@ -1,0 +1,53 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "loginRegister": "Login / Register",
+    "logout": "Logout"
+  },
+  "products": {
+    "myProducts": "My Products",
+    "addProduct": "Add Product",
+    "deleteProduct": "Delete Product",
+    "noProducts": "No products added yet",
+    "noSearchResults": "No search results found",
+    "tryDifferentKeywords": "Try different keywords",
+    "addFirstProduct": "Visit an e-commerce site to add your first product",
+    "product": "product",
+    "site": "site",
+    "totalProducts": "Total Products",
+    "totalSites": "Total Sites"
+  },
+  "extension": {
+    "notFound": "Extension not found!",
+    "installExtension": "Install Extension",
+    "addToHeybe": "Add to Heybe",
+    "adding": "Adding...",
+    "viewList": "View List",
+    "productAdded": "Product Added",
+    "productAddedToHeybe": "Product added to your list!",
+    "productAddError": "Error adding product",
+    "error": "Error!",
+    "loading": "Loading...",
+    "notProductPage": "This page is not a product page",
+    "noProductInfo": "Could not get product information",
+    "networkError": "Network connection error",
+    "serverError": "Server error",
+    "loginRequired": "Login required"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search...",
+    "language": "Language",
+    "turkish": "Türkçe",
+    "english": "English"
+  }
+}
