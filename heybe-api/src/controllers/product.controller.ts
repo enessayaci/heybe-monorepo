@@ -12,7 +12,6 @@ import {
 } from "../services/product.service";
 import { AuthRequest } from "@/types/auth.types";
 
-// STANDART: Her zaman token'dan user_id al
 export const addProduct = async (req: AuthRequest, res: Response) => {
   try {
     const { name, price, image_urls, url, site } = req.body; // title yerine name

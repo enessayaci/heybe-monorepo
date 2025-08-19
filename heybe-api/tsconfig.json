@@ -9,8 +9,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "baseUrl": ".",
-    "typeRoots": ["./node_modules/@types"],
-    "types": [],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "paths": {
       "@/*": ["src/*"]
     }
