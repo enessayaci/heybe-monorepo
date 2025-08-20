@@ -36,6 +36,7 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
+  status?: number; // HTTP status code için eklenen alan
 }
 
 export interface AuthResponse {

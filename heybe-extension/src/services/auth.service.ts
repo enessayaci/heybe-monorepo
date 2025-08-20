@@ -3,24 +3,16 @@ import { storageService } from "./storage.service";
 import type { AuthResponse, GuestTokenResponse } from "./api.types";
 
 class AuthService {
-  private guestTokenCache: string | null = null;
-
   /**
    * Misafir token'ı garanti eder - yoksa oluşturur
    */
   async ensureGuestToken(): Promise<string> {
     try {
-      // Önce cache'den kontrol et
-      if (this.guestTokenCache) {
-        return this.guestTokenCache;
-      }
-
-      // Storage'dan kontrol et
+      // Her zaman storage'dan kontrol et
       const storedToken = await storageService.getToken();
       const isGuest = await storageService.getIsGuest();
 
       if (storedToken && isGuest) {
-        this.guestTokenCache = storedToken;
         return storedToken;
       }
 
@@ -33,9 +25,6 @@ class AuthService {
         // Storage'a kaydet
         await storageService.setToken(token);
         await storageService.setIsGuest(true);
-
-        // Cache'e kaydet
-        this.guestTokenCache = token;
 
         return token;
       }
@@ -76,9 +65,6 @@ class AuthService {
         await storageService.setToken(token);
         await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
 
-        // Cache'i temizle
-        this.guestTokenCache = null;
-
         return { success: true };
       }
 
@@ -118,9 +104,6 @@ class AuthService {
         await storageService.setToken(token);
         await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
 
-        // Cache'i temizle
-        this.guestTokenCache = null;
-
         return { success: true };
       }
 
@@ -148,9 +131,6 @@ class AuthService {
         // Misafir token'ı kaydet
         await storageService.setToken(token);
         await storageService.setIsGuest(true);
-
-        // Cache'i güncelle
-        this.guestTokenCache = token;
 
         return { success: true };
       }

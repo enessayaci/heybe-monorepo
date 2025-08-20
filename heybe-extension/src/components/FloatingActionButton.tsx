@@ -21,41 +21,86 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isProductPage, setIsProductPage] = useState(false);
+  const [authError, setAuthError] = useState<string>(""); // Yeni state eklendi
 
   useEffect(() => {
-    checkAuthStatus();
+    // API servisine unauthorized callback'i set et - hata mesajını da al
+    apiService.setUnauthorizedCallback((errorMessage?: string) => {
+      setIsAuthenticated(false);
+      setAuthError(errorMessage || "Kimlik doğrulama hatası");
+      setShowAuthModal(true);
+    });
+  
+    // İlk sayfa kontrolü
     checkPage();
-
-    // URL değişikliklerini dinle
-    const handleUrlChange = () => {
-      setTimeout(checkPage, 1000);
+  
+    let checkCount = 0;
+    let checkInterval: NodeJS.Timeout | null = null;
+  
+    const startUrlBasedCheck = () => {
+      // Önceki interval'ı temizle
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      
+      checkCount = 0;
+      
+      // 5 kere, 1'er saniye aralıklarla kontrol yap
+      checkInterval = setInterval(() => {
+        checkCount++;
+        checkPage();
+        
+        if (checkCount >= 5) {
+          clearInterval(checkInterval!);
+          checkInterval = null;
+        }
+      }, 1000);
     };
-
-    window.addEventListener("popstate", handleUrlChange);
-
-    // DOM değişikliklerini izle
-    const observer = new MutationObserver(() => {
-      setTimeout(checkPage, 500);
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
+  
+    // URL değişikliklerini yakalamak için event listener'lar
+    const handleUrlChange = () => {
+      startUrlBasedCheck();
+    };
+  
+    // Browser back/forward butonları için
+    window.addEventListener('popstate', handleUrlChange);
+  
+    // SPA navigation için history API'sini override et
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+  
+    history.pushState = function(...args) {
+      originalPushState.apply(this, args);
+      // Micro-task olarak çalıştır ki DOM güncellensin
+      setTimeout(handleUrlChange, 0);
+    };
+  
+    history.replaceState = function(...args) {
+      originalReplaceState.apply(this, args);
+      setTimeout(handleUrlChange, 0);
+    };
+  
+    // Cleanup function
     return () => {
-      window.removeEventListener("popstate", handleUrlChange);
-      observer.disconnect();
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      window.removeEventListener('popstate', handleUrlChange);
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
     };
   }, []);
 
+  // checkAuthStatus fonksiyonu artık sadece buton tıklandığında çağrılacak
   const checkAuthStatus = async () => {
     try {
       const isLoggedIn = await authService.isLoggedIn();
       setIsAuthenticated(isLoggedIn);
+      return isLoggedIn;
     } catch (error) {
       console.error("Error checking login status:", error);
       setIsAuthenticated(false);
+      return false;
     }
   };
 
@@ -217,9 +262,12 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     if (state === "loading") return;
 
     // Auth kontrolü - sadece skipAuth false ise kontrol et
-    if (!skipAuth && !isAuthenticated) {
-      const isGuest = await storageService.getIsGuest();
-      if (isGuest) {
+    if (!skipAuth) {
+      // Burada auth durumunu kontrol et
+      const isLoggedIn = await checkAuthStatus();
+
+      if (!isLoggedIn) {
+        // İlk kurulumda otomatik guest token oluşturmak yerine auth modal aç
         setShowAuthModal(true);
         return;
       }
@@ -228,15 +276,16 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     setState("loading");
 
     try {
-      // Misafir token yoksa oluştur
-      if (!isAuthenticated) {
+      // SORUN: Bu kısım skipAuth=true olsa bile çalışıyor!
+      // Sadece authenticated değilse guest token oluştur
+      if (!skipAuth && !isAuthenticated) {
         await authService.ensureGuestToken();
       }
 
       const productInfo = extractProductInfo();
       if (!productInfo) {
         setState("error");
-        setTimeout(() => setState("idle"), 3000);
+        setTimeout(() => setState("idle"), 4000); // 4 saniye
         return;
       }
 
@@ -244,33 +293,57 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       if (result.success) {
         setState("success");
         onProductSaved?.();
-        setTimeout(() => setState("idle"), 2000);
+        setTimeout(() => {
+          setState("idle");
+        }, 4000); // 4 saniye
       } else {
-        setState("error");
-        setTimeout(() => setState("idle"), 3000);
+        // 401 hatası durumunda auth modal zaten açılmış olacak
+        if (result.status !== 401) {
+          setState("error");
+          setTimeout(() => setState("idle"), 4000); // 4 saniye
+        } else {
+          setState("idle");
+        }
       }
     } catch (error) {
       console.error("Error adding product:", error);
       setState("error");
-      setTimeout(() => setState("idle"), 3000);
+      setTimeout(() => setState("idle"), 4000); // 4 saniye
     }
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-    setIsAuthenticated(true);
+
+    // Token'ı yeniden kontrol et - auth.service.ts zaten doğru token'ı kaydetmiş olmalı
+    const isLoggedIn = await authService.isLoggedIn();
+    setIsAuthenticated(isLoggedIn);
+
+    // Kısa bir bekleme sonrası ürünü ekle
     setTimeout(() => handleAddToHeybe(true), 500);
   };
 
   const handleContinueAsGuest = async () => {
     try {
+      setAuthError(""); // Clear error message
+
+      // Backend'den guest token iste ve storage'a kaydet
       await authService.ensureGuestToken();
+
+      // Auth state'ini güncelle - artık token var
+      setIsAuthenticated(true);
+
+      // Modal'ı kapat ve hata mesajını temizle
       setShowAuthModal(false);
+      setAuthError("");
+
+      // Ürünü ekle (skipAuth=true çünkü token zaten var)
       await handleAddToHeybe(true);
     } catch (error) {
       console.error("Guest continuation failed:", error);
+      setAuthError("Misafir token oluşturulamadı"); // Hata mesajını göster
       setState("error");
-      setTimeout(() => setState("idle"), 3000);
+      setTimeout(() => setState("idle"), 4000); // 4 saniye (8000'den değiştirildi)
     }
   };
 
@@ -282,7 +355,14 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     switch (state) {
       case "loading":
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%",
+            }}
+          >
             <Loader2
               style={{
                 width: "20px",
@@ -295,11 +375,32 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         );
       case "success":
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%",
+              position: "relative",
+            }}
+          >
             <Check
               style={{ width: "20px", height: "20px", color: "#10b981" }}
             />
-            <span>{t("productAdded")}</span>
+            <span style={{ color: "#10b981" }}>{t("productAdded")}</span>
+            {/* Success progress bar - 4 saniye boyunca dolan */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "-3px",
+                left: "0",
+                width: "0%", // Başlangıç width'ini 0% olarak ayarla
+                height: "3px",
+                backgroundColor: "#10b981",
+                borderRadius: "0 0 8px 8px",
+                animation: "successProgress 4s ease-out forwards", // 4 saniye
+              }}
+            />
           </div>
         );
       case "error":
@@ -332,7 +433,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     let color = "#374151";
 
     if (state === "success") {
-      backgroundColor = "#f8f9fa";
+      backgroundColor = "#f0fdf4"; // Açık yeşil arka plan
       color = "#10b981";
     }
 
@@ -355,6 +456,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       position: "relative" as const,
       fontFamily:
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      opacity: state === "loading" ? 0.7 : 1, // Loading state'inde opacity azalt
     };
   };
 
@@ -368,7 +470,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
     borderRadius: "24px 0 0 24px",
     overflow: "visible" as const,
-    marginRight: isHovered ? "0px" : "-280px",
+    marginRight:
+      isHovered || state === "success" || state === "error" ? "0px" : "-280px",
     transition: "margin-right 0.3s cubic-bezier(.4,0,.2,1)",
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -407,7 +510,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         {/* Sol taraf - "Heybeye Ekle" butonu */}
         <button
           onClick={() => handleAddToHeybe()}
-          disabled={state === "loading"}
+          disabled={state === "loading" || state === "success" || state === "error"} // Loading, success ve error durumlarında disable et
           style={getAddButtonStyle()}
         >
           {getAddButtonContent()}
@@ -425,9 +528,13 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       {showAuthModal && (
         <AuthModal
           isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
+          onClose={() => {
+            setShowAuthModal(false);
+            setAuthError(""); // Modal kapanırken hata mesajını temizle
+          }}
           onContinueAsGuest={handleContinueAsGuest}
           onAuthSuccess={handleAuthSuccess}
+          error={authError} // Hata mesajını modal'a geç
         />
       )}
 
@@ -435,6 +542,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes successProgress {
+          0% { width: 0%; }
+          100% { width: 100%; }
         }
       `}</style>
     </>

@@ -24,6 +24,10 @@ class StorageService {
     return result === true;
   }
 
+  async removeIsGuest(): Promise<void> {
+    await storage.removeItem("local:is_guest");
+  }
+
   // Kullanıcı bilgileri işlemleri
   async setUser(user: any): Promise<void> {
     await storage.setItem("local:user", user);

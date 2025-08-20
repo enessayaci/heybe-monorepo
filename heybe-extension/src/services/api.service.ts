@@ -9,9 +9,16 @@ import type {
 } from "./api.types";
 
 import { storage } from "wxt/storage";
+import { storageService } from "./storage.service";
 
 class ApiService {
   private readonly baseUrl = "https://heybe-monorepo.onrender.com/api";
+  private onUnauthorized?: (errorMessage?: string) => void;
+
+  // 401 hatası durumunda çağrılacak callback'i set etme
+  setUnauthorizedCallback(callback: (errorMessage?: string) => void) {
+    this.onUnauthorized = callback;
+  }
 
   private async request<T>(
     endpoint: string,
@@ -33,9 +40,16 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
+        // 401 hatası durumunda token'ı sil ve callback çağır
+        if (response.status === 401) {
+          const errorMessage = data.message || "Kimlik doğrulama hatası";
+          await this.handleUnauthorized(errorMessage);
+        }
+        
         return {
           success: false,
           message: data.message || "Request failed",
+          status: response.status,
         };
       }
 
@@ -48,6 +62,21 @@ class ApiService {
         success: false,
         message: error instanceof Error ? error.message : "Network error",
       };
+    }
+  }
+
+  private async handleUnauthorized(errorMessage?: string) {
+    try {
+      // Storage'ı tamamen temizle - ilk yükleme gibi
+      await storageService.removeToken();
+      await storageService.removeIsGuest();
+      
+      // Auth modal'ı aç ve hata mesajını göster
+      if (this.onUnauthorized) {
+        this.onUnauthorized(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error handling unauthorized:', error);
     }
   }
 
@@ -104,7 +133,7 @@ class ApiService {
     email: string,
     password: string
   ): Promise<ApiResponse<AuthResponse>> {
-    return this.request<AuthResponse>("/auth/login-with-guest-transfer", {
+    return this.request<AuthResponse>("/auth/login-with-transfer", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -115,7 +144,7 @@ class ApiService {
     email: string,
     password: string
   ): Promise<ApiResponse<AuthResponse>> {
-    return this.request<AuthResponse>("/auth/register-with-guest-transfer", {
+    return this.request<AuthResponse>("/auth/register-with-transfer", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });

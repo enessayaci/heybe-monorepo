@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { authService } from "../services/auth.service";
 import { t } from "../lib/i18n";
 
@@ -7,6 +7,7 @@ interface AuthModalProps {
   onClose: () => void;
   onContinueAsGuest: () => void;
   onAuthSuccess: () => void;
+  error?: string; // Yeni prop eklendi
 }
 
 export function AuthModal({
@@ -14,12 +15,20 @@ export function AuthModal({
   onClose,
   onContinueAsGuest,
   onAuthSuccess,
+  error: externalError, // Dışarıdan gelen hata
 }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("login");
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ email: "", password: "" });
+
+  // External error geldiğinde internal error'u güncelle
+  useEffect(() => {
+    if (externalError) {
+      setError(externalError);
+    }
+  }, [externalError]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
