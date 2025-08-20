@@ -74,7 +74,7 @@ class AuthService {
 
         // Kullanıcı bilgilerini kaydet
         await storageService.setToken(token);
-        await storageService.setIsGuest(false);
+        await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
 
         // Cache'i temizle
         this.guestTokenCache = null;
@@ -116,7 +116,7 @@ class AuthService {
 
         // Kullanıcı bilgilerini kaydet
         await storageService.setToken(token);
-        await storageService.setIsGuest(false);
+        await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
 
         // Cache'i temizle
         this.guestTokenCache = null;

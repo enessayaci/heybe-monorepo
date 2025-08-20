@@ -17,7 +17,12 @@ export const authenticateToken = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
+
+    console.log('🔍 Auth Debug:', {
+      authHeader,
+      token: token ? 'Present' : 'Missing'
+    });
 
     if (!token) {
       return res.status(401).json({
@@ -27,7 +32,10 @@ export const authenticateToken = async (
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    console.log('🔓 Token decoded:', decoded);
+    
     const user = await findUserById(decoded.userId);
+    console.log('👤 User found:', user ? { id: user.id, email: user.email, is_guest: user.is_guest } : 'null');
 
     if (!user) {
       return res.status(401).json({
@@ -44,6 +52,7 @@ export const authenticateToken = async (
 
     next();
   } catch (error) {
+    console.error('❌ Auth middleware error:', error);
     return res.status(403).json({
       success: false,
       message: 'Geçersiz veya süresi dolmuş token'

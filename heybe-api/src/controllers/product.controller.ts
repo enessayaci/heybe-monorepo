@@ -14,41 +14,64 @@ import { AuthRequest } from "@/types/auth.types";
 
 export const addProduct = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, price, image_urls, url, site } = req.body; // title yerine name
+    const { name, price, image_urls, url, site } = req.body;
     const tokenUserId = req.user!.id;
 
-    // Validation
-    if (!name || !price || !url || !site) { // title yerine name
+    // Sadece URL zorunlu - null/undefined kontrolü
+    if (url == null) {
       return res.status(400).json({
         success: false,
-        message: "name, price, url ve site alanları gereklidir", // title yerine name
+        message: "URL alanı gereklidir",
+      });
+    }
+
+    // URL için boş string kontrolü (zorunlu alan)
+    if (typeof url === "string" && url.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "URL boş olamaz",
       });
     }
 
     // URL format kontrolü
-    const urlRegex = /^https?:\/\/.+/;
-    if (!urlRegex.test(url)) {
-      return res.status(400).json({
-        success: false,
-        message: "Geçerli bir URL giriniz (http:// veya https:// ile başlamalı)",
-      });
+    if (typeof url === "string" && url.trim() !== "") {
+      const urlRegex = /^https?:\/\/.+/;
+      if (!urlRegex.test(url)) {
+        return res.status(400).json({
+          success: false,
+          message: "Geçerli bir URL giriniz (http:// veya https:// ile başlamalı)",
+        });
+      }
     }
 
     // Image URLs array kontrolü
-    if (image_urls && !Array.isArray(image_urls)) {
+    if (image_urls != null && !Array.isArray(image_urls)) {
       return res.status(400).json({
         success: false,
         message: "image_urls bir dizi olmalıdır",
       });
     }
 
+    // Price işleme - null/undefined/boş string durumlarını ele al
+    const processedPrice = (() => {
+      if (price == null) return 0;
+      if (typeof price === "number") return price;
+      if (typeof price === "string") {
+        const trimmed = price.trim();
+        if (trimmed === "") return 0;
+        const parsed = parseFloat(trimmed);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    })();
+
     const productData: CreateProductData = {
       user_id: tokenUserId,
-      name, // title yerine direkt name kullan
-      price,
+      name: name && typeof name === "string" ? name.trim() : name || "",
+      price: processedPrice.toString(),
       image_urls: image_urls || [],
-      url,
-      site,
+      url: typeof url === "string" ? url.trim() : url,
+      site: site && typeof site === "string" ? site.trim() : site || "",
     };
 
     const newProduct = await createProduct(productData);
@@ -179,7 +202,8 @@ export const updateUserProduct = async (req: AuthRequest, res: Response) => {
       if (!urlRegex.test(url)) {
         return res.status(400).json({
           success: false,
-          message: "Geçerli bir URL giriniz (http:// veya https:// ile başlamalı)",
+          message:
+            "Geçerli bir URL giriniz (http:// veya https:// ile başlamalı)",
         });
       }
     }
@@ -281,7 +305,10 @@ export const deleteUserProduct = async (req: AuthRequest, res: Response) => {
 };
 
 // STANDART: Token'dan user_id al
-export const getProductsBySiteFilter = async (req: AuthRequest, res: Response) => {
+export const getProductsBySiteFilter = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { site } = req.params;
     const tokenUserId = req.user!.id; // Token'dan user_id
@@ -295,7 +322,7 @@ export const getProductsBySiteFilter = async (req: AuthRequest, res: Response) =
 
     // Token'dan gelen user_id ile sadece kendi ürünlerini getir
     const allProducts = await getProductsByUserId(tokenUserId);
-    const products = allProducts.filter(product => product.site === site);
+    const products = allProducts.filter((product) => product.site === site);
 
     res.status(200).json({
       success: true,
@@ -312,7 +339,10 @@ export const getProductsBySiteFilter = async (req: AuthRequest, res: Response) =
 };
 
 // STANDART: Token'dan user_id al
-export const deleteAllUserProducts = async (req: AuthRequest, res: Response) => {
+export const deleteAllUserProducts = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const tokenUserId = req.user!.id; // Token'dan user_id
 

@@ -216,10 +216,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const handleAddToHeybe = async (skipAuth = false) => {
     if (state === "loading") return;
 
-    // Auth kontrolü - misafir token yoksa modal aç
+    // Auth kontrolü - sadece skipAuth false ise kontrol et
     if (!skipAuth && !isAuthenticated) {
-      const hasGuestToken = await authService.hasValidToken();
-      if (!hasGuestToken) {
+      const isGuest = await storageService.getIsGuest();
+      if (isGuest) {
         setShowAuthModal(true);
         return;
       }
