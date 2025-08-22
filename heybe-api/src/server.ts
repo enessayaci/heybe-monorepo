@@ -14,21 +14,19 @@ const port = process.env.PORT || 3000;
 
 // CORS ayarları - Chrome uzantısı için özel yapılandırma
 // CORS ayarları - Tüm domainlerden istek kabul et
+// CORS ayarlarını daha spesifik yap
 const corsOptions = {
-  origin: '*', // Tüm domainlerden istek kabul et
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin'
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000', 
+    'https://heybe-website.vercel.app', // production domain
+    'https://your-production-domain.com'
   ],
-  credentials: false, // origin: '*' kullanırken credentials false olmalı
-  optionsSuccessStatus: 200
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
 
-// Middleware'ler
 app.use(cors(corsOptions));
 app.use(express.json());
 

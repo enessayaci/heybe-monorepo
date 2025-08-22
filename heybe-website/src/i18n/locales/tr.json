@@ -1,53 +1,101 @@
 {
-  "auth": {
-    "login": "Giriş Yap",
-    "register": "Kayıt Ol",
+  "common": {
+    "loading": "Yükleniyor",
+    "save": "Kaydet",
+    "language": "Dil",
+    "success": "Başarılı",
+    "navigation": "Navigasyon",
+    "cancel": "İptal",
+    "delete": "Sil",
     "email": "E-posta",
     "password": "Şifre",
+    "welcome": "Heybe'ye Hoş Geldiniz",
+    "description": "Ürünlerinizi takip edin ve yönetin",
+    "comingSoon": "Yakında",
+    "retry": "Tekrar Dene"
+  },
+  "auth": {
+    "login": "Giriş",
+    "register": "Kayıt",
     "loginRegister": "Giriş / Kayıt",
-    "logout": "Çıkış Yap"
+    "profile": "Profil",
+    "emailRequired": "E-posta gerekli",
+    "passwordRequired": "Şifre gerekli",
+    "loginError": "Giriş yapılırken hata oluştu",
+    "registerError": "Kayıt olurken hata oluştu"
   },
   "products": {
+    "title": "Ürünler",
+    "subtitle": "Takip ettiğiniz ürünleri görüntüleyin",
     "myProducts": "Ürünlerim",
     "addProduct": "Ürün Ekle",
-    "deleteProduct": "Ürünü Sil",
-    "noProducts": "Henüz ürün eklenmemiş",
-    "noSearchResults": "Arama sonucu bulunamadı",
-    "tryDifferentKeywords": "Farklı anahtar kelimeler deneyin",
-    "addFirstProduct": "İlk ürününüzü eklemek için bir e-ticaret sitesini ziyaret edin",
-    "product": "ürün",
-    "site": "site",
-    "totalProducts": "Toplam Ürün",
-    "totalSites": "Toplam Site"
+    "productList": "Ürün Listesi",
+    "productCount": "{{count}} ürün listelendi",
+    "noProducts": "Henüz ürün yok",
+    "noProductsMessage": "Ürünleriniz eklenti aracılığıyla otomatik olarak eklenecek",
+    "viewProducts": "Ürünleri Görüntüle",
+    "empty": {
+      "title": "Henüz ürün yok",
+      "description": "Ürünleriniz eklenti aracılığıyla otomatik olarak eklenecek"
+    },
+    "deleteAll": "Tümünü Sil",
+    "deleteAllConfirmTitle": "Tüm ürünleri sil?",
+    "deleteAllConfirmMessage": "Bu işlem geri alınamaz. Tüm ürünleriniz kalıcı olarak silinecek.",
+    "deleteConfirmTitle": "Ürünü sil?",
+    "deleteConfirmMessage": "\"{{productName}}\" ürününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "errors": {
+      "title": "Hata Oluştu",
+      "loadFailed": "Ürünler yüklenirken hata oluştu",
+      "deleteFailed": "Ürün silinirken hata oluştu",
+      "deleteAllFailed": "Ürünler silinirken hata oluştu",
+      "unexpectedError": "Beklenmeyen bir hata oluştu"
+    }
   },
   "extension": {
-    "notFound": "Eklenti bulunamadı!",
-    "installExtension": "Eklentiyi Yükle",
-    "addToHeybe": "Heybeye Ekle",
-    "adding": "Ekleniyor...",
-    "viewList": "Listeyi Gör",
-    "productAdded": "Ürün Eklendi",
-    "productAddedToHeybe": "Ürün listenize eklendi!",
-    "productAddError": "Ürün eklenirken hata oluştu",
-    "error": "Hata!",
-    "loading": "Yükleniyor...",
-    "notProductPage": "Bu sayfa bir ürün sayfası değil",
-    "noProductInfo": "Ürün bilgileri alınamadı",
-    "networkError": "Ağ bağlantısı hatası",
-    "serverError": "Sunucu hatası",
-    "loginRequired": "Giriş yapmanız gerekiyor"
+    "addToHeybe": "Heybe'ye Ekle",
+    "install": "Eklentiyi Yükle"
   },
-  "common": {
-    "loading": "Yükleniyor...",
-    "error": "Hata oluştu",
-    "success": "Başarılı",
-    "cancel": "İptal",
-    "save": "Kaydet",
-    "delete": "Sil",
-    "edit": "Düzenle",
-    "search": "Ara...",
-    "language": "Dil",
-    "turkish": "Türkçe",
-    "english": "English"
+  "setup": {
+    "title": "Kurulum",
+    "extensionInstall": "Eklenti Kurulumu",
+    "installDescription": "Heybe eklentisini tarayıcınıza yükleyin",
+    "installExtension": "Eklentiyi Kur",
+    "chrome": "Chrome",
+    "brave": "Brave",
+    "edge": "Edge",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "browserPermissions": "Tarayıcı İzinleri",
+    "permissionsDescription": "Eklentinin düzgün çalışması için aşağıdaki izinlerin verilmesi gerekir:",
+    "chromePermissions": {
+      "title": "Chrome İzinleri",
+      "steps": [
+        "Chrome Web Mağazası'ndan Heybe eklentisini indirin ve kurun"
+      ]
+    },
+    "bravePermissions": {
+      "title": "Brave İzinleri", 
+      "steps": [
+        "Chrome Web Mağazası'ndan Heybe eklentisini indirin ve kurun"
+      ]
+    },
+    "edgePermissions": {
+      "title": "Edge İzinleri",
+      "steps": [
+        "Microsoft Edge Eklentiler mağazasından Heybe eklentisini indirin ve kurun"
+      ]
+    },
+    "firefoxPermissions": {
+      "title": "Firefox İzinleri",
+      "steps": [
+        "Firefox Eklentiler mağazasından Heybe eklentisini indirin ve kurun"
+      ]
+    },
+    "safariPermissions": {
+      "title": "Safari İzinleri",
+      "steps": [
+        "App Store'dan Heybe eklentisini indirin ve kurun"
+      ]
+    }
   }
 }

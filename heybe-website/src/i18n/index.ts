@@ -1,5 +1,5 @@
-export { useTranslation } from './hooks/useTranslation'
-export type { Language } from './hooks/useTranslation'
+export { useTranslation, TranslationProvider } from './context'
+export type { Language } from './context'
 
 // Desteklenen diller
 export const SUPPORTED_LANGUAGES = ['tr', 'en'] as const

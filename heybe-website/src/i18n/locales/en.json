@@ -1,53 +1,101 @@
 {
+  "common": {
+    "loading": "Loading",
+    "save": "Save",
+    "language": "Language",
+    "success": "Success",
+    "navigation": "Navigation",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "email": "Email",
+    "password": "Password",
+    "welcome": "Welcome to Heybe",
+    "description": "Track and manage your products",
+    "comingSoon": "Coming Soon",
+    "retry": "Retry"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
-    "email": "Email",
-    "password": "Password",
     "loginRegister": "Login / Register",
-    "logout": "Logout"
+    "profile": "Profile",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "loginError": "Login failed",
+    "registerError": "Registration failed"
   },
   "products": {
+    "title": "Products",
+    "subtitle": "View your tracked products",
     "myProducts": "My Products",
     "addProduct": "Add Product",
-    "deleteProduct": "Delete Product",
-    "noProducts": "No products added yet",
-    "noSearchResults": "No search results found",
-    "tryDifferentKeywords": "Try different keywords",
-    "addFirstProduct": "Visit an e-commerce site to add your first product",
-    "product": "product",
-    "site": "site",
-    "totalProducts": "Total Products",
-    "totalSites": "Total Sites"
+    "productList": "Product List",
+    "productCount": "{{count}} products listed",
+    "noProducts": "No products yet",
+    "noProductsMessage": "Your products will be automatically added via the extension",
+    "viewProducts": "View Products",
+    "empty": {
+      "title": "No products yet",
+      "description": "Your products will be automatically added via the extension"
+    },
+    "deleteAll": "Delete All",
+    "deleteAllConfirmTitle": "Delete all products?",
+    "deleteAllConfirmMessage": "This action cannot be undone. All your products will be permanently deleted.",
+    "deleteConfirmTitle": "Delete product?",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone.",
+    "errors": {
+      "title": "Error Occurred",
+      "loadFailed": "Failed to load products",
+      "deleteFailed": "Failed to delete product",
+      "deleteAllFailed": "Failed to delete products",
+      "unexpectedError": "An unexpected error occurred"
+    }
   },
   "extension": {
-    "notFound": "Extension not found!",
-    "installExtension": "Install Extension",
     "addToHeybe": "Add to Heybe",
-    "adding": "Adding...",
-    "viewList": "View List",
-    "productAdded": "Product Added",
-    "productAddedToHeybe": "Product added to your list!",
-    "productAddError": "Error adding product",
-    "error": "Error!",
-    "loading": "Loading...",
-    "notProductPage": "This page is not a product page",
-    "noProductInfo": "Could not get product information",
-    "networkError": "Network connection error",
-    "serverError": "Server error",
-    "loginRequired": "Login required"
+    "install": "Install Extension"
   },
-  "common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "search": "Search...",
-    "language": "Language",
-    "turkish": "Türkçe",
-    "english": "English"
+  "setup": {
+    "title": "Setup",
+    "extensionInstall": "Extension Installation",
+    "installDescription": "Install the Heybe extension to your browser",
+    "installExtension": "Install Extension",
+    "chrome": "Chrome",
+    "brave": "Brave",
+    "edge": "Edge",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "browserPermissions": "Browser Permissions",
+    "permissionsDescription": "The following permissions need to be granted for the extension to work properly:",
+    "chromePermissions": {
+      "title": "Chrome Permissions",
+      "steps": [
+        "Download and install Heybe extension from Chrome Web Store"
+      ]
+    },
+    "bravePermissions": {
+      "title": "Brave Permissions",
+      "steps": [
+        "Download and install Heybe extension from Chrome Web Store"
+      ]
+    },
+    "edgePermissions": {
+      "title": "Edge Permissions",
+      "steps": [
+        "Download and install Heybe extension from Microsoft Edge Add-ons store"
+      ]
+    },
+    "firefoxPermissions": {
+      "title": "Firefox Permissions",
+      "steps": [
+        "Download and install Heybe extension from Firefox Add-ons store"
+      ]
+    },
+    "safariPermissions": {
+      "title": "Safari Permissions",
+      "steps": [
+        "Download and install Heybe extension from App Store"
+      ]
+    }
   }
 }
