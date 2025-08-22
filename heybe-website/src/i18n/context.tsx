@@ -28,14 +28,25 @@ const getNestedValue = (obj: any, path: string, returnObjects = false): any => {
   return result;
 };
 
-interface TranslationOptions {
-  returnObjects?: boolean;
+// Interpolation için parametreler
+interface InterpolationParams {
+  [key: string]: string | number;
 }
 
+interface TranslationOptions {
+  returnObjects?: boolean;
+  [key: string]: any; // Index signature eklendi
+}
+
+// t fonksiyonu için overload'lar
 interface TranslationContextType {
   language: Language;
   changeLanguage: (lang: Language) => void;
-  t: (key: TranslationKey, options?: TranslationOptions) => any;
+  t: {
+    (key: TranslationKey, options?: TranslationOptions): any;
+    (key: TranslationKey, params: InterpolationParams): string;
+    (key: TranslationKey, params: InterpolationParams, options: TranslationOptions): any;
+  };
   isLoading: boolean;
 }
 
@@ -64,8 +75,35 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
     localStorage.setItem('heybe-language', lang);
   };
 
-  const t = (key: TranslationKey, options?: TranslationOptions): any => {
-    return getNestedValue(translations[language], key, options?.returnObjects);
+  // Interpolation desteği ile t fonksiyonu
+  const t = (key: TranslationKey, paramsOrOptions?: InterpolationParams | TranslationOptions, options?: TranslationOptions): any => {
+    let interpolationParams: InterpolationParams = {};
+    let translationOptions: TranslationOptions = {};
+
+    // Parametreleri ayır
+    if (paramsOrOptions) {
+      if ('returnObjects' in paramsOrOptions) {
+        // İlk parametre TranslationOptions
+        translationOptions = paramsOrOptions;
+      } else {
+        // İlk parametre InterpolationParams
+        interpolationParams = paramsOrOptions;
+        if (options) {
+          translationOptions = options;
+        }
+      }
+    }
+
+    let result = getNestedValue(translations[language], key, translationOptions.returnObjects);
+    
+    // String ise interpolation yap
+    if (typeof result === 'string' && Object.keys(interpolationParams).length > 0) {
+      result = result.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
+        return interpolationParams[paramKey]?.toString() || match;
+      });
+    }
+    
+    return result;
   };
 
   const value = {

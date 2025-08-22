@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from '@/i18n/hooks/useTranslation'
+import { useAuth } from '@/hooks/useAuth'
 import {
   Dialog,
   DialogContent,
@@ -28,54 +29,43 @@ type FormData = {
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess, defaultMode = 'login' }: AuthModalProps) {
   const { t } = useTranslation()
+  const { login, register, isLoading, error, clearError } = useAuth()
   const [activeTab, setActiveTab] = useState<AuthMode>(defaultMode)
   const [loginData, setLoginData] = useState<FormData>({ email: '', password: '' })
   const [registerData, setRegisterData] = useState<FormData>({ email: '', password: '' })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    clearError()
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Mock success
+    const success = await login({
+      email: loginData.email,
+      password: loginData.password
+    })
+
+    if (success) {
       onAuthSuccess()
       onClose()
-      
-    } catch (error) {
-      setError(t('auth.loginError'))
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    clearError()
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Mock success
+    const success = await register({
+      email: registerData.email,
+      password: registerData.password
+    })
+
+    if (success) {
       onAuthSuccess()
       onClose()
-      
-    } catch (error) {
-      setError(t('auth.registerError'))
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const handleClose = () => {
-    setError('')
+    clearError()
     setLoginData({ email: '', password: '' })
     setRegisterData({ email: '', password: '' })
     onClose()
@@ -96,7 +86,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, defaultMode = 'login
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('login')}
-                className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                   activeTab === 'login'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -106,7 +96,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, defaultMode = 'login
               </button>
               <button
                 onClick={() => setActiveTab('register')}
-                className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                   activeTab === 'register'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -159,7 +149,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, defaultMode = 'login
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer" 
                   disabled={isLoading}
                 >
                   {isLoading ? t('common.loading') : t('auth.login')}
@@ -202,7 +192,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, defaultMode = 'login
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer" 
                   disabled={isLoading}
                 >
                   {isLoading ? t('common.loading') : t('auth.register')}

@@ -55,7 +55,7 @@ export const useAuth = (): UseAuthReturn => {
         await updateAuthState();
         return true;
       } else {
-        setError(response.message || 'Login failed');
+        setError(response.message || 'Login failed'); // Backend mesajı öncelikli
         return false;
       }
     } catch (err) {

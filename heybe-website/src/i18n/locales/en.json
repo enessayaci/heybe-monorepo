@@ -12,7 +12,8 @@
     "welcome": "Welcome to Heybe",
     "description": "Track and manage your products",
     "comingSoon": "Coming Soon",
-    "retry": "Retry"
+    "retry": "Retry",
+    "tryAgain": "Try Again"
   },
   "auth": {
     "login": "Login",
@@ -32,7 +33,8 @@
     "productList": "Product List",
     "productCount": "{{count}} products listed",
     "noProducts": "No products yet",
-    "noProductsMessage": "Your products will be automatically added via the extension",
+    "noProductsDescription": "Your products will be automatically added via the extension",
+    "addFirstProduct": "Add Your First Product",
     "viewProducts": "View Products",
     "empty": {
       "title": "No products yet",
@@ -41,8 +43,10 @@
     "deleteAll": "Delete All",
     "deleteAllConfirmTitle": "Delete all products?",
     "deleteAllConfirmMessage": "This action cannot be undone. All your products will be permanently deleted.",
-    "deleteConfirmTitle": "Delete product?",
-    "deleteConfirmMessage": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone.",
+    "deleteConfirm": {
+      "title": "Delete product?",
+      "description": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone."
+    },
     "errors": {
       "title": "Error Occurred",
       "loadFailed": "Failed to load products",

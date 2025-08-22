@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerUser, loginUser, createGuestToken, registerUserWithGuestTransfer, loginUserWithGuestTransfer } from '../controllers/user.controller';
+import { registerUser, loginUser, createGuestToken, registerUserWithGuestTransfer, loginUserWithGuestTransfer, validateToken } from '../controllers/user.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -8,6 +8,7 @@ const router = Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/guest', createGuestToken);
+router.get('/validate', authenticateToken, validateToken);
 router.post('/register-with-transfer', authenticateToken, registerUserWithGuestTransfer);
 router.post('/login-with-transfer', authenticateToken, loginUserWithGuestTransfer);
 

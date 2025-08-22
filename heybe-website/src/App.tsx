@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation, TranslationProvider } from "./i18n";
 import { useAuth } from "./hooks/useAuth";
+import useStorage from "./hooks/useStorage";
 import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { AuthModal } from "./components/AuthModal";
@@ -26,7 +27,17 @@ function AppContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const { t } = useTranslation();
+  const { isExtensionAvailable, getDebugInfo } = useStorage();
   const productsRef = useRef<HTMLElement>(null);
+
+  // Debug extension durumunu konsola yazdır
+  useEffect(() => {
+    const logExtensionStatus = async () => {
+      const debugInfo = await getDebugInfo();
+      console.log("🔍 Extension Debug Info:", debugInfo);
+    };
+    logExtensionStatus();
+  }, [getDebugInfo]);
 
   const handleOpenAuthModal = () => {
     setIsAuthModalOpen(true);
@@ -99,6 +110,7 @@ function AppContent() {
         onScrollToProducts={scrollToProducts}
         onOpenInstallModal={handleOpenInstallModal}
         onOpenAuthModal={handleOpenAuthModal}
+        hasExtension={isExtensionAvailable}
       />
       <SidebarInset>
         {/* Main content - Header kaldırıldı */}

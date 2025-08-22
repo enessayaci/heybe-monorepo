@@ -301,3 +301,25 @@ export const createGuestToken = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const validateToken = async (req: AuthRequest, res: Response) => {
+  try {
+    // authenticateToken middleware'i zaten token'ı doğruladı ve req.user'ı set etti
+    const user = req.user!;
+
+    res.status(200).json({
+      success: true,
+      message: "Token geçerli",
+      data: {
+        email: user.email,
+        is_guest: user.is_guest
+      },
+    });
+  } catch (error) {
+    console.error("Token doğrulama hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Sunucu hatası",
+    });
+  }
+};

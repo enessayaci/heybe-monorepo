@@ -11,6 +11,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "./ui/sidebar";
+import { Badge } from "./ui/badge";
 import { useTranslation } from "../i18n";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -39,12 +40,14 @@ type AppSidebarProps = {
   onScrollToProducts: () => void;
   onOpenInstallModal: () => void;
   onOpenAuthModal: () => void;
+  hasExtension?: boolean;
 };
 
-export function AppSidebar({
-  onScrollToProducts,
-  onOpenInstallModal,
+export function AppSidebar({ 
+  onScrollToProducts, 
+  onOpenInstallModal, 
   onOpenAuthModal,
+  hasExtension = false 
 }: AppSidebarProps) {
   const { t, language, changeLanguage } = useTranslation();
   const { user, isAuthenticated } = useAuth();
@@ -281,6 +284,15 @@ export function AppSidebar({
             )}
           </SidebarMenu>
         </SidebarFooter>
+        
+        {/* Extension durumunu göster */}
+        {hasExtension && (
+          <div className="px-3 py-2 border-t">
+            <Badge variant="outline" className="text-green-600 border-green-600">
+              Extension Active
+            </Badge>
+          </div>
+        )}
 
         <SidebarRail />
       </Sidebar>

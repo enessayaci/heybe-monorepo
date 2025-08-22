@@ -12,14 +12,13 @@ import productRoutes from './routes/product.routes';
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS ayarları - Chrome uzantısı için özel yapılandırma
-// CORS ayarları - Tüm domainlerden istek kabul et
-// CORS ayarlarını daha spesifik yap
+// CORS ayarları - önce tanımla
 const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://localhost:3000', 
-    'https://heybe-website.vercel.app', // production domain
+    'https://heybe-website.vercel.app',
+    'https://heybe-monorepo.onrender.com',  // Bu satırı ekle
     'https://your-production-domain.com'
   ],
   credentials: true,
@@ -27,6 +26,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
 
+// CORS middleware'ini uygula
 app.use(cors(corsOptions));
 app.use(express.json());
 
