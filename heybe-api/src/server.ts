@@ -27,7 +27,7 @@ const corsOptions = {
       );
     }
     // https:// ile başlayan tüm kaynaklara izin ver
-    if (origin.startsWith("https://")) {
+    if (origin.startsWith("https://") || developmentUrls.includes(origin)) {
       return callback(null, true);
     }
     callback(new Error("Geçersiz kaynak"), false);
