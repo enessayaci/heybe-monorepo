@@ -43,8 +43,3 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
-
-export interface GuestTokenResponse {
-  token: string;
-  user_id: number;
-}

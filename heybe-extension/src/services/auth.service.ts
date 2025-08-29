@@ -1,6 +1,6 @@
 import { apiService } from "./api.service";
-import { storageService } from "./storage.service";
-import type { AuthResponse, GuestTokenResponse } from "./api.types";
+import { notifyWebsiteAuth } from "./messenger";
+import { getToken, getUser, setToken, setUser } from "./storage.service";
 
 class AuthService {
   /**
@@ -8,9 +8,10 @@ class AuthService {
    */
   async ensureGuestToken(): Promise<string> {
     try {
+      const user = await getUser();
       // Her zaman storage'dan kontrol et
-      const storedToken = await storageService.getToken();
-      const isGuest = await storageService.getIsGuest();
+      const storedToken = await getToken();
+      const isGuest = user?.is_guest;
 
       if (storedToken && isGuest) {
         return storedToken;
@@ -20,11 +21,11 @@ class AuthService {
       const response = await apiService.createGuestToken();
 
       if (response.success && response.data) {
-        const { token } = response.data;
+        const { token, user } = response.data;
 
         // Storage'a kaydet
-        await storageService.setToken(token);
-        await storageService.setIsGuest(true);
+        await setToken(token);
+        await setUser(user);
 
         return token;
       }
@@ -44,9 +45,10 @@ class AuthService {
     password: string
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      // Mevcut storage'ı kontrol et
-      const storedToken = await storageService.getToken();
-      const isGuest = await storageService.getIsGuest();
+      const user = await getUser();
+      // Her zaman storage'dan kontrol et
+      const storedToken = await getToken();
+      const isGuest = user?.is_guest;
 
       let response;
 
@@ -62,8 +64,16 @@ class AuthService {
         const { token, user } = response.data;
 
         // Kullanıcı bilgilerini kaydet
-        await storageService.setToken(token);
-        await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
+        await setToken(token);
+        await setUser({
+          email,
+          is_guest: user.is_guest,
+        });
+
+        notifyWebsiteAuth({
+          token,
+          user,
+        });
 
         return { success: true };
       }
@@ -83,9 +93,10 @@ class AuthService {
     password: string
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      // Mevcut storage'ı kontrol et
-      const storedToken = await storageService.getToken();
-      const isGuest = await storageService.getIsGuest();
+      const user = await getUser();
+      // Her zaman storage'dan kontrol et
+      const storedToken = await getToken();
+      const isGuest = user?.is_guest;
 
       let response;
 
@@ -101,8 +112,13 @@ class AuthService {
         const { token, user } = response.data;
 
         // Kullanıcı bilgilerini kaydet
-        await storageService.setToken(token);
-        await storageService.setIsGuest(false); // ÖNEMLİ: is_guest false yap
+        await setToken(token);
+        await setUser(user);
+
+        notifyWebsiteAuth({
+          token,
+          user,
+        });
 
         return { success: true };
       }
@@ -126,11 +142,17 @@ class AuthService {
       const response = await apiService.createGuestToken();
 
       if (response.success && response.data) {
-        const { token } = response.data;
+        const { token, user } = response.data;
 
         // Misafir token'ı kaydet
-        await storageService.setToken(token);
-        await storageService.setIsGuest(true);
+        await setToken(token);
+        await setUser(user);
+
+        // Website'e yeni token'ı bildir
+        notifyWebsiteAuth({
+          token,
+          user,
+        });
 
         return { success: true };
       }
@@ -147,37 +169,12 @@ class AuthService {
    */
   async isLoggedIn(): Promise<boolean> {
     try {
-      const token = await storageService.getToken();
-      const isGuest = await storageService.getIsGuest();
+      const token = await getToken();
+      const user = await getUser();
 
-      return !!(token && !isGuest);
+      return !!(token && user);
     } catch (error) {
       console.error("Error checking login status:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Mevcut token'ı döndürür (misafir veya kullanıcı)
-   */
-  async getCurrentToken(): Promise<string | null> {
-    try {
-      return await storageService.getToken();
-    } catch (error) {
-      console.error("Error getting current token:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Geçerli bir token olup olmadığını kontrol eder
-   */
-  async hasValidToken(): Promise<boolean> {
-    try {
-      const token = await storageService.getToken();
-      return !!token;
-    } catch (error) {
-      console.error("Error checking token validity:", error);
       return false;
     }
   }

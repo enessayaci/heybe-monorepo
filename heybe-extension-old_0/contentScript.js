@@ -2043,7 +2043,7 @@ function createAddToListButton() {
       // Ürün bilgilerini al
       const productInfo = getProductInfo();
       // console.log removed
-
+      x;
       // Ürün ekleme fonksiyonunu çağır
       const success = await addProductToMyList(productInfo);
 

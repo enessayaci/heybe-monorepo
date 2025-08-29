@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Check, Loader2, AlertCircle, List } from "lucide-react";
 import { authService } from "../services/auth.service";
 import { apiService } from "../services/api.service";
-import { storageService } from "../services/storage.service";
 import type { AddProductRequest } from "../services/api.types";
 import { AuthModal } from "./AuthModal";
 import { t } from "../lib/i18n";
@@ -30,62 +29,62 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       setAuthError(errorMessage || "Kimlik doğrulama hatası");
       setShowAuthModal(true);
     });
-  
+
     // İlk sayfa kontrolü
     checkPage();
-  
+
     let checkCount = 0;
     let checkInterval: NodeJS.Timeout | null = null;
-  
+
     const startUrlBasedCheck = () => {
       // Önceki interval'ı temizle
       if (checkInterval) {
         clearInterval(checkInterval);
       }
-      
+
       checkCount = 0;
-      
+
       // 5 kere, 1'er saniye aralıklarla kontrol yap
       checkInterval = setInterval(() => {
         checkCount++;
         checkPage();
-        
+
         if (checkCount >= 5) {
           clearInterval(checkInterval!);
           checkInterval = null;
         }
       }, 1000);
     };
-  
+
     // URL değişikliklerini yakalamak için event listener'lar
     const handleUrlChange = () => {
       startUrlBasedCheck();
     };
-  
+
     // Browser back/forward butonları için
-    window.addEventListener('popstate', handleUrlChange);
-  
+    window.addEventListener("popstate", handleUrlChange);
+
     // SPA navigation için history API'sini override et
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-  
-    history.pushState = function(...args) {
+
+    history.pushState = function (...args) {
       originalPushState.apply(this, args);
       // Micro-task olarak çalıştır ki DOM güncellensin
       setTimeout(handleUrlChange, 0);
     };
-  
-    history.replaceState = function(...args) {
+
+    history.replaceState = function (...args) {
       originalReplaceState.apply(this, args);
       setTimeout(handleUrlChange, 0);
     };
-  
+
     // Cleanup function
     return () => {
       if (checkInterval) {
         clearInterval(checkInterval);
       }
-      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener("popstate", handleUrlChange);
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
     };
@@ -510,7 +509,9 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         {/* Sol taraf - "Heybeye Ekle" butonu */}
         <button
           onClick={() => handleAddToHeybe()}
-          disabled={state === "loading" || state === "success" || state === "error"} // Loading, success ve error durumlarında disable et
+          disabled={
+            state === "loading" || state === "success" || state === "error"
+          } // Loading, success ve error durumlarında disable et
           style={getAddButtonStyle()}
         >
           {getAddButtonContent()}

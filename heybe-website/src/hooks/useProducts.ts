@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { productService } from "@/services/productService";
+import {
+  addProduct as addProductApi,
+  getProducts as getProductsApi,
+  deleteAllProducts as deleteAllProductsApi,
+  deleteProduct as deleteProductApi,
+  updateProduct as updateProductApi,
+} from "@/services/productService";
 import type { Product, AddProductRequest } from "../types/api.types";
+import { log } from "node:console";
 
 interface UseProductsReturn {
   products: Product[];
@@ -27,7 +34,7 @@ export const useProducts = (): UseProductsReturn => {
     setError(null);
 
     try {
-      const response = await productService.getProducts();
+      const response = await getProductsApi();
 
       if (response.success && response.data) {
         setProducts(response.data);
@@ -43,17 +50,13 @@ export const useProducts = (): UseProductsReturn => {
     }
   }, []);
 
-  useEffect(() => {
-    refreshProducts();
-  }, [refreshProducts]);
-
   const addProduct = useCallback(
     async (productData: AddProductRequest): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await productService.addProduct(productData);
+        const response = await addProductApi(productData);
 
         if (response.success) {
           await refreshProducts(); // Refresh the list
@@ -83,7 +86,7 @@ export const useProducts = (): UseProductsReturn => {
       setError(null);
 
       try {
-        const response = await productService.updateProduct(id, productData);
+        const response = await updateProductApi(id, productData);
 
         if (response.success) {
           await refreshProducts(); // Refresh the list
@@ -110,7 +113,7 @@ export const useProducts = (): UseProductsReturn => {
       setError(null);
 
       try {
-        const response = await productService.deleteProduct(id);
+        const response = await deleteProductApi(id);
 
         if (response.success) {
           await refreshProducts(); // Refresh the list
@@ -136,7 +139,7 @@ export const useProducts = (): UseProductsReturn => {
     setError(null);
 
     try {
-      const response = await productService.deleteAllProducts();
+      const response = await deleteAllProductsApi();
 
       if (response.success) {
         setProducts([]); // Clear the list immediately

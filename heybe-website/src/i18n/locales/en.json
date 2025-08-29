@@ -17,6 +17,7 @@
   },
   "auth": {
     "login": "Login",
+    "logout": "Logout",
     "register": "Register",
     "loginRegister": "Login / Register",
     "profile": "Profile",
@@ -52,12 +53,14 @@
       "loadFailed": "Failed to load products",
       "deleteFailed": "Failed to delete product",
       "deleteAllFailed": "Failed to delete products",
-      "unexpectedError": "An unexpected error occurred"
+      "unexpectedError": "An unexpected error occurred",
+      "loginRequired": "Login required to view products"
     }
   },
   "extension": {
     "addToHeybe": "Add to Heybe",
-    "install": "Install Extension"
+    "install": "Install Extension",
+    "notInstalled": "Extension not installed. Please install the extension to use the feature."
   },
   "setup": {
     "title": "Setup",
@@ -73,15 +76,11 @@
     "permissionsDescription": "The following permissions need to be granted for the extension to work properly:",
     "chromePermissions": {
       "title": "Chrome Permissions",
-      "steps": [
-        "Download and install Heybe extension from Chrome Web Store"
-      ]
+      "steps": ["Download and install Heybe extension from Chrome Web Store"]
     },
     "bravePermissions": {
       "title": "Brave Permissions",
-      "steps": [
-        "Download and install Heybe extension from Chrome Web Store"
-      ]
+      "steps": ["Download and install Heybe extension from Chrome Web Store"]
     },
     "edgePermissions": {
       "title": "Edge Permissions",
@@ -97,9 +96,7 @@
     },
     "safariPermissions": {
       "title": "Safari Permissions",
-      "steps": [
-        "Download and install Heybe extension from App Store"
-      ]
+      "steps": ["Download and install Heybe extension from App Store"]
     }
   }
 }

@@ -1,48 +1,97 @@
 import { storage } from "wxt/storage";
 
-class StorageService {
-  // Token işlemleri (project.md'ye göre 'token' key'i)
-  async setToken(token: string): Promise<void> {
-    await storage.setItem("local:token", token);
-  }
+export interface User {
+  email: string;
+  is_guest: boolean;
+}
 
-  async getToken(): Promise<string | null> {
-    return await storage.getItem("local:token");
-  }
+export interface StorageData {
+  token: string | null;
+  user: User | null;
+}
 
-  async removeToken(): Promise<void> {
-    await storage.removeItem("local:token");
-  }
+// export class StorageService {
+//   // Token operations
+//   async setToken(token: string | null): Promise<void> {
+//     try(){
 
-  // Guest durumu işlemleri (project.md'ye göre 'is_guest' key'i)
-  async setIsGuest(isGuest: boolean): Promise<void> {
-    await storage.setItem("local:is_guest", isGuest);
-  }
+//     }
+//   }
 
-  async getIsGuest(): Promise<boolean> {
-    const result = await storage.getItem("local:is_guest");
-    return result === true;
-  }
+//   async getToken(): Promise<string | null> {
+//     return await storage.getItem("local:token");
+//   }
 
-  async removeIsGuest(): Promise<void> {
-    await storage.removeItem("local:is_guest");
-  }
+//   async removeToken(): Promise<void> {
+//     await storage.removeItem("local:token");
+//   }
 
-  // Kullanıcı bilgileri işlemleri
-  async setUser(user: any): Promise<void> {
-    await storage.setItem("local:user", user);
-  }
+//   async getIsGuest(): Promise<boolean> {
+//     const user: User | null = await storage.getItem("local:user");
+//     return !!user && user.is_guest === true;
+//   }
 
-  async getUser(): Promise<any | null> {
-    return await storage.getItem("local:user");
-  }
+//   async getUser(): Promise<any | null> {
+//     return await storage.getItem("local:user");
+//   }
 
-  // Tüm verileri temizle
-  async clearAll(): Promise<void> {
-    await storage.removeItem("local:token");
-    await storage.removeItem("local:is_guest");
-    await storage.removeItem("local:user");
+//   // Clear all data
+//   async clearAll(): Promise<void> {
+//     await storage.removeItem("local:token");
+//     await storage.removeItem("local:user");
+//   }
+
+//   async getAllData(): Promise<StorageData> {
+//     const [token, user] = await Promise.all([this.getToken(), this.getUser()]);
+
+//     return {
+//       token: token || null,
+//       user: user || null,
+//     };
+//   }
+
+//   async saveData(data: StorageData): Promise<void> {
+//      await this.setToken(data.token);
+//       await this.setUser(data.user);
+//   }
+// }
+
+export async function getToken(): Promise<string | null> {
+  try {
+    const token = await storage.getItem<Record<string, string>>("local:token");
+    return token?.value || null;
+  } catch (err) {
+    console.error("[API SERVICE] Getting token error:", err);
+    return null;
   }
 }
 
-export const storageService = new StorageService();
+export async function setToken(newToken: string): Promise<boolean> {
+  try {
+    await storage.setItem("local:token", newToken);
+    return true;
+  } catch (err) {
+    console.error("[API SERVICE] Setting token error:", err);
+    return false;
+  }
+}
+
+export async function getUser(): Promise<User | null> {
+  try {
+    const user = await storage.getItem<Record<string, User>>("local:user");
+    return user?.value || null;
+  } catch (err) {
+    console.error("[API SERVICE] Getting user error:", err);
+    return null;
+  }
+}
+
+export async function setUser(newUser: User): Promise<boolean> {
+  try {
+    await storage.setItem("local:user", newUser);
+    return true;
+  } catch (err) {
+    console.error("[API SERVICE] Setting user error:", err);
+    return false;
+  }
+}

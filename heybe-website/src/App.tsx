@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation, TranslationProvider } from "./i18n";
-import { useAuth } from "./hooks/useAuth";
-import useStorage from "./hooks/useStorage";
 import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { AuthModal } from "./components/AuthModal";
-import { ProductList } from "./components/ProductList";
-import { Download } from "lucide-react";
+import { ProductList, type ProductListRef } from "./components/ProductList";
+import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,28 +14,26 @@ import {
 } from "./components/ui/dialog";
 import { ScrollArea } from "./components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
+import { Alert, AlertDescription } from "./components/ui/alert";
 import { Chrome, Globe, Settings } from "lucide-react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
+import { useListenExtensionMessaging } from "./hooks/useListenExtensionMessaging";
+import { useMainStoreBase } from "./store/main";
 
 function AppContent() {
+  const isExtensionAvailable = useMainStoreBase(
+    (state) => state.isExtensionAvailable
+  );
+  const token = useMainStoreBase((state) => state.token);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isExtensionAlertDismissed, setIsExtensionAlertDismissed] =
+    useState(false);
   const { t } = useTranslation();
-  const { isExtensionAvailable, getDebugInfo } = useStorage();
+  useListenExtensionMessaging();
   const productsRef = useRef<HTMLElement>(null);
-
-  // Debug extension durumunu konsola yazdır
-  useEffect(() => {
-    const logExtensionStatus = async () => {
-      const debugInfo = await getDebugInfo();
-      console.log("🔍 Extension Debug Info:", debugInfo);
-    };
-    logExtensionStatus();
-  }, [getDebugInfo]);
+  const productListRef = useRef<ProductListRef>(null);
 
   const handleOpenAuthModal = () => {
     setIsAuthModalOpen(true);
@@ -47,8 +43,10 @@ function AppContent() {
     setIsAuthModalOpen(false);
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setIsAuthModalOpen(false);
+    // Ürünleri yenile
+
     scrollToProducts();
   };
 
@@ -104,6 +102,10 @@ function AppContent() {
     },
   ];
 
+  const handleDismissExtensionAlert = () => {
+    setIsExtensionAlertDismissed(true);
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar
@@ -113,56 +115,51 @@ function AppContent() {
         hasExtension={isExtensionAvailable}
       />
       <SidebarInset>
+        {/* Extension Alert - Eklenti yüklü değilse göster */}
+        {!isExtensionAvailable && !isExtensionAlertDismissed && (
+          <div className="p-4 border-b bg-amber-50">
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertDescription className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-amber-800">
+                    {t("extension.notInstalled") ||
+                      "Eklenti yüklü değil. Ürün eklemek için eklentiyi kurun."}
+                  </span>
+                  <Button
+                    onClick={handleOpenInstallModal}
+                    size="sm"
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    {t("extension.install")}
+                  </Button>
+                </div>
+                <Button
+                  onClick={handleDismissExtensionAlert}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-amber-600 hover:text-amber-800 hover:bg-amber-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         {/* Main content - Header kaldırıldı */}
         <main className="flex-1 overflow-auto">
-          {/* Hero Section */}
-          <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="flex justify-center items-center gap-4 mb-6 sm:mb-8">
-                <img
-                  src={viteLogo}
-                  className="h-12 sm:h-16 lg:h-20"
-                  alt="Vite logo"
-                />
-                <img
-                  src={reactLogo}
-                  className="h-12 sm:h-16 lg:h-20"
-                  alt="React logo"
-                />
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
-                {t("common.welcome")}
-              </h1>
-              <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto">
-                {t("common.description")}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-                <Button
-                  onClick={scrollToProducts}
-                  size="lg"
-                  className="w-full sm:w-auto cursor-pointer"
-                >
-                  {t("products.viewProducts")}
-                </Button>
-                <Button
-                  onClick={handleOpenInstallModal}
-                  variant="outline"
-                  size="lg"
-                  className="w-full sm:w-auto cursor-pointer"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  {t("extension.install")}
-                </Button>
-              </div>
-            </div>
-          </section>
+          {/* Hero Section - KALDIRILDI */}
 
           {/* Products Section */}
           <section
             ref={productsRef}
             className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8"
           >
-            <ProductList onAddProduct={() => console.log("Add product")} />
+            <ProductList
+              ref={productListRef}
+              onAddProduct={() => console.log("Add product")}
+              onClickLogin={handleOpenAuthModal}
+            />
           </section>
         </main>
       </SidebarInset>

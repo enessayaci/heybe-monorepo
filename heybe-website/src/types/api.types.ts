@@ -1,5 +1,5 @@
 // API Base URL - Environment variable'dan oku, fallback olarak production URL kullan
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://heybe-monorepo.onrender.com/api'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Backend ile tam uyumlu Product interface
 export interface Product {
@@ -28,11 +28,11 @@ export interface AddProductRequest {
 export interface FrontendProduct extends Product {}
 
 export interface User {
-  id: number;
+  id?: number;
   email: string;
   is_guest: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApiResponse<T> {
@@ -42,7 +42,8 @@ export interface ApiResponse<T> {
   status?: number; // HTTP status code için eklenen alan
 }
 
-export interface AuthResponse extends ApiResponse<{ token: string; user: User }> {
+export interface AuthResponse
+  extends ApiResponse<{ token: string; email: string; is_guest: boolean }> {
   // ApiResponse'dan success ve message özellikleri miras alınır
   // data içinde token ve user bilgileri bulunur
 }

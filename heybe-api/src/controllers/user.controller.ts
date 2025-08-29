@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { createUser, findUserByEmail, createGuestUser, findUserById, deleteUserById } from "../services/user.service";
+import {
+  createUser,
+  findUserByEmail,
+  createGuestUser,
+  findUserById,
+  deleteUserById,
+} from "../services/user.service";
 import { generateToken } from "../utils/jwt.utils";
 import { transferProductsFromGuestToUser } from "../services/product.service";
 import { AuthRequest } from "@/types/auth.types";
@@ -43,7 +49,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const newUser = await createUser({
       email,
       password: hashedPassword,
-      is_guest: false
+      is_guest: false,
     });
 
     // JWT token oluştur
@@ -55,7 +61,7 @@ export const registerUser = async (req: Request, res: Response) => {
       data: {
         email: newUser.email,
         is_guest: newUser.is_guest,
-        token
+        token,
       },
     });
   } catch (error) {
@@ -68,7 +74,10 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 // Guest token ile register (ürün transferi ile)
-export const registerUserWithGuestTransfer = async (req: AuthRequest, res: Response) => {
+export const registerUserWithGuestTransfer = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { email, password } = req.body;
     const guestUserId = req.user!.id; // Guest token'dan user_id
@@ -116,14 +125,16 @@ export const registerUserWithGuestTransfer = async (req: AuthRequest, res: Respo
     const newUser = await createUser({
       email,
       password: hashedPassword,
-      is_guest: false
+      is_guest: false,
     });
 
     // Ürünleri transfer et
     try {
       await transferProductsFromGuestToUser(guestUserId, newUser.id);
-      console.log(`✅ Ürünler başarıyla transfer edildi: ${guestUserId} → ${newUser.id}`);
-      
+      console.log(
+        `✅ Ürünler başarıyla transfer edildi: ${guestUserId} → ${newUser.id}`
+      );
+
       // Transfer başarılı olduktan sonra guest kullanıcıyı sil
       const deleted = await deleteUserById(guestUserId);
       if (deleted) {
@@ -143,7 +154,7 @@ export const registerUserWithGuestTransfer = async (req: AuthRequest, res: Respo
       data: {
         email: newUser.email,
         is_guest: newUser.is_guest,
-        token
+        token,
       },
     });
   } catch (error) {
@@ -193,7 +204,7 @@ export const loginUser = async (req: Request, res: Response) => {
       data: {
         email: user.email,
         is_guest: user.is_guest,
-        token
+        token,
       },
     });
   } catch (error) {
@@ -206,7 +217,10 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 // Guest token ile login (ürün transferi ile)
-export const loginUserWithGuestTransfer = async (req: AuthRequest, res: Response) => {
+export const loginUserWithGuestTransfer = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { email, password } = req.body;
     const guestUserId = req.user!.id; // Guest token'dan user_id
@@ -242,8 +256,10 @@ export const loginUserWithGuestTransfer = async (req: AuthRequest, res: Response
       try {
         // Ürünleri transfer et
         await transferProductsFromGuestToUser(guestUserId, user.id);
-        console.log(`✅ Ürünler başarıyla transfer edildi: ${guestUserId} → ${user.id}`);
-        
+        console.log(
+          `✅ Ürünler başarıyla transfer edildi: ${guestUserId} → ${user.id}`
+        );
+
         // Transfer başarılı olduktan sonra guest kullanıcıyı sil
         const deleted = await deleteUserById(guestUserId);
         if (deleted) {
@@ -264,7 +280,7 @@ export const loginUserWithGuestTransfer = async (req: AuthRequest, res: Response
       data: {
         email: user.email,
         is_guest: user.is_guest,
-        token
+        token,
       },
     });
   } catch (error) {
@@ -280,7 +296,7 @@ export const createGuestToken = async (req: Request, res: Response) => {
   try {
     // Misafir kullanıcı oluştur
     const guestUser = await createGuestUser();
-    
+
     // JWT token oluştur
     const token = generateToken(guestUser.id);
 
@@ -289,8 +305,8 @@ export const createGuestToken = async (req: Request, res: Response) => {
       message: "Misafir token başarıyla oluşturuldu",
       data: {
         email: guestUser.email,
-        is_guest: guestUser.is_guest,
-        token
+        user: guestUser,
+        token,
       },
     });
   } catch (error) {
@@ -312,7 +328,7 @@ export const validateToken = async (req: AuthRequest, res: Response) => {
       message: "Token geçerli",
       data: {
         email: user.email,
-        is_guest: user.is_guest
+        is_guest: user.is_guest,
       },
     });
   } catch (error) {

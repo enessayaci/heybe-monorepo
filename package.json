@@ -12,8 +12,15 @@
     "test:edge": "extension dev --browser=edge",
     "package:all": "extension build --all"
   },
+  "dependencies": {
+    "@trpc/client": "^11.5.0",
+    "@trpc/server": "^11.5.0",
+    "trpc-chrome": "^1.0.0",
+    "zod": "^3.22.4"
+  },
   "devDependencies": {
-    "extension": "^2.0.0-rc.38"
+    "extension": "^2.0.0-rc.38",
+    "wxt": "^0.19.11"
   },
   "keywords": [
     "browser-extension",

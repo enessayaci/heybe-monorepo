@@ -2,14 +2,12 @@ import type {
   Product,
   AddProductRequest,
   FrontendProduct,
-  User,
   ApiResponse,
   AuthResponse,
-  GuestTokenResponse,
 } from "./api.types";
 
 import { storage } from "wxt/storage";
-import { storageService } from "./storage.service";
+import { getToken } from "./storage.service";
 
 class ApiService {
   private readonly baseUrl = "https://heybe-monorepo.onrender.com/api";
@@ -24,7 +22,7 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const token = await this.getToken();
+    const token = await getToken();
 
     const config: RequestInit = {
       headers: {
@@ -45,7 +43,7 @@ class ApiService {
           const errorMessage = data.message || "Kimlik doğrulama hatası";
           await this.handleUnauthorized(errorMessage);
         }
-        
+
         return {
           success: false,
           message: data.message || "Request failed",
@@ -68,25 +66,21 @@ class ApiService {
   private async handleUnauthorized(errorMessage?: string) {
     try {
       // Storage'ı tamamen temizle - ilk yükleme gibi
-      await storageService.removeToken();
-      await storageService.removeIsGuest();
-      
+      await storage.removeItem("local:token");
+      await storage.removeItem("local:user");
+
       // Auth modal'ı aç ve hata mesajını göster
       if (this.onUnauthorized) {
         this.onUnauthorized(errorMessage);
       }
     } catch (error) {
-      console.error('Error handling unauthorized:', error);
+      console.error("Error handling unauthorized:", error);
     }
   }
 
-  private async getToken(): Promise<string | null> {
-    return await storage.getItem("local:token");
-  }
-
   // Guest token oluşturma
-  async createGuestToken(): Promise<ApiResponse<GuestTokenResponse>> {
-    return this.request<GuestTokenResponse>("/auth/guest", {
+  async createGuestToken(): Promise<ApiResponse<AuthResponse>> {
+    return this.request<AuthResponse>("/auth/guest", {
       method: "POST",
     });
   }
@@ -148,15 +142,6 @@ class ApiService {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-  }
-
-  // Backend Product'ı Frontend Product'a dönüştürme
-  static mapBackendProductToFrontend(product: Product): FrontendProduct {
-    return {
-      ...product,
-      created_at: new Date(product.created_at).toISOString(),
-      updated_at: new Date(product.updated_at).toISOString(),
-    };
   }
 }
 

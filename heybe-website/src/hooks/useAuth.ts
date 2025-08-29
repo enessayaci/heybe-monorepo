@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
-import { authService } from '../services/authService';
-import type { User, LoginRequest, RegisterRequest, ApiResponse, AuthResponse } from '../types/api.types';
+import { useState, useCallback } from "react";
+import {
+  login as loginApi,
+  register as registerApi,
+} from "@/services/authService";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+} from "../types/api.types";
+import {
+  clearExtensionStorage,
+  saveToExtension,
+} from "@/services/extensionService";
+import { useMainStoreBase } from "@/store/main";
 
 interface UseAuthReturn {
-  user: User | null;
-  isAuthenticated: boolean;
-  isGuest: boolean;
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest) => Promise<boolean>;
@@ -15,99 +24,100 @@ interface UseAuthReturn {
 }
 
 export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<User | null>(authService.getUser());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isGuest, setIsGuest] = useState<boolean>(true);
 
-  const updateAuthState = useCallback(async () => {
-    setUser(authService.getUser());
-    const guestStatus = await authService.isGuest();
-    setIsGuest(guestStatus);
+  const setToken = useMainStoreBase((state) => state.setToken);
+  const setUser = useMainStoreBase((state) => state.setUser);
+
+  const login = useCallback(async (credentials: LoginRequest) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await loginApi(credentials);
+
+      if (response.success) {
+        const userObj = {
+          email: response.data!.email,
+          is_guest: response.data!.is_guest,
+        };
+
+        // Token'ı hem localStorage'a hem extension'a kaydet
+        setToken(response.data!.token);
+        setUser(userObj);
+        await saveToExtension({
+          token: response.data!.token,
+          user: userObj,
+        });
+        return true;
+      } else {
+        setError(response.message || "Login failed"); // Backend mesajı öncelikli
+        return false;
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    const validateToken = async () => {
-      const token = await authService.getToken();
-      if (token) {
-        setIsLoading(true);
-        const isValid = await authService.validateToken();
-        if (isValid) {
-          await updateAuthState();
-        }
-        setIsLoading(false);
-      } else {
-        await updateAuthState();
-      }
-    };
-
-    validateToken();
-  }, [updateAuthState]);
-
-  const login = useCallback(async (credentials: LoginRequest): Promise<boolean> => {
+  const register = useCallback(async (credentials: RegisterRequest) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await authService.login(credentials);
-      
+      const response: AuthResponse = await registerApi(credentials);
+
       if (response.success) {
-        await updateAuthState();
+        const userObj = {
+          email: response.data!.email,
+          is_guest: response.data!.is_guest,
+        };
+        // Token'ı hem localStorage'a hem extension'a kaydet
+        setToken(response.data!.token);
+        setUser(userObj);
+        await saveToExtension({
+          token: response.data!.token,
+          user: userObj,
+        });
         return true;
       } else {
-        setError(response.message || 'Login failed'); // Backend mesajı öncelikli
+        setError(response.message || "Registration failed");
         return false;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [updateAuthState]);
-
-  const register = useCallback(async (credentials: RegisterRequest): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await authService.register(credentials);
-      
-      if (response.success) {
-        await updateAuthState();
-        return true;
-      } else {
-        setError(response.message || 'Registration failed');
-        return false;
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updateAuthState]);
+  }, []);
 
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
-      await authService.logout();
-      await updateAuthState();
+      setUser(null);
+      setToken(null);
+      console.log("📱 [Storage] LocalStorage cleared");
+      await clearExtensionStorage();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Logout failed');
+      setError(err instanceof Error ? err.message : "Logout failed");
     } finally {
       setIsLoading(false);
     }
-  }, [updateAuthState]);
+  }, []);
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   return {
-    user,
-    isAuthenticated: authService.isAuthenticated(),
-    isGuest,
     isLoading,
     error,
     login,

@@ -13,12 +13,13 @@ import {
 } from "./ui/sidebar";
 import { Badge } from "./ui/badge";
 import { useTranslation } from "../i18n";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Package,
   Settings,
   User,
   LogIn,
+  LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -35,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMainStoreBase } from "@/store/main";
 
 type AppSidebarProps = {
   onScrollToProducts: () => void;
@@ -43,14 +45,16 @@ type AppSidebarProps = {
   hasExtension?: boolean;
 };
 
-export function AppSidebar({ 
-  onScrollToProducts, 
-  onOpenInstallModal, 
+export function AppSidebar({
+  onScrollToProducts,
+  onOpenInstallModal,
   onOpenAuthModal,
-  hasExtension = false 
+  hasExtension = false,
 }: AppSidebarProps) {
   const { t, language, changeLanguage } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
+  const { logout } = useAuth();
+  const user = useMainStoreBase((state) => state.user);
+
   const { open, setOpen } = useSidebar();
 
   const handleProductsClick = (e: React.MouseEvent) => {
@@ -70,6 +74,15 @@ export function AppSidebar({
 
   const handleLanguageChange = (value: string) => {
     changeLanguage(value as "tr" | "en");
+  };
+
+  // Logout fonksiyonunu ekle
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const toggleSidebar = () => {
@@ -97,7 +110,11 @@ export function AppSidebar({
         <SidebarHeader className="min-h-[48px]">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="h-12 min-h-[48px]">
+              <SidebarMenuButton
+                size="lg"
+                asChild
+                className="h-12 min-h-[48px]"
+              >
                 <div className="flex items-center gap-2 h-12 min-h-[48px]">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Package className="size-4" />
@@ -207,11 +224,14 @@ export function AppSidebar({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* Kapalı sidebar için sadece bayrak */}
                 {!open && (
                   <div className="group-data-[collapsible=icon]:flex group-data-[collapsible=open]:hidden w-full justify-center">
-                    <Select value={language} onValueChange={handleLanguageChange}>
+                    <Select
+                      value={language}
+                      onValueChange={handleLanguageChange}
+                    >
                       <SelectTrigger className="cursor-pointer w-6 h-6 p-0 border-0 bg-transparent shadow-none hover:bg-accent hover:text-accent-foreground rounded-md flex items-center justify-center [&>svg]:hidden">
                         <SelectValue>
                           <span className="text-base">
@@ -243,17 +263,63 @@ export function AppSidebar({
 
         <SidebarFooter>
           <SidebarMenu>
-            {isAuthenticated && user && (
-              <SidebarMenuItem>
-                <SidebarMenuButton className="flex items-center gap-2 cursor-pointer">
-                  <User className="h-4 w-4" />
-                  <span className="truncate group-data-[collapsible=icon]:hidden">
-                    {user.email}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-            {!isAuthenticated && (
+            {user && user.email ? (
+              // Kullanıcı giriş yapmışsa - email ve logout butonu göster
+              <>
+                <SidebarMenuItem>
+                  <TooltipProvider>
+                    <Tooltip open={!open ? undefined : false}>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton className="flex items-center gap-2 cursor-default">
+                          <User className="h-4 w-4" />
+                          <span className="truncate group-data-[collapsible=icon]:hidden">
+                            {user.email}
+                          </span>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      {!open && (
+                        <TooltipContent
+                          side="right"
+                          className="bg-white border border-gray-200 shadow-lg rounded-md px-3 py-2 text-sm font-medium text-gray-900"
+                          sideOffset={8}
+                          hideWhenDetached
+                        >
+                          <p>{user.email}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <TooltipProvider>
+                    <Tooltip open={!open ? undefined : false}>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-red-50 hover:text-red-600"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span className="group-data-[collapsible=icon]:hidden">
+                            {t("auth.logout")}
+                          </span>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      {!open && (
+                        <TooltipContent
+                          side="right"
+                          className="bg-white border border-gray-200 shadow-lg rounded-md px-3 py-2 text-sm font-medium text-gray-900"
+                          sideOffset={8}
+                          hideWhenDetached
+                        >
+                          <p>{t("auth.logout")}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenuItem>
+              </>
+            ) : (
+              // Kullanıcı giriş yapmamışsa - login butonu göster
               <SidebarMenuItem>
                 <TooltipProvider>
                   <Tooltip open={!open ? undefined : false}>
@@ -284,11 +350,14 @@ export function AppSidebar({
             )}
           </SidebarMenu>
         </SidebarFooter>
-        
+
         {/* Extension durumunu göster */}
         {hasExtension && (
           <div className="px-3 py-2 border-t">
-            <Badge variant="outline" className="text-green-600 border-green-600">
+            <Badge
+              variant="outline"
+              className="text-green-600 border-green-600"
+            >
               Extension Active
             </Badge>
           </div>
