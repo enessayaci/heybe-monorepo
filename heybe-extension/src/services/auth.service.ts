@@ -63,6 +63,8 @@ class AuthService {
       if (response.success && response.data) {
         const { token, user } = response.data;
 
+        console.log("login response: ", response);
+
         // Kullanıcı bilgilerini kaydet
         await setToken(token);
         await setUser({
