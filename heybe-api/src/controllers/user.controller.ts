@@ -59,8 +59,7 @@ export const registerUser = async (req: Request, res: Response) => {
       success: true,
       message: "Kullanıcı başarıyla oluşturuldu",
       data: {
-        email: newUser.email,
-        is_guest: newUser.is_guest,
+        user: newUser,
         token,
       },
     });
@@ -152,8 +151,7 @@ export const registerUserWithGuestTransfer = async (
       success: true,
       message: "Kullanıcı başarıyla oluşturuldu ve ürünler transfer edildi",
       data: {
-        email: newUser.email,
-        is_guest: newUser.is_guest,
+        user: newUser,
         token,
       },
     });
@@ -202,8 +200,7 @@ export const loginUser = async (req: Request, res: Response) => {
       success: true,
       message: "Giriş başarılı",
       data: {
-        email: user.email,
-        is_guest: user.is_guest,
+        user,
         token,
       },
     });
@@ -278,8 +275,7 @@ export const loginUserWithGuestTransfer = async (
       success: true,
       message: "Giriş başarılı",
       data: {
-        email: user.email,
-        is_guest: user.is_guest,
+        user,
         token,
       },
     });
@@ -304,7 +300,6 @@ export const createGuestToken = async (req: Request, res: Response) => {
       success: true,
       message: "Misafir token başarıyla oluşturuldu",
       data: {
-        email: guestUser.email,
         user: guestUser,
         token,
       },

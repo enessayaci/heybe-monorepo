@@ -21,8 +21,6 @@ export const useListenExtensionMessaging = () => {
   }, []);
 
   useEffect(() => {
-    console.log("deneme");
-
     // HEYBE_EXTENSION_LOADED mesajını dinle
     const unsubscribeLoaded = messenger.onMessage(
       "HEYBE_EXTENSION_LOADED",
@@ -49,8 +47,6 @@ export const useListenExtensionMessaging = () => {
 
     // Temizlik: Abonelikleri kaldır
     return () => {
-      console.log("hebele");
-
       unsubscribeLoaded();
       unsubscribeAuthUpdated();
     };
