@@ -58,8 +58,10 @@ export interface StorageData {
 
 export async function getToken(): Promise<string | null> {
   try {
-    const token = await storage.getItem<Record<string, string>>("local:token");
-    return token?.value || null;
+    const token = await storage.getItem<string>("local:token");
+    console.log("token get: ", token);
+
+    return token ?? null;
   } catch (err) {
     console.error("[API SERVICE] Getting token error:", err);
     return null;
@@ -68,6 +70,8 @@ export async function getToken(): Promise<string | null> {
 
 export async function setToken(newToken: string): Promise<boolean> {
   try {
+    console.log("Setting token: ", newToken);
+
     await storage.setItem("local:token", newToken);
     return true;
   } catch (err) {
@@ -78,8 +82,8 @@ export async function setToken(newToken: string): Promise<boolean> {
 
 export async function getUser(): Promise<User | null> {
   try {
-    const user = await storage.getItem<Record<string, User>>("local:user");
-    return user?.value || null;
+    const user = await storage.getItem<User>("local:user");
+    return user ?? null;
   } catch (err) {
     console.error("[API SERVICE] Getting user error:", err);
     return null;

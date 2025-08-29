@@ -138,6 +138,8 @@ class Messenger {
   }
 
   public notifyWebsiteAuth(data: StorageData) {
+    console.log("Sending HEYBE_AUTH_UPDATED to website!");
+
     messenger.sendMessage("HEYBE_AUTH_UPDATED", data).catch((error) => {
       console.warn(
         `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,

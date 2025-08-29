@@ -12,10 +12,15 @@ import productRoutes from "./routes/product.routes";
 const app = express();
 const port = process.env.PORT || 3000;
 
+const developmentUrls = ["http://localhost:5173"];
+
 const corsOptions = {
   origin: (origin: any, callback: any) => {
     // null origin (Postman, cURL) veya http:// ile başlayanları engelle
-    if (!origin || origin.startsWith("http://")) {
+    if (
+      !origin ||
+      (origin.startsWith("http://") && !developmentUrls.includes(origin))
+    ) {
       return callback(
         new Error("Yalnızca HTTPS kaynaklara izin verilir"),
         false

@@ -24,6 +24,8 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const token = await getToken();
 
+    console.log("Requesting token: ", token);
+
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",

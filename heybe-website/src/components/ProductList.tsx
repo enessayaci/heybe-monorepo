@@ -55,7 +55,7 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
       }
 
       setLoginButton(false);
-      refreshProducts;
+      refreshProducts();
     }, [token]);
 
     const handleDeleteProduct = async (id: number) => {

@@ -74,7 +74,7 @@ export const useProducts = (): UseProductsReturn => {
         setIsLoading(false);
       }
     },
-    [refreshProducts]
+    []
   );
 
   const updateProduct = useCallback(
@@ -104,35 +104,32 @@ export const useProducts = (): UseProductsReturn => {
         setIsLoading(false);
       }
     },
-    [refreshProducts]
+    []
   );
 
-  const deleteProduct = useCallback(
-    async (id: number): Promise<boolean> => {
-      setIsLoading(true);
-      setError(null);
+  const deleteProduct = useCallback(async (id: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const response = await deleteProductApi(id);
+    try {
+      const response = await deleteProductApi(id);
 
-        if (response.success) {
-          await refreshProducts(); // Refresh the list
-          return true;
-        } else {
-          setError(response.message || "Failed to delete product");
-          return false;
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unexpected error occurred"
-        );
+      if (response.success) {
+        await refreshProducts(); // Refresh the list
+        return true;
+      } else {
+        setError(response.message || "Failed to delete product");
         return false;
-      } finally {
-        setIsLoading(false);
       }
-    },
-    [refreshProducts]
-  );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const deleteAllProducts = useCallback(async (): Promise<boolean> => {
     setIsLoading(true);

@@ -67,10 +67,7 @@ class AuthService {
 
         // Kullanıcı bilgilerini kaydet
         await setToken(token);
-        await setUser({
-          email,
-          is_guest: user.is_guest,
-        });
+        await setUser(user);
 
         notifyWebsiteAuth({
           token,
