@@ -171,7 +171,7 @@ class AuthService {
       const token = await getToken();
       const user = await getUser();
 
-      return !!(token && user);
+      return !!(token && user && !user.is_guest);
     } catch (error) {
       console.error("Error checking login status:", error);
       return false;

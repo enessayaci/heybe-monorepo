@@ -31,25 +31,16 @@ export const useAuth = (): UseAuthReturn => {
   const setUser = useMainStoreBase((state) => state.setUser);
 
   const login = useCallback(async (credentials: LoginRequest) => {
-    setIsLoading(true);
-    setError(null);
-
     try {
+      setIsLoading(true);
+      setError(null);
       const response = await loginApi(credentials);
 
       if (response.success) {
-        const userObj = {
-          email: response.data!.email,
-          is_guest: response.data!.is_guest,
-        };
-
         // Token'ı hem localStorage'a hem extension'a kaydet
         setToken(response.data!.token);
-        setUser(userObj);
-        await saveToExtension({
-          token: response.data!.token,
-          user: userObj,
-        });
+        setUser(response.data!.user);
+        await saveToExtension(response.data!);
         return true;
       } else {
         setError(response.message || "Login failed"); // Backend mesajı öncelikli
@@ -70,20 +61,13 @@ export const useAuth = (): UseAuthReturn => {
     setError(null);
 
     try {
-      const response: AuthResponse = await registerApi(credentials);
+      const response = await registerApi(credentials);
 
       if (response.success) {
-        const userObj = {
-          email: response.data!.email,
-          is_guest: response.data!.is_guest,
-        };
         // Token'ı hem localStorage'a hem extension'a kaydet
         setToken(response.data!.token);
-        setUser(userObj);
-        await saveToExtension({
-          token: response.data!.token,
-          user: userObj,
-        });
+        setUser(response.data!.user);
+        await saveToExtension(response.data!);
         return true;
       } else {
         setError(response.message || "Registration failed");

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -11,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, XIcon } from "lucide-react";
+import { useLoadingGlobalStore } from "@/store/LoadingGlobal";
 
 type AuthMode = "login" | "register";
 
@@ -34,6 +36,7 @@ export function AuthModal({
   defaultMode = "login",
 }: AuthModalProps) {
   const { t } = useTranslation();
+  const { showLoading, hideLoading } = useLoadingGlobalStore();
   const { login, register, isLoading, error, clearError } = useAuth();
   const [activeTab, setActiveTab] = useState<AuthMode>(defaultMode);
   const [loginData, setLoginData] = useState<FormData>({
@@ -46,6 +49,7 @@ export function AuthModal({
   });
 
   const handleLogin = async (e: React.FormEvent) => {
+    showLoading();
     e.preventDefault();
     clearError();
 
@@ -58,6 +62,8 @@ export function AuthModal({
       onAuthSuccess();
       onClose();
     }
+
+    hideLoading();
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -84,11 +90,21 @@ export function AuthModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-white">
-        <DialogHeader>
+      <DialogContent showCloseButton={false} className="sm:max-w-md bg-white">
+        <DialogHeader className="relative">
           <DialogTitle className="text-center text-lg font-semibold">
             {t("auth.loginRegister")}
           </DialogTitle>
+          <DialogClose className="absolute -top-4 -end-4" asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="danger"
+              className="size-8 rounded-full"
+            >
+              <XIcon />
+            </Button>
+          </DialogClose>
         </DialogHeader>
 
         <Card className="border-0 shadow-none">
@@ -163,8 +179,9 @@ export function AuthModal({
                 </div>
 
                 <Button
+                  variant="secondary"
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                  className="w-full "
                   disabled={isLoading}
                 >
                   {isLoading ? t("common.loading") : t("auth.login")}
@@ -216,8 +233,9 @@ export function AuthModal({
                 </div>
 
                 <Button
+                  variant="secondary"
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                  className="w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? t("common.loading") : t("auth.register")}

@@ -2,24 +2,25 @@
 
 ## 📊 Progress Tablosu
 
-| Bileşen/Kategori | Durum | Açıklama |
-|------------------|-------|----------|
-| **Proje Yapısı** | ✅ Tamamlandı | Monorepo klasör yapısının oluşturulması |
-| **Veritabanı Şeması** | ✅ Tamamlandı | PostgreSQL tablo yapılarının hazırlanması |
-| **Backend API (heybe-api)** | ✅ Tamamlandı | Node.js backend uygulamasının geliştirilmesi |
-| **Frontend Website (heybe-website)** | ✅ Tamamlandı | React + shadcn + Tailwind frontend uygulaması |
-| **Browser Extension (heybe-extension)** | ✅ Tamamlandı | WXT ile multi-browser eklenti geliştirme |
-| **Storage Senkronizasyonu** | ✅ Tamamlandı | Eklenti-Website storage iletişimi |
-| **Kullanıcı Transfer Sistemi** | ✅ Tamamlandı | Misafir-Kayıtlı kullanıcı ürün transferi |
-| **TypeScript Definitions** | 🔄 Devam Ediyor | TypeScript type definitions ve interface yapısı |
-| **Shadcn-First Approach** | 🔄 Devam Ediyor | Shadcn-first component hierarchy dokümantasyonu |
-| **Test Senaryoları** | ⏳ Beklemede | 16 maddelik test sürecinin uygulanması |
+| Bileşen/Kategori                        | Durum           | Açıklama                                        |
+| --------------------------------------- | --------------- | ----------------------------------------------- |
+| **Proje Yapısı**                        | ✅ Tamamlandı   | Monorepo klasör yapısının oluşturulması         |
+| **Veritabanı Şeması**                   | ✅ Tamamlandı   | PostgreSQL tablo yapılarının hazırlanması       |
+| **Backend API (heybe-api)**             | ✅ Tamamlandı   | Node.js backend uygulamasının geliştirilmesi    |
+| **Frontend Website (heybe-website)**    | ✅ Tamamlandı   | React + shadcn + Tailwind frontend uygulaması   |
+| **Browser Extension (heybe-extension)** | ✅ Tamamlandı   | WXT ile multi-browser eklenti geliştirme        |
+| **Storage Senkronizasyonu**             | ✅ Tamamlandı   | Eklenti-Website storage iletişimi               |
+| **Kullanıcı Transfer Sistemi**          | ✅ Tamamlandı   | Misafir-Kayıtlı kullanıcı ürün transferi        |
+| **TypeScript Definitions**              | 🔄 Devam Ediyor | TypeScript type definitions ve interface yapısı |
+| **Shadcn-First Approach**               | 🔄 Devam Ediyor | Shadcn-first component hierarchy dokümantasyonu |
+| **Test Senaryoları**                    | ⏳ Beklemede    | 16 maddelik test sürecinin uygulanması          |
 
 ---
 
 ## 🏗️ Proje Yapısı
 
 ### Monorepo Klasör Yapısı
+
 ```
 heybe/
 ├── package.json                    # Root package.json (pnpm workspace)
@@ -78,16 +79,19 @@ heybe/
 ### 🌍 Internationalization (i18n) Yapısı
 
 **Desteklenen Diller:**
+
 - 🇹🇷 Türkçe (tr) - Varsayılan
 - 🇬🇧 İngilizce (en) - Fallback
 
 **Dil Seçim Stratejisi:**
+
 1. **Varsayılan Dil:** Tarayıcının dili (`navigator.language`)
 2. **Fallback:** Desteklenmeyen diller için İngilizce
 3. **Kullanıcı Seçimi:** Website'de dil değiştirilirse localStorage'da saklanır
 4. **Öncelik Sırası:** localStorage > Browser Language > English
 
 **Website i18n Yapısı:**
+
 ```
 heybe-website/src/
 ├── i18n/
@@ -100,6 +104,7 @@ heybe-website/src/
 ```
 
 **Extension i18n Yapısı:**
+
 ```
 heybe-extension/
 ├── locales/
@@ -112,6 +117,7 @@ heybe-extension/
 ```
 
 **Sidebar Component (Shadcn UI):**
+
 ```
 heybe-website/src/components/
 ├── ui/
@@ -120,49 +126,51 @@ heybe-website/src/components/
 ```
 
 **i18n Implementation:**
+
 ```typescript
 // Website - useTranslation hook
 const useTranslation = () => {
   const [language, setLanguage] = useState(() => {
     // 1. localStorage'dan kontrol et
-    const saved = localStorage.getItem('heybe-language')
-    if (saved && ['tr', 'en'].includes(saved)) return saved
-    
+    const saved = localStorage.getItem("heybe-language");
+    if (saved && ["tr", "en"].includes(saved)) return saved;
+
     // 2. Browser dilini kontrol et
-    const browserLang = navigator.language.split('-')[0]
-    if (['tr', 'en'].includes(browserLang)) return browserLang
-    
+    const browserLang = navigator.language.split("-")[0];
+    if (["tr", "en"].includes(browserLang)) return browserLang;
+
     // 3. Fallback to English
-    return 'en'
-  })
-  
+    return "en";
+  });
+
   const changeLanguage = (lang: string) => {
-    setLanguage(lang)
-    localStorage.setItem('heybe-language', lang)
-  }
-  
-  const t = (key: string) => translations[language][key] || key
-  
-  return { language, changeLanguage, t }
-}
+    setLanguage(lang);
+    localStorage.setItem("heybe-language", lang);
+  };
+
+  const t = (key: string) => translations[language][key] || key;
+
+  return { language, changeLanguage, t };
+};
 
 // Extension - i18n utility
 const getExtensionLanguage = () => {
   // 1. Browser dilini al
-  const browserLang = chrome.i18n.getUILanguage().split('-')[0]
-  
+  const browserLang = chrome.i18n.getUILanguage().split("-")[0];
+
   // 2. Desteklenen diller arasında kontrol et
-  return ['tr', 'en'].includes(browserLang) ? browserLang : 'en'
-}
+  return ["tr", "en"].includes(browserLang) ? browserLang : "en";
+};
 
 const t = (key: string) => {
-  return chrome.i18n.getMessage(key) || key
-}
+  return chrome.i18n.getMessage(key) || key;
+};
 ```
 
 **Çeviri Anahtarları (Translation Keys):**
 
 **Türkçe (tr.json):**
+
 ```json
 {
   "auth": {
@@ -220,6 +228,7 @@ const t = (key: string) => {
 ```
 
 **İngilizce (en.json):**
+
 ```json
 {
   "auth": {
@@ -277,6 +286,7 @@ const t = (key: string) => {
 ```
 
 **Önemli Notlar:**
+
 - Tüm UI metinleri çeviri anahtarları ile kodlanacak
 - Hard-coded metinler kesinlikle kullanılmayacak
 - Extension manifest.json'da default_locale belirtilecek
@@ -288,6 +298,7 @@ const t = (key: string) => {
 ## 🛠️ Teknik Gereksinimler
 
 ### Backend (heybe-api) - TAMAMLANDI
+
 - **Runtime:** Node.js (v18+)
 - **Framework:** Express.js
 - **Language:** TypeScript
@@ -302,6 +313,7 @@ const t = (key: string) => {
 - **Paket Yöneticisi:** pnpm
 
 ### Frontend (heybe-website)
+
 - **Framework:** React 18+
 - **Build Tool:** Vite
 - **UI Library:** shadcn/ui
@@ -313,6 +325,7 @@ const t = (key: string) => {
 - **Paket Yöneticisi:** pnpm
 
 ### Extension (heybe-extension)
+
 - **Framework:** WXT (webextension-polyfill dahil)
 - **UI Framework:** React
 - **UI Components:** shadcn/ui (extension uyumlu)
@@ -393,21 +406,22 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
 
 ### Eski Serverless Functionlardan Çevrilecek Endpoint'ler
 
-| Endpoint | Method | Açıklama | Eski Dosya |
-|----------|--------|----------|-------------|
-| `/api/auth/register` | POST | Kullanıcı kaydı + ürün transferi | register.js |
-| `/api/auth/login` | POST | Kullanıcı girişi + ürün transferi | login.js |
-| `/api/products` | GET | Kullanıcının ürünlerini getir | get-products.js |
-| `/api/products` | POST | Yeni ürün ekle | add-product.js |
-| `/api/products/:id` | DELETE | Ürün sil | delete-product.js |
-| `/api/products/all` | DELETE | Tüm ürünleri sil | delete-all-products.js |
-| `/api/database/setup` | POST | Veritabanı kurulumu | setup-database.js |
-| `/api/database/check` | GET | Veritabanı şema kontrolü | check-schema.js |
-| `/api/health` | GET | API sağlık kontrolü | test.js |
+| Endpoint              | Method | Açıklama                          | Eski Dosya             |
+| --------------------- | ------ | --------------------------------- | ---------------------- |
+| `/api/auth/register`  | POST   | Kullanıcı kaydı + ürün transferi  | register.js            |
+| `/api/auth/login`     | POST   | Kullanıcı girişi + ürün transferi | login.js               |
+| `/api/products`       | GET    | Kullanıcının ürünlerini getir     | get-products.js        |
+| `/api/products`       | POST   | Yeni ürün ekle                    | add-product.js         |
+| `/api/products/:id`   | DELETE | Ürün sil                          | delete-product.js      |
+| `/api/products/all`   | DELETE | Tüm ürünleri sil                  | delete-all-products.js |
+| `/api/database/setup` | POST   | Veritabanı kurulumu               | setup-database.js      |
+| `/api/database/check` | GET    | Veritabanı şema kontrolü          | check-schema.js        |
+| `/api/health`         | GET    | API sağlık kontrolü               | test.js                |
 
 ### API Endpoint Detayları
 
 #### 1. POST `/api/auth/register`
+
 ```json
 {
   "email": "user@example.com",
@@ -419,6 +433,7 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
 ```
 
 #### 2. POST `/api/auth/login`
+
 ```json
 {
   "email": "user@example.com",
@@ -429,34 +444,41 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
 ```
 
 #### 3. POST `/api/products` (Çoklu Resim Desteği)
+
 ```json
 {
   "user_id": "user-uuid-123",
   "name": "Ürün Adı",
   "price": "99.99 TL",
-  "image_urls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+  "image_urls": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
   "url": "https://example.com/product",
   "site": "example.com"
 }
 ```
 
 **Backend Implementation:**
+
 ```javascript
-app.post('/api/products', async (req, res) => {
+app.post("/api/products", async (req, res) => {
   const { user_id, name, price, image_urls, url, site } = req.body;
-  
+
   try {
     // image_urls array'ini PostgreSQL array formatına çevir
-    const imageUrlsArray = Array.isArray(image_urls) ? image_urls : [image_urls].filter(Boolean);
-    
+    const imageUrlsArray = Array.isArray(image_urls)
+      ? image_urls
+      : [image_urls].filter(Boolean);
+
     const result = await pool.query(
-      'INSERT INTO products (user_id, name, price, image_urls, url, site) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      "INSERT INTO products (user_id, name, price, image_urls, url, site) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [user_id, name, price, imageUrlsArray, url, site]
     );
-    
+
     res.json({ success: true, product: result.rows[0] });
   } catch (error) {
-    console.error('Ürün ekleme hatası:', error);
+    console.error("Ürün ekleme hatası:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -469,6 +491,7 @@ app.post('/api/products', async (req, res) => {
 ### Ana Bileşen Yapısı (HTML-First, CSS-Second, TypeScript-Last)
 
 #### 1. App.tsx (Ana Uygulama)
+
 - **HTML-First:** Semantic HTML5 structure with proper landmarks
 - **CSS-Second:** CSS Grid/Flexbox layout, CSS custom properties
 - **TypeScript-Last:** Sidebar state yönetimi, Global user context
@@ -478,19 +501,31 @@ app.post('/api/products', async (req, res) => {
 #### Sidebar Layout (Shadcn Sidebar Tabanlı)
 
 **Shadcn Sidebar Kurulumu:**
+
 ```bash
 npx shadcn@latest add sidebar
 ```
 
 **Önemli Not:** Proje promptuna göre sidebar'da sadece 2 menü olacak:
+
 1. **Ürünlerim** - Kullanıcının eklediği ürünlerin listesi
 2. **Kurulum** - Eklenti kurulum rehberi ve durumu
 
 **Sidebar.tsx - Shadcn Sidebar-07 Komponenti:**
+
 ```typescript
 // components/Sidebar.tsx - Modern sidebar-07 teması ile
-import { useState } from 'react'
-import { Package, Settings, LogIn, LogOut, User, Globe, ChevronUp, ChevronsUpDown } from 'lucide-react'
+import { useState } from "react";
+import {
+  Package,
+  Settings,
+  LogIn,
+  LogOut,
+  User,
+  Globe,
+  ChevronUp,
+  ChevronsUpDown,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -503,32 +538,38 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarTrigger,
-} from '@/components/ui/sidebar'
+} from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { AuthModal } from './AuthModal'
-import { useTranslation } from '@/hooks/useTranslation'
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { AuthModal } from "./AuthModal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type SidebarProps = {
-  readonly onScrollToSection?: (sectionId: string) => void
-  readonly currentUserId?: string
-  readonly userRole?: string
-  readonly isLoggedIn: boolean
-  readonly onLogin: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly onRegister: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly onLogout: () => Promise<{ success: boolean }>
-  readonly currentLanguage: string
-  readonly onLanguageChange: (language: string) => void
-  readonly t: (key: string) => string
-}
+  readonly onScrollToSection?: (sectionId: string) => void;
+  readonly currentUserId?: string;
+  readonly userRole?: string;
+  readonly isLoggedIn: boolean;
+  readonly onLogin: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly onRegister: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly onLogout: () => Promise<{ success: boolean }>;
+  readonly currentLanguage: string;
+  readonly onLanguageChange: (language: string) => void;
+  readonly t: (key: string) => string;
+};
 
 export function AppSidebar({
   onScrollToSection,
@@ -542,70 +583,74 @@ export function AppSidebar({
   onLanguageChange,
   t,
 }: SidebarProps) {
-  const { t } = useTranslation()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const { t } = useTranslation();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId)
+    const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      element.scrollIntoView({ behavior: "smooth" });
     }
     if (onScrollToSection) {
-      onScrollToSection(sectionId)
+      onScrollToSection(sectionId);
     }
-  }
+  };
 
   const handleLogin = async (email: string, password: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await onLogin(email, password)
+      const result = await onLogin(email, password);
       if (result.success) {
-        setAuthModalOpen(false)
+        setAuthModalOpen(false);
       }
-      return result
+      return result;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleRegister = async (email: string, password: string, name?: string) => {
-    setIsLoading(true)
+  const handleRegister = async (
+    email: string,
+    password: string,
+    name?: string
+  ) => {
+    setIsLoading(true);
     try {
-      const result = await onRegister(email, password, name)
+      const result = await onRegister(email, password, name);
       if (result.success) {
-        setAuthModalOpen(false)
+        setAuthModalOpen(false);
       }
-      return result
+      return result;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onLogout()
+      await onLogout();
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Menu items - Sadece 2 menü (proje promptuna göre)
   const menuItems = [
     {
-      id: 'products',
-      title: t('products.myProducts') || 'Ürünlerim',
+      id: "products",
+      title: t("products.myProducts") || "Ürünlerim",
       icon: Package,
-      action: () => scrollToSection('products'),
+      action: () => scrollToSection("products"),
     },
     {
-      id: 'install',
-      title: t('extension.installExtension') || 'Kurulum',
+      id: "install",
+      title: t("extension.installExtension") || "Kurulum",
       icon: Settings,
-      action: () => scrollToSection('install'),
-    }
-  ]
+      action: () => scrollToSection("install"),
+    },
+  ];
 
   return (
     <>
@@ -620,7 +665,9 @@ export function AppSidebar({
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Heybe</span>
-                    <span className="truncate text-xs">{t('products.myProducts') || 'Ürünlerim'}</span>
+                    <span className="truncate text-xs">
+                      {t("products.myProducts") || "Ürünlerim"}
+                    </span>
                   </div>
                 </a>
               </SidebarMenuButton>
@@ -630,7 +677,7 @@ export function AppSidebar({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>{t('common.menu') || 'Menü'}</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("common.menu") || "Menü"}</SidebarGroupLabel>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
@@ -651,20 +698,24 @@ export function AppSidebar({
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    className="data-[state=open]:bg-destructive data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src="" alt={isLoggedIn ? 'User' : 'Guest'} />
+                      <AvatarImage src="" alt={isLoggedIn ? "User" : "Guest"} />
                       <AvatarFallback className="rounded-lg">
                         <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {isLoggedIn ? t('auth.loggedIn') || 'Giriş Yapıldı' : t('auth.guest') || 'Misafir'}
+                        {isLoggedIn
+                          ? t("auth.loggedIn") || "Giriş Yapıldı"
+                          : t("auth.guest") || "Misafir"}
                       </span>
                       <span className="truncate text-xs">
-                        {currentUserId ? `${currentUserId.substring(0, 8)}...` : t('auth.guestUser') || 'Misafir Kullanıcı'}
+                        {currentUserId
+                          ? `${currentUserId.substring(0, 8)}...`
+                          : t("auth.guestUser") || "Misafir Kullanıcı"}
                       </span>
                     </div>
                     <ChevronsUpDown className="ml-auto size-4" />
@@ -677,23 +728,30 @@ export function AppSidebar({
                   sideOffset={4}
                 >
                   {/* Language Selection */}
-                  <DropdownMenuItem onClick={() => onLanguageChange(currentLanguage === 'tr' ? 'en' : 'tr')}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onLanguageChange(currentLanguage === "tr" ? "en" : "tr")
+                    }
+                  >
                     <Globe className="mr-2 h-4 w-4" />
-                    {currentLanguage === 'tr' ? '🇬🇧 English' : '🇹🇷 Türkçe'}
+                    {currentLanguage === "tr" ? "🇬🇧 English" : "🇹🇷 Türkçe"}
                   </DropdownMenuItem>
-                  
+
                   <Separator className="my-1" />
-                  
+
                   {/* Auth Actions */}
                   {!isLoggedIn ? (
                     <DropdownMenuItem onClick={() => setAuthModalOpen(true)}>
                       <LogIn className="mr-2 h-4 w-4" />
-                      {t('auth.loginRegister') || 'Giriş / Kayıt'}
+                      {t("auth.loginRegister") || "Giriş / Kayıt"}
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
-                      {t('auth.logout') || 'Çıkış Yap'}
+                      {t("auth.logout") || "Çıkış Yap"}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -712,29 +770,36 @@ export function AppSidebar({
         isLoading={isLoading}
       />
     </>
-  )
+  );
 }
 ```
 
 **Layout.tsx - Ana Layout Bileşeni:**
+
 ```typescript
 // components/Layout.tsx - Sidebar-07 ile entegre layout
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { Sidebar } from './Sidebar'
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar } from "./Sidebar";
 
 type LayoutProps = {
-  readonly children: React.ReactNode
-  readonly onScrollToSection?: (sectionId: string) => void
-  readonly currentUserId?: string
-  readonly userRole?: string
-  readonly isLoggedIn: boolean
-  readonly onLogin: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly onRegister: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly onLogout: () => Promise<{ success: boolean }>
-  readonly currentLanguage: string
-  readonly onLanguageChange: (language: string) => void
-  readonly t: (key: string) => string
-}
+  readonly children: React.ReactNode;
+  readonly onScrollToSection?: (sectionId: string) => void;
+  readonly currentUserId?: string;
+  readonly userRole?: string;
+  readonly isLoggedIn: boolean;
+  readonly onLogin: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly onRegister: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly onLogout: () => Promise<{ success: boolean }>;
+  readonly currentLanguage: string;
+  readonly onLanguageChange: (language: string) => void;
+  readonly t: (key: string) => string;
+};
 
 export function Layout({
   children,
@@ -768,16 +833,15 @@ export function Layout({
           <SidebarTrigger className="-ml-1" />
           {/* Breadcrumb kaldırıldı - kullanıcı talebi */}
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          {children}
-        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </main>
     </SidebarProvider>
-  )
+  );
 }
 ```
 
 **Shadcn Renk Teması (globals.css):**
+
 ```css
 @tailwind base;
 @tailwind components;
@@ -864,6 +928,7 @@ export function Layout({
 ```
 
 **Özellikler:**
+
 - **Responsive Design:** Otomatik collapse/expand
 - **Accessibility:** ARIA labels, keyboard navigation
 - **Modern UI:** Shadcn tasarım sistemi
@@ -872,6 +937,7 @@ export function Layout({
 - **No Breadcrumb:** Kullanıcı talebi doğrultusunda breadcrumb kaldırıldı
 
 #### 3. ProductList.tsx
+
 - **Semantic HTML:** `<main>`, `<section>`, `<article>` for products
 - **CSS Grid:** Responsive product grid layout
 - **Progressive Enhancement:** Search works with CSS `:has()` selector
@@ -885,9 +951,10 @@ export function Layout({
 - **Çoklu Resim:** Native `<picture>` element with responsive images
 
 #### 4. AuthModal.tsx
+
 ```typescript
 // components/AuthModal.tsx - Shadcn Dialog ile modern auth modal
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -895,195 +962,233 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, LogIn, UserPlus } from 'lucide-react'
-import { useTranslation } from '@/hooks/useTranslation'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type AuthModalProps = {
-  readonly isOpen: boolean
-  readonly onOpenChange: (open: boolean) => void
-  readonly onLogin: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly onRegister: (email: string, password: string) => Promise<{ success: boolean; message?: string }>
-  readonly isLoading?: boolean
-}
+  readonly isOpen: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onLogin: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly onRegister: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  readonly isLoading?: boolean;
+};
 
-export function AuthModal({ isOpen, onOpenChange, onLogin, onRegister, isLoading = false }: AuthModalProps) {
-  const { t } = useTranslation()
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [registerData, setRegisterData] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('login')
+export function AuthModal({
+  isOpen,
+  onOpenChange,
+  onLogin,
+  onRegister,
+  isLoading = false,
+}: AuthModalProps) {
+  const { t } = useTranslation();
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [registerData, setRegisterData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("login");
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    
+    e.preventDefault();
+    setError("");
+
     try {
-      const result = await onLogin(loginData.email, loginData.password)
+      const result = await onLogin(loginData.email, loginData.password);
       if (result.success) {
-        onOpenChange(false)
-        setLoginData({ email: '', password: '' })
+        onOpenChange(false);
+        setLoginData({ email: "", password: "" });
       } else {
-        setError(result.message || t('auth.loginFailed'))
+        setError(result.message || t("auth.loginFailed"));
       }
     } catch (err) {
-      setError(t('common.error'))
+      setError(t("common.error"));
     }
-  }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    
+    e.preventDefault();
+    setError("");
+
     try {
-      const result = await onRegister(registerData.email, registerData.password)
+      const result = await onRegister(
+        registerData.email,
+        registerData.password
+      );
       if (result.success) {
-        onOpenChange(false)
-        setRegisterData({ email: '', password: '' })
+        onOpenChange(false);
+        setRegisterData({ email: "", password: "" });
       } else {
-        setError(result.message || t('auth.registerFailed'))
+        setError(result.message || t("auth.registerFailed"));
       }
     } catch (err) {
-        setError(t('common.error'))
-      }
-  }
+      setError(t("common.error"));
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('auth.accountOperations')}</DialogTitle>
-          <DialogDescription>
-            {t('auth.loginOrRegister')}
-          </DialogDescription>
+          <DialogTitle>{t("auth.accountOperations")}</DialogTitle>
+          <DialogDescription>{t("auth.loginOrRegister")}</DialogDescription>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login" className="flex items-center gap-2">
               <LogIn className="h-4 w-4" />
-              {t('auth.login')}
+              {t("auth.login")}
             </TabsTrigger>
             <TabsTrigger value="register" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
-              {t('auth.register')}
+              {t("auth.register")}
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="login">
             <Card>
               <CardHeader>
-                <CardTitle>{t('auth.login')}</CardTitle>
+                <CardTitle>{t("auth.login")}</CardTitle>
                 <CardDescription>
-                  {t('auth.loginWithExistingAccount')}
+                  {t("auth.loginWithExistingAccount")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">{t('auth.email')}</Label>
+                    <Label htmlFor="login-email">{t("auth.email")}</Label>
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder={t('auth.emailPlaceholder')}
+                      placeholder={t("auth.emailPlaceholder")}
                       value={loginData.email}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">{t('auth.password')}</Label>
+                    <Label htmlFor="login-password">{t("auth.password")}</Label>
                     <Input
                       id="login-password"
                       type="password"
                       placeholder="••••••••"
                       value={loginData.password}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       minLength={6}
                     />
                   </div>
-                  
+
                   {error && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
-                  
+
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('auth.loggingIn')}
+                        {t("auth.loggingIn")}
                       </>
                     ) : (
-                      t('auth.login')
+                      t("auth.login")
                     )}
                   </Button>
                 </form>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="register">
             <Card>
               <CardHeader>
-                <CardTitle>{t('auth.register')}</CardTitle>
-                <CardDescription>
-                  {t('auth.createNewAccount')}
-                </CardDescription>
+                <CardTitle>{t("auth.register")}</CardTitle>
+                <CardDescription>{t("auth.createNewAccount")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
-
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">{t('auth.email')}</Label>
+                    <Label htmlFor="register-email">{t("auth.email")}</Label>
                     <Input
                       id="register-email"
                       type="email"
-                      placeholder={t('auth.emailPlaceholder')}
+                      placeholder={t("auth.emailPlaceholder")}
                       value={registerData.email}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-password">{t('auth.password')}</Label>
+                    <Label htmlFor="register-password">
+                      {t("auth.password")}
+                    </Label>
                     <Input
                       id="register-password"
                       type="password"
                       placeholder="••••••••"
                       value={registerData.password}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       minLength={6}
                     />
                   </div>
-                  
+
                   {error && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
-                  
+
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('auth.registering')}
+                        {t("auth.registering")}
                       </>
                     ) : (
-                      t('auth.register')
+                      t("auth.register")
                     )}
                   </Button>
                 </form>
@@ -1093,11 +1198,12 @@ export function AuthModal({ isOpen, onOpenChange, onLogin, onRegister, isLoading
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 ```
 
 **Özellikler:**
+
 - **Shadcn Dialog:** Modern modal yapısı ve focus trap
 - **Tabs Component:** Login/Register arası geçiş
 - **Form Validation:** HTML5 validation + TypeScript
@@ -1108,6 +1214,7 @@ export function AuthModal({ isOpen, onOpenChange, onLogin, onRegister, isLoading
 - **Transfer Logic:** Misafir ürünlerinin transferi backend'de
 
 #### 5. InstallationModal.tsx
+
 - **Semantic Structure:** `<dialog>` element with proper roles
 - **CSS Animations:** Smooth transitions without JavaScript
 - **Progressive Disclosure:** CSS-based step navigation
@@ -1116,55 +1223,56 @@ export function AuthModal({ isOpen, onOpenChange, onLogin, onRegister, isLoading
 - **Yönlendirme:** İlgili extension store linkler
 
 #### 6. ExtensionWarning.tsx
+
 ```typescript
 // components/ExtensionWarning.tsx - Shadcn Alert ile modern uyarı banner
-import { useState, useEffect } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { X, Download, AlertTriangle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { X, Download, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type ExtensionWarningProps = {
-  readonly isExtensionInstalled: boolean
-  readonly onInstallClick: () => void
-  readonly className?: string
-}
+  readonly isExtensionInstalled: boolean;
+  readonly onInstallClick: () => void;
+  readonly className?: string;
+};
 
-export function ExtensionWarning({ 
-  isExtensionInstalled, 
-  onInstallClick, 
-  className 
+export function ExtensionWarning({
+  isExtensionInstalled,
+  onInstallClick,
+  className,
 }: ExtensionWarningProps) {
-  const [isDismissed, setIsDismissed] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Extension kurulu değilse ve daha önce kapatılmamışsa göster
-    const dismissed = localStorage.getItem('extension-warning-dismissed')
+    const dismissed = localStorage.getItem("extension-warning-dismissed");
     if (!isExtensionInstalled && !dismissed) {
-      setIsVisible(true)
+      setIsVisible(true);
     }
-  }, [isExtensionInstalled])
+  }, [isExtensionInstalled]);
 
   const handleDismiss = () => {
-    setIsDismissed(true)
-    setIsVisible(false)
-    localStorage.setItem('extension-warning-dismissed', 'true')
-  }
+    setIsDismissed(true);
+    setIsVisible(false);
+    localStorage.setItem("extension-warning-dismissed", "true");
+  };
 
   const handleInstallClick = () => {
-    onInstallClick()
-    handleDismiss() // Kurulum sayfasına yönlendirildikten sonra banner'ı kapat
-  }
+    onInstallClick();
+    handleDismiss(); // Kurulum sayfasına yönlendirildikten sonra banner'ı kapat
+  };
 
   // Extension kuruluysa veya kapatıldıysa gösterme
   if (isExtensionInstalled || isDismissed || !isVisible) {
-    return null
+    return null;
   }
 
   return (
-    <Alert 
-      variant="default" 
+    <Alert
+      variant="default"
       className={cn(
         "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
         "sticky top-0 z-50 rounded-none border-x-0 border-t-0",
@@ -1176,14 +1284,12 @@ export function ExtensionWarning({
       <AlertTriangle className="h-4 w-4" />
       <AlertDescription className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <span className="font-medium">
-            Eklenti bulunamadı!
-          </span>
+          <span className="font-medium">Eklenti bulunamadı!</span>
           <span className="text-sm">
             Yeni ürün eklemek için eklentiyi yüklemeniz gerekiyor.
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2 ml-4">
           <Button
             variant="outline"
@@ -1194,7 +1300,7 @@ export function ExtensionWarning({
             <Download className="h-3 w-3 mr-1" />
             Eklentiyi Yükle
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -1207,11 +1313,12 @@ export function ExtensionWarning({
         </div>
       </AlertDescription>
     </Alert>
-  )
+  );
 }
 ```
 
 **Özellikler:**
+
 - **Shadcn Alert:** Modern alert komponenti yapısı
 - **Sticky Banner:** Sayfanın üstünde sabit kalır
 - **Dismissible:** Kapatılabilir ve localStorage'da hatırlanır
@@ -1227,108 +1334,121 @@ export function ExtensionWarning({
 
 ```typescript
 // types/index.ts - Strict typing with template literals
-type ProductId = `product_${string}`
-type UserId = `user_${string}` | `guest_${string}`
-type SiteUrl = `https://${string}` | `http://${string}`
+type ProductId = `product_${string}`;
+type UserId = `user_${string}` | `guest_${string}`;
+type SiteUrl = `https://${string}` | `http://${string}`;
 
 type Product = {
-  readonly id: ProductId
-  readonly name: string
-  readonly price: string
-  readonly image_urls: readonly string[]
-  readonly url: SiteUrl
-  readonly site: string
-  readonly created_at: string
-}
+  readonly id: ProductId;
+  readonly name: string;
+  readonly price: string;
+  readonly image_urls: readonly string[];
+  readonly url: SiteUrl;
+  readonly site: string;
+  readonly created_at: string;
+};
 
 type UserData = {
-  readonly userType: 'guest' | 'registered'
-  readonly userId: UserId
-  readonly email?: string
-}
+  readonly userType: "guest" | "registered";
+  readonly userId: UserId;
+  readonly email?: string;
+};
 
 // API response types with branded strings
 type ApiResponse<T> = {
-  readonly success: boolean
-  readonly data: T
-  readonly message?: string
-}
+  readonly success: boolean;
+  readonly data: T;
+  readonly message?: string;
+};
 
 type ProductApiResponse = ApiResponse<{
-  readonly product: Product
-  readonly count: number
-}>
+  readonly product: Product;
+  readonly count: number;
+}>;
 ```
 
 #### Modern React Components with TypeScript
 
 ```typescript
 // components/ProductList.tsx - Performance optimized with i18n
-import { memo, useMemo, useCallback } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
-import type { Product } from '@/types'
+import { memo, useMemo, useCallback } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { Product } from "@/types";
 
 type ProductListProps = {
-  readonly products: readonly Product[]
-  readonly onDeleteProduct: (id: ProductId) => Promise<void>
-  readonly searchQuery: string
-}
+  readonly products: readonly Product[];
+  readonly onDeleteProduct: (id: ProductId) => Promise<void>;
+  readonly searchQuery: string;
+};
 
 const ProductList = memo(function ProductList({
   products,
   onDeleteProduct,
-  searchQuery
+  searchQuery,
 }: ProductListProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   // Memoized filtered products
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products
-    
-    const query = searchQuery.toLowerCase()
-    return products.filter(product => 
-      product.name.toLowerCase().includes(query) ||
-      product.site.toLowerCase().includes(query)
-    )
-  }, [products, searchQuery])
+    if (!searchQuery.trim()) return products;
+
+    const query = searchQuery.toLowerCase();
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.site.toLowerCase().includes(query)
+    );
+  }, [products, searchQuery]);
 
   // Memoized delete handler
-  const handleDeleteProduct = useCallback(async (productId: ProductId) => {
-    try {
-      await onDeleteProduct(productId)
-    } catch (error) {
-      console.error('Product deletion failed:', error)
-    }
-  }, [onDeleteProduct])
+  const handleDeleteProduct = useCallback(
+    async (productId: ProductId) => {
+      try {
+        await onDeleteProduct(productId);
+      } catch (error) {
+        console.error("Product deletion failed:", error);
+      }
+    },
+    [onDeleteProduct]
+  );
 
   if (filteredProducts.length === 0) {
     return (
-      <section 
+      <section
         className="flex flex-col items-center justify-center p-8 text-center"
         role="status"
         aria-live="polite"
       >
         <h2 className="text-lg font-semibold text-gray-700">
-          {searchQuery ? t('products.noSearchResults') || 'Arama sonucu bulunamadı' : t('products.noProducts') || 'Henüz ürün eklenmemiş'}
+          {searchQuery
+            ? t("products.noSearchResults") || "Arama sonucu bulunamadı"
+            : t("products.noProducts") || "Henüz ürün eklenmemiş"}
         </h2>
         <p className="text-sm text-gray-500 mt-2">
-          {searchQuery ? t('products.tryDifferentKeywords') || 'Farklı anahtar kelimeler deneyin' : t('products.addFirstProduct') || 'İlk ürününüzü ekleyin'}
+          {searchQuery
+            ? t("products.tryDifferentKeywords") ||
+              "Farklı anahtar kelimeler deneyin"
+            : t("products.addFirstProduct") || "İlk ürününüzü ekleyin"}
         </p>
       </section>
-    )
+    );
   }
 
   return (
     <main className="space-y-4 p-4">
       <header className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">{t('products.myProducts') || 'Ürünlerim'}</h1>
+        <h1 className="text-xl font-bold">
+          {t("products.myProducts") || "Ürünlerim"}
+        </h1>
         <div className="text-sm text-gray-600">
-          {filteredProducts.length} {t('products.product') || 'ürün'} • {new Set(filteredProducts.map(p => p.site)).size} {t('products.site') || 'site'}
+          {filteredProducts.length} {t("products.product") || "ürün"} •{" "}
+          {new Set(filteredProducts.map((p) => p.site)).size}{" "}
+          {t("products.site") || "site"}
         </div>
       </header>
-      
+
       <ul className="space-y-3" role="list">
-        {filteredProducts.map(product => (
+        {filteredProducts.map((product) => (
           <ProductItem
             key={product.id}
             product={product}
@@ -1337,100 +1457,113 @@ const ProductList = memo(function ProductList({
         ))}
       </ul>
     </main>
-  )
-})
+  );
+});
 
-export { ProductList }
+export { ProductList };
 ```
 
 ```typescript
 // hooks/useExtensionStorage.ts - Custom hook with proper error handling
-import { useCallback, useEffect, useState } from 'react'
-import type { Product, UserData } from '@/types'
+import { useCallback, useEffect, useState } from "react";
+import type { Product, UserData } from "@/types";
 
 type ExtensionStorageHook = {
-  readonly products: readonly Product[]
-  readonly userData: UserData | null
-  readonly isLoading: boolean
-  readonly error: string | null
-  readonly addProduct: (product: Omit<Product, 'id' | 'created_at'>) => Promise<void>
-  readonly deleteProduct: (id: ProductId) => Promise<void>
-  readonly syncWithWebsite: () => Promise<void>
-}
+  readonly products: readonly Product[];
+  readonly userData: UserData | null;
+  readonly isLoading: boolean;
+  readonly error: string | null;
+  readonly addProduct: (
+    product: Omit<Product, "id" | "created_at">
+  ) => Promise<void>;
+  readonly deleteProduct: (id: ProductId) => Promise<void>;
+  readonly syncWithWebsite: () => Promise<void>;
+};
 
 function useExtensionStorage(): ExtensionStorageHook {
-  const [products, setProducts] = useState<readonly Product[]>([])
-  const [userData, setUserData] = useState<UserData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [products, setProducts] = useState<readonly Product[]>([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Load initial data
   useEffect(() => {
     const loadData = async (): Promise<void> => {
       try {
-        setIsLoading(true)
-        setError(null)
-        
+        setIsLoading(true);
+        setError(null);
+
         const [productsData, userDataResult] = await Promise.all([
-          browser.storage.local.get('products'),
-          browser.storage.local.get('userData')
-        ])
-        
-        setProducts(productsData.products || [])
-        setUserData(userDataResult.userData || null)
+          browser.storage.local.get("products"),
+          browser.storage.local.get("userData"),
+        ]);
+
+        setProducts(productsData.products || []);
+        setUserData(userDataResult.userData || null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Storage load failed')
+        setError(err instanceof Error ? err.message : "Storage load failed");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    
-    loadData()
-  }, [])
+    };
 
-  const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'created_at'>): Promise<void> => {
-    try {
-      const newProduct: Product = {
-        ...productData,
-        id: `product_${crypto.randomUUID()}` as ProductId,
-        created_at: new Date().toISOString()
+    loadData();
+  }, []);
+
+  const addProduct = useCallback(
+    async (productData: Omit<Product, "id" | "created_at">): Promise<void> => {
+      try {
+        const newProduct: Product = {
+          ...productData,
+          id: `product_${crypto.randomUUID()}` as ProductId,
+          created_at: new Date().toISOString(),
+        };
+
+        const updatedProducts = [...products, newProduct];
+        await browser.storage.local.set({ products: updatedProducts });
+        setProducts(updatedProducts);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Product add failed"
+        );
       }
-      
-      const updatedProducts = [...products, newProduct]
-      await browser.storage.local.set({ products: updatedProducts })
-      setProducts(updatedProducts)
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Product add failed')
-    }
-  }, [products])
+    },
+    [products]
+  );
 
-  const deleteProduct = useCallback(async (productId: ProductId): Promise<void> => {
-    try {
-      const updatedProducts = products.filter(p => p.id !== productId)
-      await browser.storage.local.set({ products: updatedProducts })
-      setProducts(updatedProducts)
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Product delete failed')
-    }
-  }, [products])
+  const deleteProduct = useCallback(
+    async (productId: ProductId): Promise<void> => {
+      try {
+        const updatedProducts = products.filter((p) => p.id !== productId);
+        await browser.storage.local.set({ products: updatedProducts });
+        setProducts(updatedProducts);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Product delete failed"
+        );
+      }
+    },
+    [products]
+  );
 
   const syncWithWebsite = useCallback(async (): Promise<void> => {
     try {
       // Send storage change notification to website
-      await browser.tabs.query({ active: true, currentWindow: true })
-        .then(tabs => {
+      await browser.tabs
+        .query({ active: true, currentWindow: true })
+        .then((tabs) => {
           if (tabs[0]?.id) {
             return browser.tabs.sendMessage(tabs[0].id, {
-              type: 'HEYBE_STORAGE_UPDATED',
-              data: { products, userData }
-            })
+              type: "HEYBE_STORAGE_UPDATED",
+              data: { products, userData },
+            });
           }
-        })
+        });
     } catch (err) {
-      console.warn('Website sync failed:', err)
+      console.warn("Website sync failed:", err);
       // Non-critical error, don't throw
     }
-  }, [products, userData])
+  }, [products, userData]);
 
   return {
     products,
@@ -1439,11 +1572,11 @@ function useExtensionStorage(): ExtensionStorageHook {
     error,
     addProduct,
     deleteProduct,
-    syncWithWebsite
-  }
+    syncWithWebsite,
+  };
 }
 
-export { useExtensionStorage }
+export { useExtensionStorage };
 ```
 
 ---
@@ -1451,6 +1584,7 @@ export { useExtensionStorage }
 ## 🧩 Extension Özellikleri
 
 ### Desteklenen Tarayıcılar
+
 - **Chrome** ✅ (WXT native support)
 - **Firefox** ✅ (WXT native support)
 - **Edge** ✅ (Chromium-based, Chrome ile uyumlu)
@@ -1458,7 +1592,9 @@ export { useExtensionStorage }
 - **Safari** ⚠️ (WXT experimental support - alternatif yaklaşım gerekebilir)
 
 ### Safari İçin Alternatif Yaklaşım
+
 Safari için WXT tam destek vermiyorsa:
+
 1. **Safari Web Extension Converter** kullanımı
 2. **Manuel Safari extension** geliştirme
 3. **Progressive Web App (PWA)** alternatifi
@@ -1485,7 +1621,7 @@ const isHomePage = (): boolean => {
     document.querySelector('meta[property="og:type"][content="website"]'),
     document.querySelector('meta[name="robots"][content*="index"]')
   ];
-  
+
   return homePageIndicators.some(indicator => indicator);
 };
 
@@ -1494,7 +1630,7 @@ const checkAddToCartButton = (): { hasButton: boolean; buttonCount: number; topB
   // Tüm olası sepete ekle buton seçicileri
   const buttonSelectors = "button, a, input[type='button'], input[type='submit'], div[role='button'], span[role='button'], [class*='button'], [class*='btn'], [data-testid*='button'], [data-testid*='cart'], [data-testid*='add']";
   const allElements = Array.from(document.querySelectorAll(buttonSelectors));
-  
+
   // Sepete ekle metinleri (çoklu dil desteği)
   const addToCartTexts = [
     // Türkçe
@@ -1508,24 +1644,24 @@ const checkAddToCartButton = (): { hasButton: boolean; buttonCount: number; topB
     // Kısaltmalar ve semboller
     "add +", "+ cart", "🛒", "🛍️"
   ];
-  
+
   const addToCartButtons = allElements.filter(element => {
     const text = (
-      element.textContent || 
-      element.getAttribute('value') || 
-      element.getAttribute('aria-label') || 
-      element.getAttribute('title') || 
+      element.textContent ||
+      element.getAttribute('value') ||
+      element.getAttribute('aria-label') ||
+      element.getAttribute('title') ||
       element.getAttribute('alt') ||
       ''
     ).toLowerCase().trim();
-    
+
     return addToCartTexts.some(term => text.includes(term.toLowerCase()));
   });
-  
+
   // En üstteki butonu bul (viewport'a göre)
   let topButton: Element | null = null;
   let minTop = Infinity;
-  
+
   addToCartButtons.forEach(button => {
     const rect = button.getBoundingClientRect();
     if (rect.top < minTop && rect.top >= 0) {
@@ -1533,7 +1669,7 @@ const checkAddToCartButton = (): { hasButton: boolean; buttonCount: number; topB
       topButton = button;
     }
   });
-  
+
   return {
     hasButton: addToCartButtons.length > 0,
     buttonCount: addToCartButtons.length,
@@ -1561,47 +1697,47 @@ const isProductDetailPage = (): boolean => {
     'meta[property="product:name"]',
     'meta[property="product:title"]'
   ];
-  
+
   return productMetaTags.some(selector => document.querySelector(selector));
 };
 
 // 4. Butonun yerleşim kontrolü (son kontrol)
 const checkButtonPlacement = (button: Element): boolean => {
   if (!button) return false;
-  
+
   const rect = button.getBoundingClientRect();
   const viewportHeight = window.innerHeight;
-  
+
   // Buton sayfanın üst yarısında mı?
   const isInTopHalf = rect.top < (viewportHeight / 2);
-  
+
   if (!isInTopHalf) return false;
-  
+
   // Butonun çevresinde başka sepete ekle butonu var mı kontrol et
   const parentElement = button.parentElement;
   if (!parentElement) return true;
-  
+
   // 3 seviye yukarı çık ve çevredeki elementleri kontrol et
   let checkElement = parentElement;
   for (let i = 0; i < 3; i++) {
     if (!checkElement.parentElement) break;
     checkElement = checkElement.parentElement;
   }
-  
+
   // Çevredeki sepete ekle butonlarını say
   const nearbyButtons = checkElement.querySelectorAll('button, a, [role="button"]');
   const addToCartTexts = ["sepete ekle", "add to cart", "buy", "satın al", "sepet", "cart"];
-  
+
   let nearbyAddToCartCount = 0;
   nearbyButtons.forEach(btn => {
     if (btn === button) return; // Kendisini sayma
-    
+
     const text = (btn.textContent || '').toLowerCase();
     if (addToCartTexts.some(term => text.includes(term))) {
       nearbyAddToCartCount++;
     }
   });
-  
+
   // Çevrede 2'den fazla sepete ekle butonu varsa bu muhtemelen ürün listesi
   return nearbyAddToCartCount <= 2;
 };
@@ -1610,22 +1746,22 @@ const checkButtonPlacement = (button: Element): boolean => {
 const extractProductNameFromUrl = (): string => {
   const pathname = window.location.pathname;
   const segments = pathname.split('/').filter(segment => segment.length > 0);
-  
+
   // URL'de tire ile ayrılmış ürün adı arama (en uzun segmenti tercih et)
   let bestSegment = "";
-  
+
   for (const segment of segments) {
     // Tire içeren, yeterince uzun ve sayısal olmayan segmentleri değerlendir
-    if (segment.includes('-') && 
-        segment.length > 10 && 
+    if (segment.includes('-') &&
+        segment.length > 10 &&
         segment.length > bestSegment.length &&
         !/^\d+$/.test(segment.replace(/-/g, ''))) {
       bestSegment = segment;
     }
   }
-  
+
   if (!bestSegment) return "";
-  
+
   // Tire ile ayrılmış metni boşluklara çevir ve temizle
   return bestSegment
     .split('-')
@@ -1638,7 +1774,7 @@ const extractProductNameFromUrl = (): string => {
 
 // Algoritma Özeti:
 // 1. Ana sayfa kontrolü → Eğer ana sayfaysa FALSE döndür
-// 2. Sepete ekle butonu arama → Bulunamazsa FALSE döndür  
+// 2. Sepete ekle butonu arama → Bulunamazsa FALSE döndür
 // 3. Meta tag doğrulaması → Varsa TRUE döndür
 // 4. Son kontrol: Tek buton + üst yerleşim + çevrede az buton → TRUE döndür
 // 5. Diğer durumlar → FALSE döndür
@@ -1646,30 +1782,30 @@ const extractProductNameFromUrl = (): string => {
 // 6. DOM'da URL tabanlı ürün adı arama
 const findProductNameInDOM = (urlProductName: string): string => {
   if (!urlProductName) return "";
-  
+
   // URL'den çıkarılan ürün adının DOM'da eşleşmesini ara
   const searchTerms = urlProductName.toLowerCase().split(' ').filter(term => term.length > 2);
   const allTextElements = document.querySelectorAll(
     'h1, h2, h3, title, [class*="title"], [class*="name"], [class*="product"], [class*="baslik"], [data-testid*="title"], [data-testid*="name"]'
   );
-  
+
   let bestMatch = "";
   let bestScore = 0;
-  
+
   for (const element of allTextElements) {
     const text = element.textContent?.toLowerCase() || "";
-    
+
     // Kelime eşleşme skorunu hesapla
     const matchCount = searchTerms.filter(term => text.includes(term)).length;
     const score = matchCount / searchTerms.length;
-    
+
     // En az %60 eşleşme arıyoruz ve en iyi skoru kaydet
     if (score >= 0.6 && score > bestScore) {
       bestScore = score;
       bestMatch = element.textContent?.trim() || "";
     }
   }
-  
+
   return bestMatch;
 };
 
@@ -1680,43 +1816,43 @@ export const detectProductPage = (): boolean => {
     console.log('Heybe: Ana sayfa tespit edildi, ürün sayfası değil');
     return false;
   }
-  
+
   // 2. ADIM: Sepete ekle butonu arama
   const addToCartResult = checkAddToCartButton();
-  
+
   if (!addToCartResult.hasButton) {
     console.log('Heybe: Sepete ekle butonu bulunamadı');
     return false;
   }
-  
+
   console.log(`Heybe: ${addToCartResult.buttonCount} adet sepete ekle butonu bulundu`);
-  
+
   // 3. ADIM: Meta tag ile doğrulama
   const hasProductMeta = isProductDetailPage();
-  
+
   if (hasProductMeta) {
     console.log('Heybe: Meta tag doğrulaması başarılı - Ürün sayfası tespit edildi');
     return true;
   }
-  
+
   console.log('Heybe: Meta tag doğrulaması başarısız - Son kontrol yapılıyor');
-  
+
   // 4. ADIM: Son kontrol - Butonun yerleşimi ve teklik kontrolü
   if (addToCartResult.buttonCount === 1 && addToCartResult.topButton) {
     const isWellPlaced = checkButtonPlacement(addToCartResult.topButton);
-    
+
     if (isWellPlaced) {
       console.log('Heybe: Tek sepete ekle butonu üst kısımda ve iyi yerleştirilmiş - Ürün sayfası olarak kabul edildi');
       return true;
     }
   }
-  
+
   // Birden fazla buton varsa ve meta tag yoksa, muhtemelen ürün listesi
   if (addToCartResult.buttonCount > 1) {
     console.log(`Heybe: ${addToCartResult.buttonCount} sepete ekle butonu var ama meta tag yok - Muhtemelen ürün listesi`);
     return false;
   }
-  
+
   console.log('Heybe: Ürün sayfası kriterleri karşılanmadı');
   return false;
 };
@@ -1729,7 +1865,7 @@ const checkPriceElement = (): boolean => {
     '[class*="money"]', '[class*="para"]', '[class*="preis"]',
     '[class*="tutar"]', '[class*="ucret"]', '[class*="bedel"]'
   ];
-  
+
   return priceSelectors.some(selector => {
     const elements = document.querySelectorAll(selector);
     return Array.from(elements).some(element => {
@@ -1751,9 +1887,9 @@ export const extractProductInfo = () => {
       metaTags[name.toLowerCase()] = content;
     }
   });
-  
+
   // 1. Meta taglerden ürün adı (en yüksek öncelik)
-  const metaProductName = 
+  const metaProductName =
     metaTags["og:title"] ||
     metaTags["twitter:title"] ||
     metaTags["product:name"] ||
@@ -1761,20 +1897,20 @@ export const extractProductInfo = () => {
     metaTags["item:name"] ||
     metaTags.title ||
     "";
-  
+
   // 2. URL tabanlı ürün adı tespiti
   const urlProductName = extractProductNameFromUrl();
   const domProductName = findProductNameInDOM(urlProductName);
-  
+
   // 3. H1 taginden ürün adı alma (ek kaynak)
   const h1ProductName = document.querySelector('h1')?.textContent?.trim() || "";
-  
+
   // 4. Gelişmiş ürün adı seçimi - Öncelik ve kalite tabanlı
   const siteDomain = window.location.hostname.toLowerCase();
   const domainKeywords = siteDomain.split('.')[0]; // trendyol.com -> trendyol
-  
+
   let finalProductName = "Ürün";
-  
+
   // Tüm adayları öncelik sırasıyla topla
   const candidates = [
     { name: metaProductName, priority: 4, source: 'meta' },
@@ -1782,19 +1918,19 @@ export const extractProductInfo = () => {
     { name: h1ProductName, priority: 2, source: 'h1' },
     { name: urlProductName, priority: 1, source: 'url' }
   ].filter(candidate => candidate.name && candidate.name.length > 3);
-  
+
   if (candidates.length === 0) {
     // Fallback: Sayfa başlığından al
     const titleParts = document.title.split(/[|\-–—]/)[0].trim();
     finalProductName = titleParts.length > 3 ? titleParts : "Ürün";
   } else {
     // Domain adı kontrolü ve en iyi adayı seçme
-    const withoutDomain = candidates.filter(c => 
+    const withoutDomain = candidates.filter(c =>
       !c.name.toLowerCase().includes(domainKeywords)
     );
-    
+
     const finalCandidates = withoutDomain.length > 0 ? withoutDomain : candidates;
-    
+
     // En yüksek öncelikli ve en uzun olanı seç
     finalProductName = finalCandidates.reduce((best, current) => {
       if (current.priority > best.priority) return current;
@@ -1802,29 +1938,29 @@ export const extractProductInfo = () => {
       return best;
     }).name;
   }
-  
+
   // Fiyat çıkarma
-  const price = 
+  const price =
     metaTags["product:price:amount"] ||
     metaTags["twitter:data1"] ||
     metaTags["product:price"] ||
     extractPriceFromDOM();
-  
+
   // Resim URL'leri
-  const primaryImageUrl = 
+  const primaryImageUrl =
     metaTags["og:image"] ||
     metaTags["twitter:image"] ||
     metaTags["product:image"] ||
     metaTags.image ||
     "";
-  
+
   const secondaryImageUrl = findLargerProductImage();
-  
+
   const imageUrls = [primaryImageUrl];
   if (secondaryImageUrl && secondaryImageUrl !== primaryImageUrl) {
     imageUrls.push(secondaryImageUrl);
   }
-  
+
   return {
     name: finalProductName,
     price: price || "",
@@ -1839,23 +1975,23 @@ const extractProductNameFromUrl = (): string => {
   try {
     const url = window.location.href;
     const pathname = window.location.pathname;
-    
+
     // URL'den tire ile ayrılmış kısımları çıkar
     const urlParts = pathname.split('/').filter(part => part.length > 0);
-    
+
     // En uzun ve en çok tire içeren kısmı bul (genelde ürün adı)
     let productNameCandidate = '';
-    
+
     for (const part of urlParts) {
       if (part.includes('-') && part.length > productNameCandidate.length) {
         productNameCandidate = part;
       }
     }
-    
+
     if (!productNameCandidate) {
       return '';
     }
-    
+
     // Tire ile ayrılmış kelimeleri birleştir
     const words = productNameCandidate
       .split('-')
@@ -1865,7 +2001,7 @@ const extractProductNameFromUrl = (): string => {
         // İlk harfi büyük yap
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       });
-    
+
     return words.join(' ').trim();
   } catch (error) {
     console.error('URL\'den ürün adı çıkarma hatası:', error);
@@ -1878,7 +2014,7 @@ const findProductNameInDOM = (urlProductName: string): string => {
   if (!urlProductName || urlProductName.length < 3) {
     return '';
   }
-  
+
   try {
     // Arama yapılacak elementler (öncelik sırasına göre)
     const searchSelectors = [
@@ -1892,32 +2028,32 @@ const findProductNameInDOM = (urlProductName: string): string => {
       '[class*="name" i]',
       'h3'
     ];
-    
+
     // URL'den çıkarılan kelimeleri hazırla
     const urlWords = urlProductName.toLowerCase().split(' ');
     const minMatchWords = Math.max(2, Math.floor(urlWords.length * 0.6)); // En az %60 eşleşme
-    
+
     for (const selector of searchSelectors) {
       const elements = document.querySelectorAll(selector);
-      
+
       for (const element of elements) {
         const text = element.textContent?.trim() || '';
-        
+
         if (text.length < 10 || text.length > 200) {
           continue; // Çok kısa veya çok uzun metinleri atla
         }
-        
+
         // Metin temizleme
         const cleanText = text
           .toLowerCase()
           .replace(/[^a-zA-ZğüşıöçĞÜŞIÖÇ0-9\s]/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
-        
+
         // Kelime eşleşmesi kontrolü
         const textWords = cleanText.split(' ');
         let matchCount = 0;
-        
+
         for (const urlWord of urlWords) {
           if (urlWord.length > 2) { // Çok kısa kelimeleri atla
             for (const textWord of textWords) {
@@ -1926,12 +2062,12 @@ const findProductNameInDOM = (urlProductName: string): string => {
                 matchCount++;
                 break;
               }
-              
+
               // UTF-8 karakter dönüşümü kontrolü (ç->c, ş->s, vb.)
               const normalizedTextWord = normalizeText(textWord);
               const normalizedUrlWord = normalizeText(urlWord);
-              
-              if (normalizedTextWord.includes(normalizedUrlWord) || 
+
+              if (normalizedTextWord.includes(normalizedUrlWord) ||
                   normalizedUrlWord.includes(normalizedTextWord)) {
                 matchCount++;
                 break;
@@ -1939,16 +2075,16 @@ const findProductNameInDOM = (urlProductName: string): string => {
             }
           }
         }
-        
+
         // Yeterli eşleşme varsa bu metni döndür
         if (matchCount >= minMatchWords) {
           return text.trim();
         }
       }
     }
-    
+
     return ''; // Eşleşme bulunamadı
-    
+
   } catch (error) {
     console.error('DOM\'da ürün adı arama hatası:', error);
     return '';
@@ -1976,7 +2112,7 @@ const extractPriceFromDOM = (): string => {
     '[class*="amount"]', '[class*="money"]', '[class*="para"]',
     'span', 'div', 'p'
   ];
-  
+
   for (const selector of priceSelectors) {
     const elements = document.querySelectorAll(selector);
     for (const element of elements) {
@@ -1993,22 +2129,22 @@ const extractPriceFromDOM = (): string => {
 // Büyük ürün resmi bulma
 const findLargerProductImage = (): string => {
   const images = Array.from(document.querySelectorAll("img"));
-  
+
   const productImages = images
     .filter(img => {
       const src = img.src || img.getAttribute("data-src") || "";
       const alt = img.alt?.toLowerCase() || "";
-      
-      return src.length > 50 && 
-             !src.includes("logo") && 
+
+      return src.length > 50 &&
+             !src.includes("logo") &&
              !src.includes("icon") &&
              !src.includes("avatar") &&
              !alt.includes("logo") &&
-             img.width > 100 && 
+             img.width > 100 &&
              img.height > 100;
     })
     .sort((a, b) => (b.width * b.height) - (a.width * a.height));
-  
+
   return productImages[0]?.src || productImages[0]?.getAttribute("data-src") || "";
 };
 ```
@@ -2016,25 +2152,33 @@ const findLargerProductImage = (): string => {
 ### Ürün Ekleme Butonu Tasarımı
 
 #### Buton Yapısı (Tailwind CSS)
+
 CSS artık kullanılmayacak, tüm stiller Tailwind CSS ile React component içinde tanımlanacak:
 
 ```tsx
 // Tailwind classes ile styling
 const buttonClasses = {
-  container: "fixed right-0 top-1/2 -translate-y-1/2 z-[10000] transition-transform duration-300 translate-x-full hover:translate-x-0",
+  container:
+    "fixed right-0 top-1/2 -translate-y-1/2 z-[10000] transition-transform duration-300 translate-x-full hover:translate-x-0",
   wrapper: "flex shadow-lg rounded-l-lg overflow-hidden",
-  addButton: "rounded-none rounded-l-lg px-4 py-3 h-12 bg-white text-gray-700 hover:bg-gray-50 flex items-center gap-2",
-  viewButton: "rounded-none rounded-r-lg px-4 py-3 h-12 bg-blue-600 hover:bg-blue-700 flex items-center gap-2",
-  progressBar: "absolute bottom-0 left-0 h-1 bg-green-500 animate-pulse rounded-b-lg w-full"
-}
+  addButton:
+    "rounded-none rounded-l-lg px-4 py-3 h-12 bg-white text-gray-700 hover:bg-gray-50 flex items-center gap-2",
+  viewButton:
+    "rounded-none rounded-r-lg px-4 py-3 h-12 bg-blue-600 hover:bg-blue-700 flex items-center gap-2",
+  progressBar:
+    "absolute bottom-0 left-0 h-1 bg-green-500 animate-pulse rounded-b-lg w-full",
+};
 ```
 
 #### Buton Tasarımı (Proje Promptuna Göre)
+
 **Buton 2 parçaya bölünmüş olacak:**
+
 - **Sol Kısım:** Heybe logosu (küçük)
 - **Sağ Kısım:** "Heybeye Ekle" metni
 
 #### Animasyon Durumları
+
 1. **Normal:** Logo + "Heybeye Ekle" (2 parçalı tasarım)
 2. **Loading:** Spinner + "Ekleniyor..." (tek parça, disabled)
 3. **Success:** Yeşil tik + "Ürün Eklendi" + Progress bar (2 saniye)
@@ -2048,28 +2192,28 @@ flowchart TD
     Start[Sayfa yüklendi] --> Check{Ürün sayfası mı?}
     Check -->|Hayır| Hide[Buton gizli kalır]
     Check -->|Evet| Show[Buton görünür olur]
-    
+
     Show --> A[Kullanıcı 'Heybeye Ekle' butonuna basar]
     A --> B[Ürün bilgilerini çıkar]
     B --> C[Buton durumunu 'Ekleniyor...' yap]
     C --> D{Kullanıcı giriş yapmış mı?}
-    
+
     D -->|Hayır - Misafir| E[Guest UUID al/oluştur]
     D -->|Evet - Kayıtlı| F[Registered User ID al]
-    
+
     E --> G[API: POST /api/products (guest_user_id)]
     F --> H[API: POST /api/products (registered_user_id)]
-    
+
     G --> I{API başarılı mı?}
     H --> I
-    
+
     I -->|Evet| J[Extension storage'a ürün ekle]
     I -->|Hayır| K[Hata mesajı göster]
-    
+
     J --> L[Website'e storage değişikliği bildir]
     L --> M[Buton: 'Ürün Eklendi' (2 saniye)]
     M --> N[Buton normal duruma dön]
-    
+
     K --> O[Buton: 'Hata!' (2 saniye)]
     O --> N
 ```
@@ -2150,7 +2294,7 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
 
       // Ürün bilgilerini çıkar
       const productInfo = await extractProductInfo()
-      
+
       if (!isValidProductInfo(productInfo)) {
         throw new Error('Ürün bilgileri alınamadı')
       }
@@ -2173,7 +2317,7 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
       })
 
       // Website ile senkronize et
-      extensionStorage.syncWithWebsite().catch(err => 
+      extensionStorage.syncWithWebsite().catch(err =>
         console.warn('Website sync failed:', err)
       )
 
@@ -2195,7 +2339,7 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
     } catch (error) {
       console.error('Product addition failed:', error)
       setButtonState('error')
-      
+
       toast({
         variant: "destructive",
         title: t('extension_error') || "Hata!",
@@ -2230,10 +2374,10 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
           )}
         >
           <div className="flex items-center gap-2">
-            <img 
-              src="/assets/heybe-logo.svg" 
-              alt="Heybe" 
-              className="w-4 h-4" 
+            <img
+              src="/assets/heybe-logo.svg"
+              alt="Heybe"
+              className="w-4 h-4"
             />
             <span className="text-sm font-medium">{config.text}</span>
           </div>
@@ -2254,7 +2398,7 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
 
       {/* Progress bar - Success durumunda */}
       {buttonState === 'success' && (
-        <div className="absolute bottom-0 left-0 h-1 bg-green-500 animate-pulse rounded-b-lg" 
+        <div className="absolute bottom-0 left-0 h-1 bg-green-500 animate-pulse rounded-b-lg"
              style={{ width: '100%' }} />
       )}
     </div>
@@ -2264,8 +2408,8 @@ export function HeybeButton({ className, onProductAdd }: HeybeButtonProps) {
 // Utility fonksiyonlar
 const isValidProductInfo = (info: ProductInfo): boolean => {
   return Boolean(
-    info.name && 
-    info.name !== 'Ürün' && 
+    info.name &&
+    info.name !== 'Ürün' &&
     info.name.length > 2 &&
     info.url &&
     info.site
@@ -2279,7 +2423,7 @@ const getUserId = async (userData: UserData | null): Promise<string> => {
     if (!registeredId) throw new Error('Registered user ID not found')
     return registeredId
   }
-  
+
   // Guest user flow
   let guestId = await extensionStorage.getGuestUUID()
   if (!guestId) {
@@ -2328,65 +2472,64 @@ const extractProductInfo = async (): Promise<ProductInfo> => {
 
 ```
 
-
-
 // Content Script Initialization
 const initContentScript = (): void => {
-  // Sayfa yüklendiğinde ve DOM değişikliklerinde çalışacak
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeHeybeButton)
-  } else {
-    initializeHeybeButton()
-  }
-  
-  // Dinamik içerik değişikliklerini izle
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        // Eğer button yoksa yeniden oluştur
-        if (!document.querySelector('#heybe-button-root')) {
-          setTimeout(initializeHeybeButton, 100)
-        }
-      }
-    })
-  })
-  
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  })
+// Sayfa yüklendiğinde ve DOM değişikliklerinde çalışacak
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', initializeHeybeButton)
+} else {
+initializeHeybeButton()
+}
+
+// Dinamik içerik değişikliklerini izle
+const observer = new MutationObserver((mutations) => {
+mutations.forEach((mutation) => {
+if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+// Eğer button yoksa yeniden oluştur
+if (!document.querySelector('#heybe-button-root')) {
+setTimeout(initializeHeybeButton, 100)
+}
+}
+})
+})
+
+observer.observe(document.body, {
+childList: true,
+subtree: true
+})
 }
 
 // Ana initialization fonksiyonu
 const initializeHeybeButton = async (): Promise<void> => {
-  try {
-    // Ürün sayfası kontrolü
-    const isProductPage = await detectProductPage()
-    if (!isProductPage) return
-    
+try {
+// Ürün sayfası kontrolü
+const isProductPage = await detectProductPage()
+if (!isProductPage) return
+
     // Mevcut button varsa kaldır
     const existingButton = document.querySelector('#heybe-button-root')
     if (existingButton) {
       existingButton.remove()
     }
-    
+
     // React root oluştur ve HeybeButton component'ini render et
     const buttonContainer = document.createElement('div')
     buttonContainer.id = 'heybe-button-root'
     document.body.appendChild(buttonContainer)
-    
+
     // React component'ini mount et
     const root = ReactDOM.createRoot(buttonContainer)
     root.render(React.createElement(HeybeButton))
-    
-  } catch (error) {
-    console.error('Heybe button initialization failed:', error)
-  }
+
+} catch (error) {
+console.error('Heybe button initialization failed:', error)
+}
 }
 
 // Script başlatma
 initContentScript()
-```
+
+````
 
 ### Storage Yönetimi (Cross-Browser Uyumlu)
 
@@ -2441,7 +2584,7 @@ export const extensionStorage = {
   async get(key: keyof StorageData): Promise<any> {
     return await storage.getItem(`local:${key}`);
   },
-  
+
   async set(key: keyof StorageData, value: any): Promise<void> {
     await storage.setItem(`local:${key}`, value);
     // Website'e değişiklik bildir
@@ -2465,7 +2608,7 @@ export const extensionStorage = {
     const newGuestUUID = crypto.randomUUID();
     await this.setGuestUUID(newGuestUUID);
   },
-  
+
   async notifyWebsite(key: string, value: any): Promise<void> {
     // WXT otomatik olarak doğru messaging API'sini kullanır
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
@@ -2524,18 +2667,19 @@ export const crossBrowserMessaging = {
     browser.runtime.onMessage.addListener(callback);
   }
 };
-```
+````
 
 ### Cross-Browser API Handling (Detaylı)
 
 WXT framework otomatik olarak farklı tarayıcılar için doğru API'leri kullanır: <mcreference link="https://wxt.dev/" index="2">2</mcreference>
 
 **Desteklenen Tarayıcılar:**
-- ✅ **Chrome** (chrome.* API'leri)
-- ✅ **Brave** (chrome.* API'leri) 
-- ✅ **Edge** (chrome.* API'leri)
-- ✅ **Firefox** (browser.* API'leri)
-- ✅ **Safari** (browser.* API'leri)
+
+- ✅ **Chrome** (chrome.\* API'leri)
+- ✅ **Brave** (chrome.\* API'leri)
+- ✅ **Edge** (chrome.\* API'leri)
+- ✅ **Firefox** (browser.\* API'leri)
+- ✅ **Safari** (browser.\* API'leri)
 
 **API Dönüşüm Tablosu:**
 | Özellik | Chrome/Edge/Brave | Firefox/Safari | WXT Kullanımı |
@@ -2546,13 +2690,14 @@ WXT framework otomatik olarak farklı tarayıcılar için doğru API'leri kullan
 | Notifications | `chrome.notifications` | `browser.notifications` | `browser.notifications` |
 
 **Otomatik Polyfill Sistemi:**
+
 ```typescript
 // WXT otomatik olarak şu dönüşümleri yapar:
 // Chrome: chrome.storage.local.set()
 // Firefox: browser.storage.local.set()
 // Geliştirici sadece şunu yazar:
-import { storage } from 'wxt/storage';
-await storage.setItem('local:key', value);
+import { storage } from "wxt/storage";
+await storage.setItem("local:key", value);
 
 // Cross-browser messaging
 // Tüm tarayıcılarda çalışır:
@@ -2560,38 +2705,42 @@ await browser.tabs.sendMessage(tabId, message);
 ```
 
 **Heybe Extension Cross-Browser Implementasyonu:**
+
 ```typescript
 // storage.ts - Tüm tarayıcılarda çalışır
 export const extensionStorage = {
   // WXT storage API (otomatik cross-browser)
   async setGuestUUID(uuid: string): Promise<void> {
-    await storage.setItem('local:guestUUID', uuid);
+    await storage.setItem("local:guestUUID", uuid);
   },
-  
+
   // Cross-browser messaging
   async syncWithWebsite(): Promise<void> {
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     if (tabs[0]?.id) {
       await browser.tabs.sendMessage(tabs[0].id, {
-        type: 'SYNC_DATA',
-        data: await this.getUserData()
+        type: "SYNC_DATA",
+        data: await this.getUserData(),
       });
     }
   },
-  
+
   // Browser detection (debugging)
   getBrowserInfo(): string {
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      if (navigator.userAgent.includes('Edg')) return 'Edge';
-      if (navigator.userAgent.includes('Chrome')) return 'Chrome';
-      if (navigator.userAgent.includes('Brave')) return 'Brave';
+    if (typeof chrome !== "undefined" && chrome.runtime) {
+      if (navigator.userAgent.includes("Edg")) return "Edge";
+      if (navigator.userAgent.includes("Chrome")) return "Chrome";
+      if (navigator.userAgent.includes("Brave")) return "Brave";
     }
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      if (navigator.userAgent.includes('Firefox')) return 'Firefox';
-      if (navigator.userAgent.includes('Safari')) return 'Safari';
+    if (typeof browser !== "undefined" && browser.runtime) {
+      if (navigator.userAgent.includes("Firefox")) return "Firefox";
+      if (navigator.userAgent.includes("Safari")) return "Safari";
     }
-    return 'Unknown';
-  }
+    return "Unknown";
+  },
 };
 ```
 
@@ -2604,6 +2753,7 @@ Bu sayede kod yazarken sadece `browser.*` API'lerini kullanabilir, WXT build sı
 ## 👤 Kullanıcı Akışları
 
 ### 1. Misafir Kullanıcı Akışı
+
 ```mermaid
 graph TD
     A[Eklenti Yüklenir] --> B[Otomatik Misafir UUID]
@@ -2621,6 +2771,7 @@ graph TD
 ```
 
 ### 2. Kayıt/Giriş Akışı
+
 ```mermaid
 graph TD
     A[Popup'ta Giriş/Kayıt] --> B[API İsteği]
@@ -2636,6 +2787,7 @@ graph TD
 ```
 
 ### 3. Ürün Transfer İşlemi (Düzeltilmiş)
+
 ```mermaid
 graph TD
     A[Giriş/Kayıt İsteği] --> B[guest_user_id Gönderilir]
@@ -2650,54 +2802,57 @@ graph TD
 
 ```javascript
 // Backend: /api/transfer-products
-app.post('/api/transfer-products', async (req, res) => {
+app.post("/api/transfer-products", async (req, res) => {
   const { guestUuid, registeredUserId } = req.body;
-  
+
   try {
     // Sadece belirtilen guest UUID'ye ait ürünleri registered user'a transfer et
     const result = await pool.query(
-      'UPDATE products SET user_id = $1 WHERE user_id = $2',
+      "UPDATE products SET user_id = $1 WHERE user_id = $2",
       [registeredUserId, guestUuid]
     );
-    
-    console.log(`${result.rowCount} ürün transfer edildi: ${guestUuid} -> ${registeredUserId}`);
-    
-    res.json({ 
-      success: true, 
+
+    console.log(
+      `${result.rowCount} ürün transfer edildi: ${guestUuid} -> ${registeredUserId}`
+    );
+
+    res.json({
+      success: true,
       transferredCount: result.rowCount,
-      message: `${result.rowCount} ürün başarıyla transfer edildi` 
+      message: `${result.rowCount} ürün başarıyla transfer edildi`,
     });
   } catch (error) {
-    console.error('Ürün transfer hatası:', error);
+    console.error("Ürün transfer hatası:", error);
     res.status(500).json({ error: error.message });
   }
 });
 ```
 
 ### 4. Storage Senkronizasyonu (Güncellenmiş)
+
 ```mermaid
 sequenceDiagram
     participant W as Website
     participant E as Extension
     participant S as Storage
-    
+
     Note over W,E: Kullanıcı Girişi
     W->>E: Login Event (userId)
     E->>S: Store Registered User ID
     E->>W: Confirm Storage Updated
-    
+
     Note over W,E: Ürün Ekleme
     W->>E: Add Product Event
     E->>S: Store Product Locally
     E->>W: Sync Product Data
-    
+
     Note over W,E: Website Çıkışı (Yeni!)
     W->>E: Logout Event
     E->>S: Clear Registered User ID
     E->>S: Generate New Guest UUID
     E->>W: Send New Guest UUID
     W->>W: Update Local Guest UUID
-    
+
     Note over W,E: Sayfa Yenileme
     W->>E: Request Current User
     E->>S: Get Stored User ID
@@ -2712,7 +2867,7 @@ graph TD
     C --> D[Local Storage Güncelle]
     D --> E[UI State Güncelle]
     E --> F[Ürün Listesi Yenile]
-    
+
     G[Website Çıkış] --> H[Extension Storage Temizle]
     H --> I[Yeni Misafir UUID]
     I --> J[Website'e Bildir]
@@ -2726,6 +2881,7 @@ graph TD
 ### 16 Maddelik Test Süreci (Proje Promptuna Göre)
 
 #### Test Ortamı Hazırlığı
+
 - **Tarayıcılar:** Safari, Chrome, Brave, Edge, Firefox
 - **Test Siteleri:** Çeşitli e-ticaret siteleri (Amazon, Trendyol, vb.)
 - **Veritabanı:** Test PostgreSQL instance
@@ -2734,23 +2890,27 @@ graph TD
 #### Detaylı Test Senaryoları
 
 **Test 1: İlk Website Ziyareti (Eklenti Yok)**
+
 - Website'i aç
 - Kayıt ol/Giriş yap
 - `currentUuid` local storage'da oluşturulur
 - Sidebar kullanıcı bilgilerini gösterir
 
 **Test 2: Eklenti Kurulumu**
+
 - Eklentiyi yükle (Safari/Chrome/Firefox/Edge/Brave)
 - Otomatik misafir UUID oluşturulur
 - Extension storage: `{currentUuid: "uuid", auth: "GUEST"}`
 
 **Test 3: Website Yenileme (Extension Storage Sync)**
+
 - Website'i yenile
 - Extension storage okunur
 - Local storage güncellenir
 - Sidebar "Misafir Kullanıcı" gösterir
 
 **Test 4: Misafir Ürün Ekleme**
+
 - E-ticaret sitesinde "Heybeye Ekle" butonuna tıkla
 - `auth=GUEST` kontrolü yapılır
 - Popup açılır: "Giriş Yap" / "Misafir olarak devam et"
@@ -2758,6 +2918,7 @@ graph TD
 - Ürün extension storage'a eklenir
 
 **Test 5: Popup'tan Giriş Yapma**
+
 - Ürün sayfasında "Heybeye Ekle" tıkla
 - Popup'ta "Giriş Yap" seç
 - Giriş yap
@@ -2765,65 +2926,76 @@ graph TD
 - Ürün kayıtlı kullanıcı olarak eklenir
 
 **Test 6: Çoklu Sekme Senkronizasyonu**
+
 - 3-5 farklı ürün sayfası aç
 - Birinde giriş yap
 - Diğer sekmelerde UUID otomatik güncellenir
 - Sayfa yenileme gerektirmez
 
 **Test 7: Website'den Logout**
+
 - Website'den çıkış yap
 - Local storage temizlenir
 - Extension storage temizlenir
 - Yeni misafir UUID oluşturulur
 
 **Test 8: Misafir Kullanıcı Devam Etme**
+
 - Ürün sayfalarında popup aç
 - "Misafir olarak devam et" seç
 - Misafir UUID ile ürün ekleme
 - Extension storage'da saklanır
 
 **Test 9: Misafir → Kayıt Transfer**
+
 - Misafir olarak 2-3 ürün ekle
 - Website'de kayıt ol
 - Misafir ürünleri kayıtlı kullanıcıya transfer edilir
 - Hiç ürün kaybolmaz
 
 **Test 10: Misafir → Giriş Transfer**
+
 - Misafir olarak ürün ekle
 - Mevcut hesapla giriş yap
 - Misafir ürünleri mevcut hesaba transfer edilir
 - Duplicate ürün kontrolü yapılır
 
 **Test 11: Transfer Sonrası Doğrulama**
+
 - Transfer işlemi sonrası
 - Website'de tüm ürünler görünür
 - Extension storage temizlenip yeni UUID ile güncellenir
 - Senkronizasyon doğru çalışır
 
 **Test 12: Eklenti Kaldırma (Giriş Yapmış)**
+
 - Giriş yapmış durumda eklentiyi kaldır
 - Website extension storage bulamaz
 - Local storage ile devam eder
 - Ürün ekleme devre dışı kalır
 
 **Test 13: Eklenti Kaldırma (Misafir)**
+
 - Misafir durumda eklentiyi kaldır
 - Website extension storage bulamaz
 - Misafir ürünlere erişim kaybolur
 - Yeni giriş gerekir
 
 **Test 14: Logout (Extension Yüklü)**
+
 - Extension yüklü durumda logout
 - Her iki storage da temizlenir
 - Yeni misafir UUID oluşturulur
 - Senkronizasyon devam eder
 
 **Test 15: Logout (Extension Yok)**
+
 - Extension olmadan logout
 - Sadece local storage temizlenir
 - Yeni giriş için hazır duruma geçer
 
 **Test 16: Cross-Browser Test**
+
 - Aynı hesapla farklı tarayıcılarda giriş
 - Ürünlerin senkronize olduğunu doğrula
 - Extension'ların bağımsız çalıştığını kontrol et
@@ -2834,12 +3006,15 @@ graph TD
 ## 🚀 Geliştirme Adımları
 
 ### Faz 1: Temel Altyapı (1-2 Hafta)
+
 1. **Monorepo Kurulumu**
+
    - pnpm workspace konfigürasyonu
    - Temel klasör yapısı
    - Package.json dosyaları
 
 2. **Veritabanı Kurulumu**
+
    - PostgreSQL şema oluşturma
    - Test verisi ekleme
    - Connection string konfigürasyonu
@@ -2851,12 +3026,15 @@ graph TD
    - Temel middleware'ler
 
 ### Faz 2: Backend Geliştirme (2-3 Hafta)
+
 1. **API Endpoint'leri**
+
    - Auth endpoints (login/register)
    - Product endpoints (CRUD)
    - Database utility endpoints
 
 2. **Transfer Logic**
+
    - Misafir ürün transfer algoritması
    - Error handling
    - Logging sistemi
@@ -2866,12 +3044,15 @@ graph TD
    - Database işlem testleri
 
 ### Faz 3: Frontend Geliştirme (3-4 Hafta)
+
 1. **Temel UI Yapısı**
+
    - React + Vite kurulumu
    - shadcn/ui konfigürasyonu
    - Tailwind CSS kurulumu
 
 2. **Ana Bileşenler**
+
    - Sidebar komponenti
    - Product list komponenti
    - Auth modal komponenti
@@ -2882,12 +3063,15 @@ graph TD
    - Error handling
 
 ### Faz 4: Extension Geliştirme (3-4 Hafta)
+
 1. **WXT Kurulumu**
+
    - Multi-browser konfigürasyonu
    - React + shadcn entegrasyonu
    - Build sistemi
 
 2. **Core Functionality**
+
    - Product detection algoritması
    - Floating button komponenti
    - Storage management
@@ -2898,12 +3082,15 @@ graph TD
    - Error handling
 
 ### Faz 5: Entegrasyon ve Test (2-3 Hafta)
+
 1. **Sistem Entegrasyonu**
+
    - Extension-Website iletişimi
    - Storage senkronizasyonu
    - Transfer işlemleri
 
 2. **Kapsamlı Test**
+
    - 16 maddelik test senaryoları
    - Multi-browser testing
    - Edge case testleri
@@ -2914,7 +3101,9 @@ graph TD
    - Code review ve refactoring
 
 ### Faz 6: Deployment ve Dokümantasyon (1 Hafta)
+
 1. **Production Hazırlığı**
+
    - Environment konfigürasyonları
    - Build optimizasyonları
    - Security review
@@ -2929,38 +3118,44 @@ graph TD
 ## 🔧 Kritik Teknik Notlar
 
 #### Cross-Browser API Compatibility
+
 WXT framework sayesinde farklı tarayıcılar için API uyumluluğu otomatik olarak sağlanır: <mcreference link="https://blog.logrocket.com/developing-web-extensions-wxt-library/" index="5">5</mcreference>
 
 - **Chromium-based (Chrome, Edge, Brave):** `chrome.*` API'leri
-- **Firefox/Safari:** `browser.*` API'leri  
+- **Firefox/Safari:** `browser.*` API'leri
 - **Otomatik Polyfill:** webextension-polyfill varsayılan olarak dahil <mcreference link="https://devshogun.medium.com/creating-a-browser-extension-using-solidjs-wxt-ii-2ff10fcafc98" index="4">4</mcreference>
 - **Kod Yazımı:** Sadece `browser.*` API'leri kullanılır, WXT build sırasında dönüştürür
 
 #### Storage Senkronizasyonu
+
 - **Extension Storage** merkezi depolama alanı olarak kullanılacak
 - **Website Local Storage** extension storage ile senkronize edilecek
 - **Real-time Updates** content script messaging ile sağlanacak
 - **Fallback Mechanism** extension yoksa local storage kullanılacak
 
 ### Kullanıcı Transfer İşlemleri
+
 - **Atomik İşlemler** veritabanı transaction'ları ile güvence altına alınacak
 - **Duplicate Prevention** aynı ürünün birden fazla kez eklenmesi engellenecek
 - **Error Recovery** transfer başarısız olursa rollback yapılacak
 - **Logging** tüm transfer işlemleri loglanacak
 
 ### Extension-Website İletişimi
+
 - **Content Script** messaging bridge olarak kullanılacak
 - **Event-Driven Architecture** storage değişiklikleri event-based olacak
 - **Cross-Origin Handling** güvenlik kısıtlamaları dikkate alınacak
 - **Timeout Handling** iletişim timeout'ları için fallback mekanizmaları
 
 ### Güvenlik Önlemleri
+
 - **Password Hashing** bcryptjs ile güvenli hash
 - **SQL Injection Prevention** parameterized queries
 - **XSS Protection** input sanitization
 - **CORS Configuration** sadece gerekli origin'lere izin
 
 ### Performance Optimizasyonları
+
 - **Database Indexing** sık kullanılan kolonlarda index
 - **Lazy Loading** ürün listesi pagination ile
 - **Caching** API response'ları için client-side cache
@@ -2971,6 +3166,7 @@ WXT framework sayesinde farklı tarayıcılar için API uyumluluğu otomatik ola
 ## 📋 Sonuç ve Kontrol Listesi
 
 ### Proje Tamamlanma Kriterleri
+
 - [ ] Tüm 3 uygulama (API, Website, Extension) çalışır durumda
 - [ ] 16 maddelik test senaryosu başarıyla geçildi
 - [ ] 5 tarayıcıda (Chrome, Firefox, Safari, Edge, Brave) test edildi
@@ -2979,6 +3175,7 @@ WXT framework sayesinde farklı tarayıcılar için API uyumluluğu otomatik ola
 - [ ] Production ortamında deploy edilebilir durumda
 
 ### Kalite Kontrol
+
 - [ ] Code review tamamlandı
 - [ ] Unit testler yazıldı ve geçiyor
 - [ ] Integration testler başarılı
@@ -2987,6 +3184,7 @@ WXT framework sayesinde farklı tarayıcılar için API uyumluluğu otomatik ola
 - [ ] Dokümantasyon güncel ve eksiksiz
 
 ### Deployment Hazırlığı
+
 - [ ] Environment variables konfigüre edildi
 - [ ] Database migration scriptleri hazır
 - [ ] Build process optimize edildi
@@ -3000,50 +3198,50 @@ WXT framework sayesinde farklı tarayıcılar için API uyumluluğu otomatik ola
 ```mermaid
 flowchart TD
     A[Kullanıcı "Heybeye Ekle" butonuna tıklar] --> B{Ürün sayfası tespit edildi mi?}
-    
+
     B -->|Hayır| C[Hata toast: "Bu sayfa bir ürün sayfası değil"]
     C --> D[Buton normal duruma döner]
-    
+
     B -->|Evet| E[Buton loading durumuna geçer]
     E --> F[Ürün bilgileri çıkarılır]
     F --> G{Ürün bilgileri geçerli mi?}
-    
+
     G -->|Hayır| H[Hata toast: "Ürün bilgileri alınamadı"]
     H --> D
-    
+
     G -->|Evet| I{Kullanıcı giriş yapmış mı?}
-    
+
     I -->|Hayır| J[Guest token kontrol edilir]
     J --> K{Guest token var mı?}
-    
+
     K -->|Hayır| L[Yeni guest token oluşturulur]
     L --> M[Extension storage'a kaydedilir]
     M --> N[API'ye ürün ekleme isteği]
-    
+
     K -->|Evet| N
-    
+
     I -->|Evet| O[Kullanıcı token'ı alınır]
     O --> N
-    
+
     N --> P{API isteği başarılı mı?}
-    
+
     P -->|Hayır| Q{Hata türü nedir?}
     Q -->|401 Unauthorized| R[Token yenilenir]
     R --> S{Token yenileme başarılı mı?}
     S -->|Evet| N
     S -->|Hayır| T[Hata toast: "Oturum süresi doldu"]
     T --> D
-    
+
     Q -->|Diğer hatalar| U[Hata toast: API hata mesajı]
     U --> D
-    
+
     P -->|Evet| V[Başarı toast: "Ürün listenize eklendi"]
     V --> W[Buton success durumuna geçer]
     W --> X[Extension storage güncellenir]
     X --> Y[Website senkronizasyonu (non-blocking)]
     Y --> Z[2 saniye sonra buton normal duruma döner]
     Z --> AA[İşlem tamamlandı]
-    
+
     style A fill:#e1f5fe
     style AA fill:#c8e6c9
     style C fill:#ffcdd2
@@ -3056,12 +3254,14 @@ flowchart TD
 ### Buton Durumları ve Davranışları
 
 #### Normal Durum
+
 - **Görünüm**: Heybe logosu + "Heybeye Ekle" metni
 - **Davranış**: Tıklanabilir, hover efektleri aktif
 - **Accessibility**: `aria-label="Ürün eklemek için hazır"`
 - **CSS Class**: `heybe-add-button normal`
 
 #### Loading Durum
+
 - **Görünüm**: Spinner animasyonu + "Ekleniyor..." metni
 - **Davranış**: Devre dışı, tıklanamaz
 - **Accessibility**: `aria-busy="true"`, `aria-label="Ürün ekleniyor"`
@@ -3069,6 +3269,7 @@ flowchart TD
 - **Süre**: API isteği tamamlanana kadar
 
 #### Success Durum
+
 - **Görünüm**: Yeşil tick işareti + "Eklendi!" metni
 - **Davranış**: Geçici durum, tıklanamaz
 - **Accessibility**: `aria-label="Ürün başarıyla eklendi"`
@@ -3076,6 +3277,7 @@ flowchart TD
 - **Süre**: 2 saniye, sonra normal duruma döner
 
 #### Error Durum
+
 - **Görünüm**: Kırmızı X işareti + "Hata!" metni
 - **Davranış**: Geçici durum, tıklanamaz
 - **Accessibility**: `aria-label="Ürün eklenirken hata oluştu"`
@@ -3085,6 +3287,7 @@ flowchart TD
 ### Toast Mesaj Türleri
 
 #### Başarı Toast'ı
+
 - **Mesaj**: "Ürün listenize eklendi!"
 - **Renk**: Yeşil (#10b981)
 - **İkon**: ✓
@@ -3092,6 +3295,7 @@ flowchart TD
 - **Pozisyon**: Sağ üst köşe
 
 #### Hata Toast'ları
+
 - **Ürün sayfası değil**: "Bu sayfa bir ürün sayfası değil"
 - **Ürün bilgisi yok**: "Ürün bilgileri alınamadı"
 - **Oturum süresi**: "Oturum süresi doldu, lütfen tekrar giriş yapın"
@@ -3101,6 +3305,7 @@ flowchart TD
 - **Süre**: 4 saniye
 
 #### Bilgi Toast'ı
+
 - **Mesaj**: "İşlem devam ediyor..."
 - **Renk**: Mavi (#3b82f6)
 - **İkon**: ℹ
@@ -3113,62 +3318,62 @@ flowchart TD
 ```typescript
 // User Types
 type User = {
-  uuid: string
-  email: string
-  name: string
-  created_at: string
-  updated_at: string
-}
+  uuid: string;
+  email: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
 
 type GuestUser = {
-  guest_user_id: string
-  role: 'GUEST'
-}
+  guest_user_id: string;
+  role: "GUEST";
+};
 
 // Product Types
 type Product = {
-  id: string
-  user_id: string
-  title: string
-  price: number
-  currency: string
-  image_url?: string
-  product_url: string
-  store_name: string
-  created_at: string
-  updated_at: string
-}
+  id: string;
+  user_id: string;
+  title: string;
+  price: number;
+  currency: string;
+  image_url?: string;
+  product_url: string;
+  store_name: string;
+  created_at: string;
+  updated_at: string;
+};
 
-type ProductInput = Omit<Product, 'id' | 'created_at' | 'updated_at'>
+type ProductInput = Omit<Product, "id" | "created_at" | "updated_at">;
 
 // API Response Types
 type ApiResponse<T = any> = {
-  success: boolean
-  data?: T
-  error?: string
-  transferredCount?: number // Login/Register için
-}
+  success: boolean;
+  data?: T;
+  error?: string;
+  transferredCount?: number; // Login/Register için
+};
 
 type LoginRequest = {
-  email: string
-  password: string
-  guest_user_id?: string
-  role?: 'GUEST'
-}
+  email: string;
+  password: string;
+  guest_user_id?: string;
+  role?: "GUEST";
+};
 
 type RegisterRequest = {
-  email: string
-  password: string
-  name: string
-  guest_user_id?: string
-  role?: 'GUEST'
-}
+  email: string;
+  password: string;
+  name: string;
+  guest_user_id?: string;
+  role?: "GUEST";
+};
 
 type AuthResponse = ApiResponse<{
-  user: User
-  token: string
-  transferredCount?: number
-}>
+  user: User;
+  token: string;
+  transferredCount?: number;
+}>;
 ```
 
 ### Component Props Types
@@ -3176,27 +3381,27 @@ type AuthResponse = ApiResponse<{
 ```typescript
 // Auth Modal Props
 type AuthModalProps = {
-  isOpen: boolean
-  onClose: () => void
-  defaultTab?: 'login' | 'register'
-  guestUserId?: string
-}
+  isOpen: boolean;
+  onClose: () => void;
+  defaultTab?: "login" | "register";
+  guestUserId?: string;
+};
 
 // Product Card Props
 type ProductCardProps = {
-  product: Product
-  onDelete?: (id: string) => void
-  onEdit?: (product: Product) => void
-  isLoading?: boolean
-}
+  product: Product;
+  onDelete?: (id: string) => void;
+  onEdit?: (product: Product) => void;
+  isLoading?: boolean;
+};
 
 // Sidebar Props
 type SidebarProps = {
-  isOpen: boolean
-  onClose: () => void
-  user?: User | null
-  productCount: number
-}
+  isOpen: boolean;
+  onClose: () => void;
+  user?: User | null;
+  productCount: number;
+};
 ```
 
 ### Hook Types
@@ -3204,23 +3409,23 @@ type SidebarProps = {
 ```typescript
 // Auth Hook
 type UseAuthReturn = {
-  user: User | null
-  isLoading: boolean
-  login: (credentials: LoginRequest) => Promise<AuthResponse>
-  register: (data: RegisterRequest) => Promise<AuthResponse>
-  logout: () => void
-  isAuthenticated: boolean
-}
+  user: User | null;
+  isLoading: boolean;
+  login: (credentials: LoginRequest) => Promise<AuthResponse>;
+  register: (data: RegisterRequest) => Promise<AuthResponse>;
+  logout: () => void;
+  isAuthenticated: boolean;
+};
 
 // Products Hook
 type UseProductsReturn = {
-  products: Product[]
-  isLoading: boolean
-  addProduct: (product: ProductInput) => Promise<void>
-  deleteProduct: (id: string) => Promise<void>
-  updateProduct: (id: string, product: Partial<ProductInput>) => Promise<void>
-  refetch: () => void
-}
+  products: Product[];
+  isLoading: boolean;
+  addProduct: (product: ProductInput) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  updateProduct: (id: string, product: Partial<ProductInput>) => Promise<void>;
+  refetch: () => void;
+};
 ```
 
 ## 🎨 Shadcn-First Component Hierarchy
@@ -3229,33 +3434,37 @@ type UseProductsReturn = {
 
 ```typescript
 // Base Shadcn Components Kullanımı
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Toast, ToastProvider } from '@/components/ui/toast'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 ```
 
 ### Component Architecture
 
 #### 1. Layout Components (Shadcn + Custom)
+
 ```typescript
 // AppLayout.tsx - Ana layout wrapper
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="container mx-auto px-4 py-8">{children}</main>
       <Footer />
     </div>
-  )
-}
+  );
+};
 
 // Header.tsx - Shadcn Button + Avatar kullanımı
 const Header = () => {
@@ -3272,14 +3481,19 @@ const Header = () => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 ```
 
 #### 2. Auth Components (Shadcn Dialog + Tabs)
+
 ```typescript
 // AuthModal.tsx - Shadcn Dialog + Tabs
-const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) => {
+const AuthModal = ({
+  isOpen,
+  onClose,
+  defaultTab = "login",
+}: AuthModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -3300,8 +3514,8 @@ const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) =>
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 // LoginForm.tsx - Shadcn Input + Button
 const LoginForm = () => {
@@ -3313,11 +3527,12 @@ const LoginForm = () => {
         Giriş Yap
       </Button>
     </form>
-  )
-}
+  );
+};
 ```
 
 #### 3. Product Components (Shadcn Card + Badge)
+
 ```typescript
 // ProductCard.tsx - Shadcn Card + Badge + Button
 const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => {
@@ -3339,34 +3554,43 @@ const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => {
             {product.store_name}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit?.(product)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit?.(product)}
+            >
               Düzenle
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => onDelete?.(product.id)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete?.(product.id)}
+            >
               Sil
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 // ProductGrid.tsx - Grid layout with Shadcn Cards
 const ProductGrid = ({ products }: { products: Product[] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map(product => (
+      {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
-  )
-}
+  );
+};
 ```
 
 ### Styling Guidelines
 
 #### 1. Tailwind + CSS Variables
+
 ```css
 /* globals.css - Shadcn theme variables */
 :root {
@@ -3396,28 +3620,32 @@ const ProductGrid = ({ products }: { products: Product[] }) => {
 ```
 
 #### 2. Component Variants
+
 ```typescript
 // Button variants (Shadcn built-in)
 const buttonVariants = {
   default: "bg-primary text-primary-foreground hover:bg-primary/90",
-  destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-  outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+  destructive:
+    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  outline:
+    "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
   secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
   ghost: "hover:bg-accent hover:text-accent-foreground",
-  link: "text-primary underline-offset-4 hover:underline"
-}
+  link: "text-primary underline-offset-4 hover:underline",
+};
 
 // Custom component variants
 const productCardVariants = {
   default: "border bg-card text-card-foreground shadow-sm",
   featured: "border-2 border-primary bg-card text-card-foreground shadow-md",
-  compact: "border bg-card text-card-foreground shadow-sm p-3"
-}
+  compact: "border bg-card text-card-foreground shadow-sm p-3",
+};
 ```
 
 ### Accessibility Standards
 
 #### 1. ARIA Labels ve Roles
+
 ```typescript
 // Proper ARIA implementation
 const AccessibleButton = () => {
@@ -3430,8 +3658,8 @@ const AccessibleButton = () => {
       <Heart className="h-4 w-4" />
       <span className="sr-only">Favorilere Ekle</span>
     </Button>
-  )
-}
+  );
+};
 
 // Form accessibility
 const AccessibleForm = () => {
@@ -3450,20 +3678,21 @@ const AccessibleForm = () => {
         </div>
       )}
     </form>
-  )
-}
+  );
+};
 ```
 
 #### 2. Keyboard Navigation
+
 ```typescript
 // Keyboard event handling
 const KeyboardAccessibleCard = ({ product }: { product: Product }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      handleProductClick()
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleProductClick();
     }
-  }
+  };
 
   return (
     <Card
@@ -3476,8 +3705,8 @@ const KeyboardAccessibleCard = ({ product }: { product: Product }) => {
     >
       {/* Card content */}
     </Card>
-  )
-}
+  );
+};
 ```
 
 ---

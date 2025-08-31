@@ -24,7 +24,8 @@
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
     "loginError": "Login failed",
-    "registerError": "Registration failed"
+    "registerError": "Registration failed",
+    "guest": "Guest User"
   },
   "products": {
     "title": "Products",

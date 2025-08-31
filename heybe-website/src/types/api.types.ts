@@ -31,8 +31,6 @@ export interface User {
   id?: number;
   email: string;
   is_guest: boolean;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface ApiResponse<T> {
@@ -42,10 +40,9 @@ export interface ApiResponse<T> {
   status?: number; // HTTP status code için eklenen alan
 }
 
-export interface AuthResponse
-  extends ApiResponse<{ token: string; email: string; is_guest: boolean }> {
-  // ApiResponse'dan success ve message özellikleri miras alınır
-  // data içinde token ve user bilgileri bulunur
+export interface AuthResponse {
+  token: string;
+  user: User;
 }
 
 export interface GuestTokenResponse {

@@ -1,14 +1,6 @@
 import { useEffect, forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "../i18n";
 import type { Product } from "../types/api.types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
@@ -23,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Link } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useMainStoreBase } from "@/store/main";
 
@@ -37,7 +29,7 @@ export interface ProductListRef {
 }
 
 export const ProductList = forwardRef<ProductListRef, ProductListProps>(
-  ({ onAddProduct, onClickLogin }, ref) => {
+  ({ onClickLogin }, ref) => {
     const { products, isLoading, error, refreshProducts, deleteProduct } =
       useProducts();
     const [showLoginButton, setLoginButton] = useState(false);
@@ -74,25 +66,27 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
             <p className="text-muted-foreground">{t("products.subtitle")}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid gap-2">
             {Array.from({ length: 8 }).map((_, index) => (
-              <Card key={index} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <Skeleton className="h-16 w-16 rounded-lg flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardFooter className="pt-4">
-                  <div className="flex justify-between items-center w-full">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-8 w-16" />
-                  </div>
-                </CardFooter>
-              </Card>
+              <div
+                key={index}
+                className="flex items-center space-x-4 border border-accent rounded-md p-2"
+                style={{ opacity: `${1 - index / 10}` }}
+              >
+                <div className="shrink-0">
+                  <Skeleton className="h-12 w-12 rounded" />
+                </div>
+
+                <div className="space-y-2 flex-grow">
+                  <Skeleton className="h-4 w-96" />
+                  <Skeleton className="h-3 w-70" />
+                </div>
+
+                <div className="flex shrink-0 gap-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -107,7 +101,7 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
             <p className="text-muted-foreground">{t("products.subtitle")}</p>
           </div>
 
-          <div className="text-center py-12">
+          <div className="text-center">
             <div className="max-w-md mx-auto">
               <h3 className="text-lg font-semibold mb-2">
                 {t("products.errors.loadFailed")}
@@ -128,15 +122,15 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
 
     if (showLoginButton) {
       return (
-        <div className="text-center py-12">
+        <div className="text-center">
           <div className="max-w-md mx-auto">
             <h3 className="text-lg font-semibold mb-2">
               {t("products.errors.loginRequired")}
             </h3>
             <Button
+              variant="secondary"
               onClick={handleClickLogin}
-              variant="outline"
-              className="cursor-pointer"
+              className="min-w-24"
             >
               {t("auth.login")}
             </Button>
@@ -146,17 +140,14 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
     }
 
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{t("products.title")}</h1>
-              <p className="text-muted-foreground">{t("products.subtitle")}</p>
-            </div>
-            {onAddProduct && (
-              <Button onClick={onAddProduct}>{t("products.addProduct")}</Button>
-            )}
-          </div>
+      <div className="container mx-auto">
+        <div className="mb-4">
+          <h1 className="text-start text-2xl font-bold">
+            {t("products.title")}
+          </h1>
+          <p className="text-start text-muted-foreground">
+            {t("products.subtitle")}
+          </p>
         </div>
 
         {products.length === 0 ? (
@@ -167,97 +158,73 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
             <p className="text-muted-foreground mb-4">
               {t("products.noProductsDescription")}
             </p>
-            {onAddProduct && (
-              <Button onClick={onAddProduct}>
-                {t("products.addFirstProduct")}
-              </Button>
-            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.isArray(products) &&
-              products.map((product) => (
-                <Card
-                  key={product.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start gap-3">
-                      {product.image_urls && product.image_urls.length > 0 && (
-                        <img
-                          src={product.image_urls[0]}
-                          alt={product.name}
-                          className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg leading-tight truncate">
-                          {product.name}
-                        </CardTitle>
-                        <CardDescription className="text-sm mt-1">
-                          {product.site}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
+          <div className="grid gap-2">
+            {products.map((product, index) => (
+              <div
+                key={index}
+                className="flex items-center space-x-4 border border-accent rounded-md p-2"
+              >
+                <div className="flex space-x-0.5 shrink-0 h-12 w-18 bg-muted rounded overflow-hidden">
+                  {product.image_urls && product.image_urls.length > 0 ? (
+                    product.image_urls.length === 1 ? (
+                      <img
+                        src={product.image_urls[0]}
+                        alt={""}
+                        className="flex h-full flex-1 object-cover"
+                      />
+                    ) : (
+                      <>
+                        <div className="flex h-full rounded flex-1 bg-muted">
+                          <img
+                            src={product.image_urls[0]}
+                            alt={""}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="flex h-full flex-1 rounded bg-muted">
+                          <img
+                            src={product.image_urls[1]}
+                            alt={""}
+                            className="flex h-full flex-1 object-cover"
+                          />
+                        </div>
+                      </>
+                    )
+                  ) : (
+                    <></>
+                  )}
+                </div>
 
-                  <CardContent className="py-2">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {product.url}
-                    </p>
-                  </CardContent>
+                <div className="grid space-y-1 flex-grow">
+                  <div className="text-start font-medium truncate">
+                    {product.name}
+                  </div>
+                  <div className="text-start text-sm text-accent-foreground truncate">
+                    {product.site}
+                  </div>
+                </div>
 
-                  <CardFooter className="pt-4">
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="secondary" className="text-xs w-fit">
-                          {product.site}
-                        </Badge>
-                        {product.price && (
-                          <span className="text-sm font-medium">
-                            ${product.price}
-                          </span>
-                        )}
-                      </div>
-
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {t("products.deleteConfirm.title")}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t("products.deleteConfirm.description", {
-                                productName: product.name,
-                              })}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {t("common.cancel")}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {t("common.delete")}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    onClick={() => handleDeleteProduct(product.id)}
+                    variant="danger"
+                    size="icon"
+                    className="size-8 rounded-full"
+                  >
+                    <Trash2 />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="size-8 rounded-full"
+                  >
+                    <Link />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

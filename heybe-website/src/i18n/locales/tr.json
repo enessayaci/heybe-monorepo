@@ -24,7 +24,8 @@
     "emailRequired": "E-posta gerekli",
     "passwordRequired": "Şifre gerekli",
     "loginError": "Giriş yapılırken hata oluştu",
-    "registerError": "Kayıt olurken hata oluştu"
+    "registerError": "Kayıt olurken hata oluştu",
+    "guest": "Misafir Kullanıcı"
   },
   "products": {
     "title": "Ürünler",

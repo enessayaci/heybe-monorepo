@@ -37,6 +37,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useMainStoreBase } from "@/store/main";
+import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 type AppSidebarProps = {
   onScrollToProducts: () => void;
@@ -94,17 +96,18 @@ export function AppSidebar({
       <Sidebar collapsible="icon">
         {/* Toggle Button - Sidebar içinde, sağ üst köşede sabit */}
         <div className="absolute -right-3 top-4 z-50">
-          <button
+          <Button
             onClick={toggleSidebar}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:bg-gray-50 transition-colors cursor-pointer"
+            variant="secondary"
+            className="absolute -right-4.5 top-0 size-7 text-neutral-400 z-50 rounded-full"
             aria-label="Toggle sidebar"
           >
             {open ? (
-              <ChevronLeft className="h-3 w-3" />
+              <ChevronLeft className="size-6" />
             ) : (
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="size-6" />
             )}
-          </button>
+          </Button>
         </div>
 
         <SidebarHeader className="min-h-[48px]">
@@ -116,8 +119,8 @@ export function AppSidebar({
                 className="h-12 min-h-[48px]"
               >
                 <div className="flex items-center gap-2 h-12 min-h-[48px]">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <Package className="size-4" />
+                  <div className="flex w-8 items-center justify-center rounded-lg">
+                    <img className="w-full" src="/logo.png"></img>
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-semibold">Heybe</span>
@@ -131,7 +134,7 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-2">
                 <SidebarMenuItem>
                   <TooltipProvider>
                     <Tooltip open={!open ? undefined : false}>
@@ -140,7 +143,7 @@ export function AppSidebar({
                           onClick={handleProductsClick}
                           className="flex items-center gap-2 cursor-pointer"
                         >
-                          <Package className="h-4 w-4" />
+                          <Package className="!h-5.5 !w-5.5" />
                           <span className="group-data-[collapsible=icon]:hidden">
                             {t("products.myProducts")}
                           </span>
@@ -167,7 +170,7 @@ export function AppSidebar({
                           onClick={handleSetupClick}
                           className="flex items-center gap-2 cursor-pointer"
                         >
-                          <Settings className="h-4 w-4" />
+                          <Settings className="!h-5.5 !w-5.5" />
                           <span className="group-data-[collapsible=icon]:hidden">
                             {t("setup.title")}
                           </span>
@@ -192,7 +195,11 @@ export function AppSidebar({
 
           <SidebarGroup>
             <SidebarGroupContent>
-              <div className="px-2">
+              <div
+                className={`${!open && "border rounded"} ${
+                  !open && "border rounded"
+                }`}
+              >
                 {/* Açık sidebar için normal select */}
                 <div className="group-data-[collapsible=open]:!block group-data-[collapsible=icon]:!hidden">
                   <Select value={language} onValueChange={handleLanguageChange}>
@@ -227,14 +234,14 @@ export function AppSidebar({
 
                 {/* Kapalı sidebar için sadece bayrak */}
                 {!open && (
-                  <div className="group-data-[collapsible=icon]:flex group-data-[collapsible=open]:hidden w-full justify-center">
+                  <div className=" group-data-[collapsible=icon]:flex group-data-[collapsible=open]:hidden w-full justify-center">
                     <Select
                       value={language}
                       onValueChange={handleLanguageChange}
                     >
-                      <SelectTrigger className="cursor-pointer w-6 h-6 p-0 border-0 bg-transparent shadow-none hover:bg-accent hover:text-accent-foreground rounded-md flex items-center justify-center [&>svg]:hidden">
+                      <SelectTrigger className="cursor-pointer w-full h-6 p-0 border-0 bg-transparent shadow-none hover:bg-accent hover:text-accent-foreground rounded-md flex items-center justify-center [&>svg]:hidden">
                         <SelectValue>
-                          <span className="text-base">
+                          <span className="text-lg">
                             {language === "tr" ? "🇹🇷" : "🇺🇸"}
                           </span>
                         </SelectValue>
@@ -263,7 +270,7 @@ export function AppSidebar({
 
         <SidebarFooter>
           <SidebarMenu>
-            {user && user.email ? (
+            {user && user.is_guest === false ? (
               // Kullanıcı giriş yapmışsa - email ve logout butonu göster
               <>
                 <SidebarMenuItem>
@@ -271,7 +278,7 @@ export function AppSidebar({
                     <Tooltip open={!open ? undefined : false}>
                       <TooltipTrigger asChild>
                         <SidebarMenuButton className="flex items-center gap-2 cursor-default">
-                          <User className="h-4 w-4" />
+                          <User className="!h-5.5 !w-5.5" />
                           <span className="truncate group-data-[collapsible=icon]:hidden">
                             {user.email}
                           </span>
@@ -298,7 +305,7 @@ export function AppSidebar({
                           onClick={handleLogout}
                           className="flex items-center gap-2 cursor-pointer hover:bg-red-50 hover:text-red-600"
                         >
-                          <LogOut className="h-4 w-4" />
+                          <LogOut className="!h-5.5 !w-5.5" />
                           <span className="group-data-[collapsible=icon]:hidden">
                             {t("auth.logout")}
                           </span>
@@ -320,48 +327,64 @@ export function AppSidebar({
               </>
             ) : (
               // Kullanıcı giriş yapmamışsa - login butonu göster
-              <SidebarMenuItem>
-                <TooltipProvider>
-                  <Tooltip open={!open ? undefined : false}>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuButton
-                        onClick={handleAuthClick}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <LogIn className="h-4 w-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">
-                          {t("auth.loginRegister")}
-                        </span>
-                      </SidebarMenuButton>
-                    </TooltipTrigger>
-                    {!open && (
-                      <TooltipContent
-                        side="right"
-                        className="bg-white border border-gray-200 shadow-lg rounded-md px-3 py-2 text-sm font-medium text-gray-900 [&>*:last-child]:hidden"
-                        sideOffset={8}
-                        hideWhenDetached
-                      >
-                        <p>{t("auth.loginRegister")}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenuItem>
+              <>
+                {user && user?.is_guest === true && (
+                  <SidebarMenuItem>
+                    <TooltipProvider>
+                      <Tooltip open={!open ? undefined : false}>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton className="flex items-center gap-2 cursor-default">
+                            <User className="h-4 w-4" />
+                            <span className="truncate group-data-[collapsible=icon]:hidden">
+                              {t("auth.guest")}
+                            </span>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        {!open && (
+                          <TooltipContent
+                            side="right"
+                            className="bg-white border border-gray-200 shadow-lg rounded-md px-3 py-2 text-sm font-medium text-gray-900"
+                            sideOffset={8}
+                            hideWhenDetached
+                          >
+                            <p>{t("auth.guest")}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                  </SidebarMenuItem>
+                )}
+                <SidebarMenuItem>
+                  <TooltipProvider>
+                    <Tooltip open={!open ? undefined : false}>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton
+                          onClick={handleAuthClick}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <LogIn className="!h-5.5 !w-5.5" />
+                          <span className="group-data-[collapsible=icon]:hidden">
+                            {t("auth.loginRegister")}
+                          </span>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      {!open && (
+                        <TooltipContent
+                          side="right"
+                          className="bg-white border border-gray-200 shadow-lg rounded-md px-3 py-2 text-sm font-medium text-gray-900 [&>*:last-child]:hidden"
+                          sideOffset={8}
+                          hideWhenDetached
+                        >
+                          <p>{t("auth.loginRegister")}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                </SidebarMenuItem>
+              </>
             )}
           </SidebarMenu>
         </SidebarFooter>
-
-        {/* Extension durumunu göster */}
-        {hasExtension && (
-          <div className="px-3 py-2 border-t">
-            <Badge
-              variant="outline"
-              className="text-green-600 border-green-600"
-            >
-              Extension Active
-            </Badge>
-          </div>
-        )}
 
         <SidebarRail />
       </Sidebar>
