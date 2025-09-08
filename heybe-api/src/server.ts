@@ -15,22 +15,20 @@ const port = process.env.PORT || 3000;
 const developmentUrls = ["http://localhost:5173"];
 
 const corsOptions = {
-  origin: (origin: any, callback: any) => {
-    // null origin (Postman, cURL) veya http:// ile başlayanları engelle
-    if (
-      !origin ||
-      (origin.startsWith("http://") && !developmentUrls.includes(origin))
-    ) {
-      return callback(
-        new Error("Yalnızca HTTPS kaynaklara izin verilir. origin: " + origin),
-        false
-      );
-    }
-    // https:// ile başlayan tüm kaynaklara izin ver
-    if (origin.startsWith("https://") || developmentUrls.includes(origin)) {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    // Geliştirme ortamında izin verilen URL'ler
+    if (!origin || developmentUrls.includes(origin)) {
       return callback(null, true);
     }
-    callback(new Error("Geçersiz kaynak"), false);
+    // Üretim ortamında yalnızca HTTPS kaynaklara izin ver
+    if (origin.startsWith("https://")) {
+      return callback(null, true);
+    }
+    // Diğer tüm durumlar için hata fırlat
+    callback(new Error(`Geçersiz kaynak: ${origin || "undefined"}`), false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -43,17 +41,7 @@ const corsOptions = {
   ],
 };
 
-// Postman gibi araçları ek olarak engelle
-const restrictPostman = (req: any, res: any, next: any) => {
-  const userAgent = req.get("User-Agent") || "";
-  if (userAgent.includes("Postman") || userAgent.includes("curl")) {
-    return res.status(403).json({ error: "Yetkisiz istemci" });
-  }
-  next();
-};
-
 // Express.js kullanımı
-app.use(restrictPostman);
 app.use(cors(corsOptions));
 app.use(express.json());
 
