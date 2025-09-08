@@ -1,4 +1,7 @@
-import { allowWindowMessaging } from "webext-bridge/content-script";
+import {
+  allowWindowMessaging,
+  sendMessage,
+} from "webext-bridge/content-script";
 import { defineCustomEventMessaging } from "@webext-core/messaging/page";
 import { StorageData } from "./storage.service";
 import { storage } from "wxt/storage";
@@ -10,6 +13,7 @@ export interface ProtocolMap {
   clearStorage(): boolean;
   HEYBE_EXTENSION_LOADED(value: boolean): void;
   HEYBE_AUTH_UPDATED(value: StorageData): void;
+  unauthorized(errorMessage?: string): void;
 }
 
 const NAMESPACE = "heybe-extension-messaging";
@@ -43,23 +47,23 @@ class Messenger {
     messenger.onMessage("saveStorageData", async (data): Promise<boolean> => {
       try {
         // Forward to background script
-        // const response = await sendMessage(
-        //   "saveStorageData",
-        //   { ...data.data },
-        //   "background"
-        // );
-        await storage.setItems([
-          {
-            key: "local:token",
-            value: data.data.token,
-          },
-          {
-            key: "local:user",
-            value: data.data.user,
-          },
-        ]);
+        const response = await sendMessage(
+          "saveStorageData",
+          { ...data.data } as unknown as Record<string, any>,
+          "background"
+        );
+        // await storage.setItems([
+        //   {
+        //     key: "local:token",
+        //     value: data.data.token,
+        //   },
+        //   {
+        //     key: "local:user",
+        //     value: data.data.user,
+        //   },
+        // ]);
 
-        return true;
+        return (response as boolean) === true;
       } catch (error) {
         console.error(`❌ [Content Script] Error on saveStorageData:`, error);
         return false;
@@ -71,13 +75,31 @@ class Messenger {
       async (): Promise<StorageData | null> => {
         try {
           // Forward to background script
-          // const response = await sendMessage("getStorageData", {}, "background");
-          const response = await storage.getItems([
-            "local:token",
-            "local:user",
-          ]);
-          const formatted = response.reduce(
-            (acc, { key, value }) => ({
+          const response = await sendMessage(
+            "getStorageData",
+            {},
+            "background"
+          );
+          // const response = await storage.getItems([
+          //   "local:token",
+          //   "local:user",
+          // ]);
+          console.log("getStorageData response:", response);
+
+          const isEmpty =
+            response === null ||
+            (typeof response === "object" &&
+              Object.keys(response).length === 0) ||
+            response === undefined;
+          console.log("isEmpty: ", isEmpty);
+          if (isEmpty) {
+            return null;
+          }
+          const formatted = (response as Record<string, any>)?.reduce(
+            (
+              acc: Record<string, any>,
+              { key, value }: { key: string; value: any }
+            ) => ({
               ...acc,
               [key.replace("local:", "")]: value,
             }),
@@ -99,9 +121,9 @@ class Messenger {
     messenger.onMessage("clearStorage", async (): Promise<boolean> => {
       try {
         // Forward to background script
-        // const response = await sendMessage("clearStorage", {}, "background");
-        storage.removeItems(["local:token", "local:user"]);
-        return true;
+        const response = await sendMessage("clearStorage", {}, "background");
+        // storage.removeItems(["local:token", "local:user"]);
+        return (response as boolean) === true;
       } catch (error) {
         console.error(
           `❌ [Content Script] Error forwarding clearStorage message:`,
@@ -114,9 +136,9 @@ class Messenger {
     messenger.onMessage("ping", async (): Promise<boolean> => {
       try {
         // Forward to background script
-        // const response = await sendMessage("ping", {}, "background");
+        const response = await sendMessage("ping", {}, "background");
 
-        return true;
+        return (response as boolean) === true;
       } catch (error) {
         console.error(
           `❌ [Content Script] Error forwarding ping message:`,
@@ -125,6 +147,8 @@ class Messenger {
         return false;
       }
     });
+
+    messenger.onMessage("unauthorized", ({ data }) => {});
 
     // Notify webpage that extension is loaded
     setTimeout(() => {

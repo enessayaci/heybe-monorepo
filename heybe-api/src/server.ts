@@ -22,7 +22,7 @@ const corsOptions = {
       (origin.startsWith("http://") && !developmentUrls.includes(origin))
     ) {
       return callback(
-        new Error("Yalnızca HTTPS kaynaklara izin verilir"),
+        new Error("Yalnızca HTTPS kaynaklara izin verilir. origin: " + origin),
         false
       );
     }

@@ -1,4 +1,4 @@
-import { apiService } from "./api.service";
+import { apiBridge } from "./content.api.bridge";
 import { notifyWebsiteAuth } from "./messenger";
 import { getToken, getUser, setToken, setUser } from "./storage.service";
 
@@ -18,7 +18,7 @@ class AuthService {
       }
 
       // Yeni misafir token oluştur
-      const response = await apiService.createGuestToken();
+      const response = await apiBridge.createGuestToken();
 
       if (response.success && response.data) {
         const { token, user } = response.data;
@@ -54,10 +54,10 @@ class AuthService {
 
       // Eğer misafir token varsa transfer ile giriş yap
       if (storedToken && isGuest) {
-        response = await apiService.loginWithGuestTransfer(email, password);
+        response = await apiBridge.loginWithGuestTransfer(email, password);
       } else {
         // Normal giriş
-        response = await apiService.login(email, password);
+        response = await apiBridge.login(email, password);
       }
 
       if (response.success && response.data) {
@@ -101,10 +101,10 @@ class AuthService {
 
       // Eğer misafir token varsa transfer ile kayıt ol
       if (storedToken && isGuest) {
-        response = await apiService.registerWithGuestTransfer(email, password);
+        response = await apiBridge.registerWithGuestTransfer(email, password);
       } else {
         // Normal kayıt
-        response = await apiService.register(email, password);
+        response = await apiBridge.register(email, password);
       }
 
       if (response.success && response.data) {
@@ -138,7 +138,7 @@ class AuthService {
   async logout(): Promise<{ success: boolean }> {
     try {
       // Yeni misafir token oluştur
-      const response = await apiService.createGuestToken();
+      const response = await apiBridge.createGuestToken();
 
       if (response.success && response.data) {
         const { token, user } = response.data;

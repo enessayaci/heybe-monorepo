@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Check, Loader2, AlertCircle, List } from "lucide-react";
-import { authService } from "../services/auth.service";
-import { apiService } from "../services/api.service";
 import type { AddProductRequest } from "../services/api.types";
 import { AuthModal } from "./AuthModal";
 import { t } from "../lib/i18n";
+import { apiBridge } from "@/services/content.api.bridge";
+import { authService } from "@/services/auth.service";
 
 interface FloatingActionButtonProps {
   onProductSaved?: () => void;
@@ -20,77 +20,70 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isProductPage, setIsProductPage] = useState(false);
-  const [authError, setAuthError] = useState<string>(""); // Yeni state eklendi
+  const [authError, setAuthError] = useState<string>("");
+  const [productError, setProductError] = useState<string>("");
 
   useEffect(() => {
-    // API servisine unauthorized callback'i set et - hata mesajını da al
-    apiService.setUnauthorizedCallback((errorMessage?: string) => {
+    apiBridge.setUnauthorizedCallback((errorMessage?: string) => {
       setIsAuthenticated(false);
-      setAuthError(errorMessage || "Kimlik doğrulama hatası");
+      setAuthError(errorMessage || t("authError"));
       setShowAuthModal(true);
     });
-
-    // İlk sayfa kontrolü
-    checkPage();
 
     let checkCount = 0;
     let checkInterval: NodeJS.Timeout | null = null;
 
-    const startUrlBasedCheck = () => {
-      // Önceki interval'ı temizle
-      if (checkInterval) {
-        clearInterval(checkInterval);
+    const checkPage = () => {
+      const isProduct = detectProductPage();
+      console.log("first isProduct: ", isProduct);
+
+      setIsProductPage(isProduct);
+      setState(isProduct ? "idle" : "hidden");
+
+      if (!isProduct && checkCount < 5) {
+        if (checkInterval) clearInterval(checkInterval);
+        checkCount = 0;
+        checkInterval = setInterval(() => {
+          checkCount++;
+          const isProductRetry = detectProductPage();
+          console.log("interval isProduct: ", isProductRetry);
+          setIsProductPage(isProductRetry);
+          setState(isProductRetry ? "idle" : "hidden");
+          if (isProductRetry || checkCount >= 5) {
+            clearInterval(checkInterval!);
+            checkInterval = null;
+          }
+        }, 1000);
       }
-
-      checkCount = 0;
-
-      // 5 kere, 1'er saniye aralıklarla kontrol yap
-      checkInterval = setInterval(() => {
-        checkCount++;
-        checkPage();
-
-        if (checkCount >= 5) {
-          clearInterval(checkInterval!);
-          checkInterval = null;
-        }
-      }, 1000);
     };
 
-    // URL değişikliklerini yakalamak için event listener'lar
+    setTimeout(checkPage, 500); // İlk kontrol 500ms gecikmeli
+
     const handleUrlChange = () => {
-      startUrlBasedCheck();
+      checkCount = 0;
+      setTimeout(checkPage, 500); // URL değişiminde 500ms gecikmeli kontrol
     };
 
-    // Browser back/forward butonları için
     window.addEventListener("popstate", handleUrlChange);
-
-    // SPA navigation için history API'sini override et
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-
     history.pushState = function (...args) {
       originalPushState.apply(this, args);
-      // Micro-task olarak çalıştır ki DOM güncellensin
-      setTimeout(handleUrlChange, 0);
+      setTimeout(handleUrlChange, 500);
     };
-
     history.replaceState = function (...args) {
       originalReplaceState.apply(this, args);
-      setTimeout(handleUrlChange, 0);
+      setTimeout(handleUrlChange, 500);
     };
 
-    // Cleanup function
     return () => {
-      if (checkInterval) {
-        clearInterval(checkInterval);
-      }
+      if (checkInterval) clearInterval(checkInterval);
       window.removeEventListener("popstate", handleUrlChange);
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
     };
   }, []);
 
-  // checkAuthStatus fonksiyonu artık sadece buton tıklandığında çağrılacak
   const checkAuthStatus = async () => {
     try {
       const isLoggedIn = await authService.isLoggedIn();
@@ -103,246 +96,476 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     }
   };
 
-  const checkPage = () => {
-    const isProduct = detectProductPage();
-    setIsProductPage(isProduct);
-    setState(isProduct ? "idle" : "hidden");
-  };
-
   const detectProductPage = (): boolean => {
-    // Ana sayfa kontrolü
-    if (isHomePage()) {
+    const isHomePage = (): boolean => {
+      const homePageIndicators = [
+        window.location.pathname === "/",
+        window.location.pathname === "/home",
+        window.location.pathname === "/anasayfa",
+        window.location.pathname === "/index",
+        document.title.toLowerCase().includes("ana sayfa"),
+        document.title.toLowerCase().includes("homepage"),
+        window.location.href.match(/\/(home|anasayfa|index)(\/|\?|#|$)/i),
+      ];
+      return homePageIndicators.some((indicator) => indicator);
+    };
+
+    const isHeybeWebsite = (): boolean => {
+      const hostname = window.location.hostname;
+      return (
+        hostname === "my-heybe.vercel.app" ||
+        hostname === "localhost" ||
+        hostname.includes("vercel.app")
+      );
+    };
+
+    const checkAddToCartButton = (): {
+      hasButton: boolean;
+      buttonCount: number;
+      topButton: Element | null;
+    } => {
+      const addToCartTexts = [
+        "sepete ekle",
+        "satın al",
+        "hemen al",
+        "add to cart",
+        "buy now",
+        "purchase",
+        "order now",
+        "add to bag",
+        "buy",
+        "kaufen",
+        "in den warenkorb",
+        "acheter",
+        "ajouter au panier",
+        "comprar",
+        "añadir al carrito",
+        "acquista",
+        "aggiungi al carrello",
+        "add +",
+        "+ cart",
+        "🛒",
+        "🛍️",
+      ];
+
+      const addToCartButtons: Element[] = [];
+
+      // XPath ile anahtar kelimeyi içeren metin düğümlerinin parent'larını bul, script etiketlerini hariç tut
+      addToCartTexts.forEach((text) => {
+        const escapedText = text.replace(/'/g, "\\'");
+        const xpathQuery = `.//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${escapedText}')]/parent::*[not(self::script) and not(ancestor::header) and not(ancestor::nav) and not(ancestor::*[contains(@class, 'header')]) and not(ancestor::*[contains(@class, 'nav')])]`;
+        const elements = document.evaluate(
+          xpathQuery,
+          document,
+          null,
+          XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+          null
+        );
+        for (let i = 0; i < elements.snapshotLength; i++) {
+          const element = elements.snapshotItem(i) as HTMLElement;
+          const style = window.getComputedStyle(element);
+          const rect = element.getBoundingClientRect();
+          if (
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            parseFloat(style.opacity) !== 0 &&
+            rect.width > 0 &&
+            rect.height > 0 &&
+            element.offsetParent !== null
+          ) {
+            console.log("Found visible element with text: ", element);
+            addToCartButtons.push(element);
+          }
+        }
+      });
+
+      let topButton: Element | null = null;
+      let minTop = Infinity;
+      console.log("addToCartButtons: ", addToCartButtons);
+
+      addToCartButtons.forEach((button) => {
+        console.log("addToCartButtons foreach: ", button);
+
+        const rect = button.getBoundingClientRect();
+        console.log("rect top kontrolü öncesi: ", rect);
+
+        if (
+          rect.top < minTop &&
+          rect.top >= 0 &&
+          rect.width > 0 &&
+          rect.height > 0
+        ) {
+          console.log("rect top kontrolü: ", rect);
+          minTop = rect.top;
+          topButton = button;
+        }
+      });
+
+      console.log({
+        hasButton: addToCartButtons.length > 0,
+        buttonCount: addToCartButtons.length,
+        topButton,
+      });
+
+      return {
+        hasButton: addToCartButtons.length > 0,
+        buttonCount: addToCartButtons.length,
+        topButton,
+      };
+    };
+
+    const isProductDetailPage = (): boolean => {
+      const productMetaTags = [
+        'meta[property="og:type"][content="product"]',
+        'meta[property="product:price:amount"]',
+        'meta[property="product:price:currency"]',
+        'meta[name="twitter:data1"]',
+        'meta[property="product:availability"]',
+      ];
+      return productMetaTags.some((selector) =>
+        document.querySelector(selector)
+      );
+    };
+
+    const checkButtonPlacement = (button: Element): boolean => {
+      if (!button) return false;
+      const rect = button.getBoundingClientRect();
+      const isInTopHalf = rect.top < window.innerHeight + 100;
+      console.log("isInTopHalf: ", isInTopHalf);
+
+      return isInTopHalf;
+    };
+
+    if (isHomePage() || isHeybeWebsite()) {
+      console.log("isHomePage:", isHomePage());
+      console.log("isHeybeWebsite: ", isHeybeWebsite());
+
       return false;
     }
-
-    // Heybe website'inde buton gösterme
-    if (isHeybeWebsite()) {
+    const addToCartResult = checkAddToCartButton();
+    if (!addToCartResult.hasButton) {
+      console.log("addToCartResult.hasButton: ", addToCartResult.hasButton);
       return false;
     }
+    if (isProductDetailPage()) {
+      console.log("isProductDetailPage: ", isProductDetailPage());
 
-    // Sepete ekle butonu arama
-    const hasAddToCartButton = checkAddToCartButton();
-    if (!hasAddToCartButton) {
-      return false;
+      return true;
     }
+    if (
+      addToCartResult.buttonCount < 12 &&
+      addToCartResult.topButton &&
+      checkButtonPlacement(addToCartResult.topButton) &&
+      extractProductNameFromUrl().length > 10
+    ) {
+      return true;
+    }
+    console.log(".........");
 
-    // Meta tag kontrolü
-    const hasProductMeta = isProductDetailPage();
-    return hasProductMeta;
+    return false;
   };
 
-  const isHomePage = (): boolean => {
-    const pathname = window.location.pathname.toLowerCase();
-    const homePatterns = [
-      /^\/$/,
-      /^\/index(\.html?)?$/,
-      /^\/home(\.html?)?$/,
-      /^\/anasayfa(\.html?)?$/,
-    ];
-    return (
-      homePatterns.some((pattern) => pattern.test(pathname)) ||
-      document.title.toLowerCase().includes("ana sayfa") ||
-      document.title.toLowerCase().includes("homepage")
-    );
-  };
-
-  const isHeybeWebsite = (): boolean => {
-    const hostname = window.location.hostname;
-    return (
-      hostname === "my-heybe.vercel.app" ||
-      hostname === "localhost" ||
-      hostname.includes("vercel.app")
-    );
-  };
-
-  const checkAddToCartButton = (): boolean => {
-    const addToCartTexts = [
-      "sepete ekle",
-      "sepet",
-      "satın al",
-      "hemen al",
-      "add to cart",
-      "buy now",
-      "purchase",
-      "order now",
-      "add to bag",
-      "buy",
-    ];
-
-    const relevantButtons = Array.from(
-      document.querySelectorAll(
-        "button, a, input[type='button'], div[role='button'], [data-testid*='cart'], [data-testid*='buy']"
-      )
-    );
-
-    return relevantButtons.some((btn) => {
-      const text = (
-        btn.textContent ||
-        (btn as HTMLInputElement).value ||
-        ""
-      ).toLowerCase();
-      return addToCartTexts.some((cartText) => text.includes(cartText));
-    });
-  };
-
-  const isProductDetailPage = (): boolean => {
-    // Meta tag kontrolü
-    const productMeta =
-      document.querySelector('meta[property="og:type"][content="product"]') ||
-      document.querySelector('meta[name="product"]') ||
-      document.querySelector('[itemtype*="Product"]');
-
-    if (productMeta) return true;
-
-    // Ürün fiyatı kontrolü
-    const priceSelectors = [
-      '[data-testid*="price"]',
-      ".price",
-      ".product-price",
-      '[class*="price"]',
-      '[id*="price"]',
-    ];
-
-    const hasPrice = priceSelectors.some((selector) =>
-      document.querySelector(selector)
-    );
-
-    // Ürün resmi kontrolü
-    const productImages = document.querySelectorAll(
-      'img[src*="product"], img[alt*="product"], .product-image img, [data-testid*="product-image"] img'
-    );
-
-    return hasPrice && productImages.length > 0;
+  const siteSpecificRules: Record<
+    string,
+    {
+      titleSelector?: string;
+      priceSelector?: string;
+      imageSelectors?: string[];
+    }
+  > = {
+    "trendyol.com": {
+      titleSelector: "h1.pr-new-br",
+      priceSelector: "span.prc-dsc",
+      imageSelectors: ["img.pv-main-image", "img.gallery-image"], // Örnek: Birden fazla resim seçici
+    },
+    // Diğer siteler için kurallar eklenebilir, örneğin:
+    // 'amazon.com': {
+    //   titleSelector: '#productTitle',
+    //   priceSelector: '.a-price-whole',
+    //   imageSelectors: ['#landingImage']
+    // }
   };
 
   const extractProductInfo = (): AddProductRequest | null => {
     try {
-      const title =
-        document.querySelector("h1")?.textContent?.trim() ||
-        document
-          .querySelector('[data-testid="product-title"]')
-          ?.textContent?.trim() ||
-        document.querySelector(".product-title")?.textContent?.trim() ||
-        document.title;
+      const hostname = window.location.hostname;
+      const rules = siteSpecificRules[hostname] || {};
 
-      const price =
-        document.querySelector('[data-testid="price"]')?.textContent?.trim() ||
-        document.querySelector(".price")?.textContent?.trim() ||
-        document.querySelector(".product-price")?.textContent?.trim() ||
-        "";
+      // Başlık çıkarma
+      let finalProductName = "Ürün";
+      if (rules.titleSelector) {
+        const titleElement = document.querySelector(rules.titleSelector);
+        if (titleElement?.textContent?.trim()) {
+          finalProductName = titleElement.textContent.trim();
+        }
+      } else {
+        // Genel algoritma
+        const metaTags: Record<string, string> = {};
+        document.querySelectorAll("meta").forEach((meta) => {
+          const name =
+            meta.getAttribute("name") || meta.getAttribute("property");
+          const content = meta.getAttribute("content");
+          if (name && content) metaTags[name.toLowerCase()] = content;
+        });
 
-      const imageElement = document.querySelector(
-        'img[src*="product"], img[alt*="product"], .product-image img, [data-testid="product-image"] img'
-      ) as HTMLImageElement;
-      const image = imageElement?.src || "";
+        const metaProductName =
+          metaTags["og:title"] ||
+          metaTags["twitter:title"] ||
+          document.title.split(/[|\-–—]/)[0].trim();
 
-      if (!title) {
-        console.error("Product title not found");
-        return null;
+        const urlProductName = extractProductNameFromUrl();
+        const domProductName = findProductNameInDOM(urlProductName);
+        const h1ProductName =
+          document.querySelector("h1")?.textContent?.trim() || "";
+
+        const candidates = [
+          { name: metaProductName, priority: 4 },
+          { name: domProductName, priority: 3 },
+          { name: h1ProductName, priority: 2 },
+          { name: urlProductName, priority: 1 },
+        ].filter((c) => c.name && c.name.length > 3);
+
+        if (candidates.length > 0) {
+          const domainKeywords = hostname.split(".")[0];
+          const withoutDomain = candidates.filter(
+            (c) => !c.name.toLowerCase().includes(domainKeywords)
+          );
+          const finalCandidates =
+            withoutDomain.length > 0 ? withoutDomain : candidates;
+          finalProductName = finalCandidates.reduce((best, current) =>
+            current.priority > best.priority ||
+            (current.priority === best.priority &&
+              current.name.length > best.name.length)
+              ? current
+              : best
+          ).name;
+        }
       }
 
-      const productData: AddProductRequest = {
-        name: title,
-        price: price,
-        image_urls: image ? [image] : [],
-        url: window.location.href,
-        site: window.location.hostname,
-        // description alanı kaldırıldı - AddProductRequest tipinde yok
-      };
+      // Fiyat çıkarma
+      let price = "";
+      if (rules.priceSelector) {
+        const priceElement = document.querySelector(rules.priceSelector);
+        if (priceElement?.textContent?.trim()) {
+          price = priceElement.textContent.trim();
+        }
+      } else {
+        // Genel algoritma
+        const metaTags: Record<string, string> = {};
+        document.querySelectorAll("meta").forEach((meta) => {
+          const name =
+            meta.getAttribute("name") || meta.getAttribute("property");
+          const content = meta.getAttribute("content");
+          if (name && content) metaTags[name.toLowerCase()] = content;
+        });
+        price = metaTags["product:price:amount"] || extractPriceFromDOM();
+      }
 
-      return productData; // Return statement eklendi
+      // Resim çıkarma
+      let imageUrls: string[] = [];
+      if (rules.imageSelectors && rules.imageSelectors.length > 0) {
+        const expectedCount = rules.imageSelectors.length;
+        rules.imageSelectors.forEach((selector) => {
+          const imgElement = document.querySelector(
+            selector
+          ) as HTMLImageElement | null;
+          const src =
+            imgElement?.src || imgElement?.getAttribute("data-src") || "";
+          if (src) {
+            imageUrls.push(src);
+          }
+        });
+
+        // Eksik resimler için genel algoritmayı kullan
+        while (imageUrls.length < expectedCount) {
+          const fallbackImage = findLargerProductImage();
+          if (fallbackImage) {
+            imageUrls.push(fallbackImage);
+            break; // Sadece bir fallback ekle, veya daha fazla için modifiye et
+          } else {
+            break;
+          }
+        }
+      } else {
+        // Genel algoritma
+        const metaTags: Record<string, string> = {};
+        document.querySelectorAll("meta").forEach((meta) => {
+          const name =
+            meta.getAttribute("name") || meta.getAttribute("property");
+          const content = meta.getAttribute("content");
+          if (name && content) metaTags[name.toLowerCase()] = content;
+        });
+        const primaryImageUrl = metaTags["og:image"] || "";
+        const secondaryImageUrl = findLargerProductImage();
+        imageUrls = [primaryImageUrl, secondaryImageUrl].filter(
+          (url) => url && url.length > 0
+        );
+      }
+
+      return {
+        name: finalProductName,
+        price: price || "",
+        image_urls: imageUrls,
+        url: window.location.href,
+        site: hostname,
+      };
     } catch (error) {
       console.error("Error extracting product info:", error);
       return null;
     }
   };
 
+  const extractProductNameFromUrl = (): string => {
+    const pathname = window.location.pathname;
+    const segments = pathname
+      .split("/")
+      .filter((segment) => segment.length > 0);
+    let bestSegment = "";
+    for (const segment of segments) {
+      if (
+        segment.includes("-") &&
+        segment.length > 10 &&
+        segment.length > bestSegment.length &&
+        !/^\d+$/.test(segment.replace(/-/g, ""))
+      ) {
+        bestSegment = segment;
+      }
+    }
+    return bestSegment
+      ? bestSegment
+          .split("-")
+          .filter((word) => word.length > 1 && !/^\d+$/.test(word))
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+          .replace(/[^a-zA-ZğüşıöçĞÜŞİÖÇ0-9\s]/g, "")
+          .trim()
+      : "";
+  };
+
+  const findProductNameInDOM = (urlProductName: string): string => {
+    if (!urlProductName) return "";
+    const searchTerms = urlProductName
+      .toLowerCase()
+      .split(" ")
+      .filter((term) => term.length > 2);
+    const allTextElements = document.querySelectorAll(
+      "h1, [class*='title'], [class*='name'], [data-testid*='title']"
+    );
+    let bestMatch = "";
+    let bestScore = 0;
+
+    for (const element of allTextElements) {
+      const text = element.textContent?.toLowerCase() || "";
+      const matchCount = searchTerms.filter((term) =>
+        text.includes(term)
+      ).length;
+      const score = matchCount / searchTerms.length;
+      if (score >= 0.6 && score > bestScore) {
+        bestScore = score;
+        bestMatch = element.textContent?.trim() || "";
+      }
+    }
+    return bestMatch;
+  };
+
+  const extractPriceFromDOM = (): string => {
+    const priceSelectors = [
+      "[class*='price']",
+      "[class*='fiyat']",
+      "[data-testid*='price']",
+    ];
+    for (const selector of priceSelectors) {
+      const elements = document.querySelectorAll(selector);
+      for (const element of elements) {
+        const text = element.textContent?.trim() || "";
+        const priceMatch = text.match(/[\d.,]+\s*(₺|TL|\$|€|USD|EUR)/i);
+        if (priceMatch) return priceMatch[0];
+      }
+    }
+    return "";
+  };
+
+  const findLargerProductImage = (): string => {
+    const images = Array.from(document.querySelectorAll("img"))
+      .filter(
+        (img) =>
+          (img.src || img.getAttribute("data-src") || "").length > 50 &&
+          !img.src.includes("logo") &&
+          !img.alt?.toLowerCase().includes("logo") &&
+          img.width > 100 &&
+          img.height > 100
+      )
+      .sort((a, b) => b.width * b.height - a.width * a.height);
+    return images[0]?.src || images[0]?.getAttribute("data-src") || "";
+  };
+
   const handleAddToHeybe = async (skipAuth = false) => {
     if (state === "loading") return;
 
-    // Auth kontrolü - sadece skipAuth false ise kontrol et
     if (!skipAuth) {
-      // Burada auth durumunu kontrol et
       const isLoggedIn = await checkAuthStatus();
-
       if (!isLoggedIn) {
-        // İlk kurulumda otomatik guest token oluşturmak yerine auth modal aç
         setShowAuthModal(true);
         return;
       }
     }
 
     setState("loading");
-
     try {
-      // SORUN: Bu kısım skipAuth=true olsa bile çalışıyor!
-      // Sadece authenticated değilse guest token oluştur
       if (!skipAuth && !isAuthenticated) {
         await authService.ensureGuestToken();
       }
 
       const productInfo = extractProductInfo();
-      if (!productInfo) {
+      if (!productInfo || !productInfo.name) {
+        setProductError(t("productInfoError"));
         setState("error");
-        setTimeout(() => setState("idle"), 4000); // 4 saniye
+        setTimeout(() => setState("idle"), 4000);
         return;
       }
 
-      const result = await apiService.addProduct(productInfo);
+      const result = await apiBridge.addProduct(productInfo);
       if (result.success) {
         setState("success");
         onProductSaved?.();
-        setTimeout(() => {
-          setState("idle");
-        }, 4000); // 4 saniye
+        setTimeout(() => setState("idle"), 4000);
       } else {
-        // 401 hatası durumunda auth modal zaten açılmış olacak
         if (result.status !== 401) {
+          setProductError(t("productAddError"));
           setState("error");
-          setTimeout(() => setState("idle"), 4000); // 4 saniye
+          setTimeout(() => setState("idle"), 4000);
         } else {
           setState("idle");
         }
       }
     } catch (error) {
       console.error("Error adding product:", error);
+      setProductError(t("productAddError"));
       setState("error");
-      setTimeout(() => setState("idle"), 4000); // 4 saniye
+      setTimeout(() => setState("idle"), 4000);
     }
   };
 
   const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-
-    // Token'ı yeniden kontrol et - auth.service.ts zaten doğru token'ı kaydetmiş olmalı
+    setAuthError("");
     const isLoggedIn = await authService.isLoggedIn();
     setIsAuthenticated(isLoggedIn);
-
-    // Kısa bir bekleme sonrası ürünü ekle
     setTimeout(() => handleAddToHeybe(true), 500);
   };
 
   const handleContinueAsGuest = async () => {
     try {
-      setAuthError(""); // Clear error message
-
-      // Backend'den guest token iste ve storage'a kaydet
-      await authService.ensureGuestToken();
-
-      // Auth state'ini güncelle - artık token var
-      setIsAuthenticated(true);
-
-      // Modal'ı kapat ve hata mesajını temizle
-      setShowAuthModal(false);
       setAuthError("");
-
-      // Ürünü ekle (skipAuth=true çünkü token zaten var)
+      await authService.ensureGuestToken();
+      setIsAuthenticated(true);
+      setShowAuthModal(false);
       await handleAddToHeybe(true);
     } catch (error) {
       console.error("Guest continuation failed:", error);
-      setAuthError("Misafir token oluşturulamadı"); // Hata mesajını göster
+      setAuthError(t("guestTokenError"));
       setState("error");
-      setTimeout(() => setState("idle"), 4000); // 4 saniye (8000'den değiştirildi)
+      setTimeout(() => setState("idle"), 4000);
     }
   };
 
@@ -387,17 +610,16 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
               style={{ width: "20px", height: "20px", color: "#10b981" }}
             />
             <span style={{ color: "#10b981" }}>{t("productAdded")}</span>
-            {/* Success progress bar - 4 saniye boyunca dolan */}
             <div
               style={{
                 position: "absolute",
                 bottom: "-3px",
                 left: "0",
-                width: "0%", // Başlangıç width'ini 0% olarak ayarla
+                width: "0%",
                 height: "3px",
                 backgroundColor: "#10b981",
                 borderRadius: "0 0 8px 8px",
-                animation: "successProgress 4s ease-out forwards", // 4 saniye
+                animation: "successProgress 4s ease-out forwards",
               }}
             />
           </div>
@@ -408,7 +630,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             <AlertCircle
               style={{ width: "20px", height: "20px", color: "#ef4444" }}
             />
-            <span>{t("productAddError")}</span>
+            <span>{productError || t("productAddError")}</span>
           </div>
         );
       default:
@@ -430,12 +652,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const getAddButtonStyle = () => {
     let backgroundColor = "#f8f9fa";
     let color = "#374151";
-
     if (state === "success") {
-      backgroundColor = "#f0fdf4"; // Açık yeşil arka plan
+      backgroundColor = "#f0fdf4";
       color = "#10b981";
     }
-
     return {
       background: backgroundColor,
       color: color,
@@ -455,7 +675,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       position: "relative" as const,
       fontFamily:
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      opacity: state === "loading" ? 0.7 : 1, // Loading state'inde opacity azalt
+      opacity: state === "loading" ? 0.7 : 1,
     };
   };
 
@@ -494,7 +714,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   };
 
-  // Hidden state kontrolü - buton gizliyse render etme
   if (state === "hidden") {
     return null;
   }
@@ -506,18 +725,15 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Sol taraf - "Heybeye Ekle" butonu */}
         <button
           onClick={() => handleAddToHeybe()}
           disabled={
             state === "loading" || state === "success" || state === "error"
-          } // Loading, success ve error durumlarında disable et
+          }
           style={getAddButtonStyle()}
         >
           {getAddButtonContent()}
         </button>
-
-        {/* Sağ taraf - "Listeyi Gör" butonu */}
         <button onClick={handleViewList} style={viewButtonStyle}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <List style={{ width: "16px", height: "16px" }} />
@@ -525,20 +741,18 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           </div>
         </button>
       </div>
-
       {showAuthModal && (
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => {
             setShowAuthModal(false);
-            setAuthError(""); // Modal kapanırken hata mesajını temizle
+            setAuthError("");
           }}
           onContinueAsGuest={handleContinueAsGuest}
           onAuthSuccess={handleAuthSuccess}
-          error={authError} // Hata mesajını modal'a geç
+          error={authError}
         />
       )}
-
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

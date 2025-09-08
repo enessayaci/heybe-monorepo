@@ -17,9 +17,18 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@public/*": ["./public/*"],
+      "@assets/*": ["./assets/*"]
     }
   },
-  "include": ["entrypoints", "components", "src", "wxt.config.ts"],
+  "include": [
+    "public/entrypoints",
+    "src/**/*",
+    "components",
+    "wxt.config.ts",
+    "services/*",
+    "declarations.d.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

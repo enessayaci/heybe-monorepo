@@ -1,22 +1,14 @@
 import type {
   Product,
   AddProductRequest,
-  FrontendProduct,
   ApiResponse,
   AuthResponse,
 } from "./api.types";
 
-import { storage } from "wxt/storage";
 import { getToken } from "./storage.service";
 
 class ApiService {
   private readonly baseUrl = "https://heybe-monorepo.onrender.com/api";
-  private onUnauthorized?: (errorMessage?: string) => void;
-
-  // 401 hatası durumunda çağrılacak callback'i set etme
-  setUnauthorizedCallback(callback: (errorMessage?: string) => void) {
-    this.onUnauthorized = callback;
-  }
 
   private async request<T>(
     endpoint: string,
@@ -24,7 +16,8 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const token = await getToken();
 
-    console.log("Requesting token: ", token);
+    console.log("endpoint: ", endpoint);
+    console.log("token sending to endpoint: ", token);
 
     const config: RequestInit = {
       headers: {
@@ -35,48 +28,55 @@ class ApiService {
       ...options,
     };
 
+    console.log("endpoint config: ", config);
+
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, config);
-      const data = await response.json();
+      console.log("response coming from endpoint: ", response);
+
+      let data = null;
+      if (response.headers.get("Content-Type")?.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (error) {
+          console.log(
+            "Failed to parse JSON response. Falling back to text.",
+            error
+          );
+          const text = await response.text();
+          console.log("Response body as text: ", text);
+        }
+      } else {
+        console.log(
+          "Response is not JSON. Content-Type: ",
+          response.headers.get("Content-Type")
+        );
+        const text = await response.text();
+        console.log("Response body as text: ", text);
+      }
 
       if (!response.ok) {
-        // 401 hatası durumunda token'ı sil ve callback çağır
-        if (response.status === 401) {
-          const errorMessage = data.message || "Kimlik doğrulama hatası";
-          await this.handleUnauthorized(errorMessage);
-        }
-
-        return {
-          success: false,
-          message: data.message || "Request failed",
+        throw Object.assign(new Error(data?.message || "Request failed"), {
           status: response.status,
-        };
+        });
       }
 
       return {
         success: true,
-        data: data.data || data,
+        data: data?.data || data,
+        status: response.status,
       };
     } catch (error) {
+      console.log("error coming from endpoint: ", error);
+
       return {
         success: false,
         message: error instanceof Error ? error.message : "Network error",
+        status:
+          error instanceof Error && "status" in error
+            ? (error.status as number)
+            : undefined,
       };
-    }
-  }
-
-  private async handleUnauthorized(errorMessage?: string) {
-    try {
-      // Storage'ı tamamen temizle - ilk yükleme gibi
-      await storage.removeItem("local:token");
-      await storage.removeItem("local:user");
-
-      // Auth modal'ı aç ve hata mesajını göster
-      if (this.onUnauthorized) {
-        this.onUnauthorized(errorMessage);
-      }
-    } catch (error) {
-      console.error("Error handling unauthorized:", error);
     }
   }
 
@@ -91,6 +91,8 @@ class ApiService {
   async addProduct(
     productData: AddProductRequest
   ): Promise<ApiResponse<Product>> {
+    console.log("productData coming as paramter: ", productData);
+
     return this.request<Product>("/products/add", {
       method: "POST",
       body: JSON.stringify(productData),

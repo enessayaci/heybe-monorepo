@@ -1,11 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { FloatingActionButton } from "../src/components/FloatingActionButton";
-import "../src/globals.css";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import "@/globals.css";
 import { defineContentScript } from "wxt/sandbox";
 import { createShadowRootUi } from "wxt/client";
 
-import { listenWebsite } from "../src/services/messenger";
+import { listenWebsite } from "@/services/messenger";
 
 export default defineContentScript({
   matches: ["<all_urls>"],

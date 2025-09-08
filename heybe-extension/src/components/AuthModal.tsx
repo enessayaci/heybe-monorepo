@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { authService } from "../services/auth.service";
 import { t } from "../lib/i18n";
+import { apiBridge } from "@/services/content.api.bridge";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -36,10 +36,7 @@ export function AuthModal({
     setError("");
 
     try {
-      const result = await authService.login(
-        loginData.email,
-        loginData.password
-      );
+      const result = await apiBridge.login(loginData.email, loginData.password);
       if (result.success) {
         onAuthSuccess();
         onClose();
@@ -59,7 +56,7 @@ export function AuthModal({
     setError("");
 
     try {
-      const result = await authService.register(
+      const result = await apiBridge.register(
         registerData.email,
         registerData.password
       );
