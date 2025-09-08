@@ -12,7 +12,10 @@ import productRoutes from "./routes/product.routes";
 const app = express();
 const port = process.env.PORT || 3000;
 
-const developmentUrls = ["http://localhost:5173"];
+const developmentUrls = [
+  "http://localhost:5173",
+  "chrome-extension://chgineallhlahnpbaoceclhjohpndhlo",
+];
 
 const corsOptions = {
   origin: (
