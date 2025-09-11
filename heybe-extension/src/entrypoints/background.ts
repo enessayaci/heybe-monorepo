@@ -5,6 +5,60 @@ import { apiService } from "@/services/background.api.service";
 import { type ApiResponse } from "@/services/api.types";
 
 export default defineBackground(() => {
+  // Reusable fonksiyon: Belirtilen URL'deki tab'lere mesaj gönderir
+  async function sendToWebsite(
+    messageType: string,
+    messageData: any,
+    urlPattern: string = "http://localhost:5173/*"
+  ) {
+    try {
+      const tabs = await browser.tabs.query({ url: urlPattern });
+      console.log("Found tabs for sendToWebsite:", tabs);
+
+      for (const tab of tabs) {
+        if (tab.id) {
+          console.log(`Sending message to tab ID ${tab.id}`);
+
+          await sendMessage(
+            messageType,
+            messageData,
+            `content-script@${tab.id}`
+          );
+          console.log(
+            `Mesaj gönderildi: Tab ID ${tab.id}, Mesaj: ${messageType}`
+          );
+        }
+      }
+    } catch (error) {
+      console.error(`${messageType} mesajı gönderilirken hata:`, error);
+    }
+  }
+
+  browser.runtime.setUninstallURL("https://localhost:5173/uninstall");
+
+  // Uzantı yüklendiğinde otomatik mesaj gönder
+  (async () => {
+    try {
+      // https://localhost:5173 adresindeki tüm tab'leri bul
+      const tabs = await browser.tabs.query({ url: "http://localhost:5173/*" });
+
+      // Her bir tab'e HEYBE_EXTENSION_LOADED mesajını gönder
+      for (const tab of tabs) {
+        if (tab.id) {
+          await sendMessage(
+            "HEYBE_EXTENSION_LOADED",
+            { message: "Extension loaded successfully" },
+            `content-script@${tab.id}` // Hedef: belirli tab'in window context'i
+          );
+          console.log(`Mesaj gönderildi: Tab ID ${tab.id}`);
+        }
+      }
+    } catch (error) {
+      console.error("HEYBE_EXTENSION_LOADED mesajı gönderilirken hata:", error);
+    }
+  })();
+
+  // Currently not in use, content script access strage directly
   onMessage("saveStorageData", async ({ data }) => {
     try {
       const obj = JSON.parse(JSON.stringify(data));
@@ -16,6 +70,7 @@ export default defineBackground(() => {
     }
   });
 
+  // Currently not in use, content script access storage directly
   onMessage("getStorageData", async () => {
     try {
       return await browser.storage.local.get(["token", "user"]);
@@ -25,6 +80,7 @@ export default defineBackground(() => {
     }
   });
 
+  // Currently not in use, content script access and clear storage directly
   onMessage("clearStorage", async () => {
     try {
       await browser.storage.local.remove(["token", "user"]);
@@ -35,8 +91,15 @@ export default defineBackground(() => {
     }
   });
 
+  // Currently not in use, content script return true drectly
   onMessage("ping", () => {
     return true;
+  });
+
+  // HEYBE_AUTH_UPDATED mesajını dinle ve açık website tab'lerine ilet
+  onMessage("HEYBE_AUTH_UPDATED", async ({ data }) => {
+    console.log("Found data for HEYBE_AUTH_UPDATED:", data);
+    sendToWebsite("HEYBE_AUTH_UPDATED", data as unknown as Record<string, any>);
   });
 
   // API istekleri için mesaj işleyicisi

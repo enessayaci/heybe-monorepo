@@ -2,6 +2,22 @@ import { apiBridge } from "./content.api.bridge";
 import { notifyWebsiteAuth } from "./messenger";
 import { getToken, getUser, setToken, setUser } from "./storage.service";
 
+// Hata yönetimini merkezileştiren yardımcı fonksiyon
+function handleError(
+  error: unknown,
+  method: string
+): { success: boolean; message: string; status?: number } {
+  console.error(`${method} error:`, error);
+  return {
+    success: false,
+    message: error instanceof Error ? error.message : "Network error",
+    status:
+      error instanceof Error && "status" in error
+        ? (error as any).status
+        : undefined,
+  };
+}
+
 class AuthService {
   /**
    * Misafir token'ı garanti eder - yoksa oluşturur
@@ -20,20 +36,29 @@ class AuthService {
       // Yeni misafir token oluştur
       const response = await apiBridge.createGuestToken();
 
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-
-        // Storage'a kaydet
-        await setToken(token);
-        await setUser(user);
-
-        return token;
+      if (!response.success || !response.data) {
+        throw Object.assign(
+          new Error(response.message || "Failed to create guest token"),
+          {
+            status: response.status,
+          }
+        );
       }
 
-      throw new Error("Failed to create guest token");
+      const { token, user: responseUser } = response.data;
+
+      // Storage'a kaydet
+      await setToken(token);
+      await setUser(responseUser);
+
+      return token;
     } catch (error) {
-      console.error("Error ensuring guest token:", error);
-      throw error;
+      throw Object.assign(handleError(error, "Error ensuring guest token"), {
+        status:
+          error instanceof Error && "status" in error
+            ? (error as any).status
+            : undefined,
+      });
     }
   }
 
@@ -43,7 +68,7 @@ class AuthService {
   async login(
     email: string,
     password: string
-  ): Promise<{ success: boolean; message?: string }> {
+  ): Promise<{ success: boolean; message?: string; status?: number }> {
     try {
       const user = await getUser();
       // Her zaman storage'dan kontrol et
@@ -57,30 +82,38 @@ class AuthService {
         response = await apiBridge.loginWithGuestTransfer(email, password);
       } else {
         // Normal giriş
+        console.log("login isteği gidiyor...");
+
         response = await apiBridge.login(email, password);
+
+        console.log(
+          "login isteği gitti ve backgrounddan response geldi: ",
+          response
+        );
       }
 
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-
-        console.log("login response: ", response);
-
-        // Kullanıcı bilgilerini kaydet
-        await setToken(token);
-        await setUser(user);
-
-        notifyWebsiteAuth({
-          token,
-          user,
+      if (!response.success || !response.data) {
+        throw Object.assign(new Error(response.message || "Login failed"), {
+          status: response.status,
         });
-
-        return { success: true };
       }
 
-      return { success: false, message: response.message || "Login failed" };
+      const { token, user: responseUser } = response.data;
+
+      console.log("login response: ", response);
+
+      // Kullanıcı bilgilerini kaydet
+      await setToken(token);
+      await setUser(responseUser);
+
+      notifyWebsiteAuth({
+        token,
+        user: responseUser,
+      });
+
+      return { success: true };
     } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, message: "Network error" };
+      return handleError(error, "Login");
     }
   }
 
@@ -90,7 +123,7 @@ class AuthService {
   async register(
     email: string,
     password: string
-  ): Promise<{ success: boolean; message?: string }> {
+  ): Promise<{ success: boolean; message?: string; status?: number }> {
     try {
       const user = await getUser();
       // Her zaman storage'dan kontrol et
@@ -107,59 +140,68 @@ class AuthService {
         response = await apiBridge.register(email, password);
       }
 
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-
-        // Kullanıcı bilgilerini kaydet
-        await setToken(token);
-        await setUser(user);
-
-        notifyWebsiteAuth({
-          token,
-          user,
-        });
-
-        return { success: true };
+      if (!response.success || !response.data) {
+        throw Object.assign(
+          new Error(response.message || "Registration failed"),
+          {
+            status: response.status,
+          }
+        );
       }
 
-      return {
-        success: false,
-        message: response.message || "Registration failed",
-      };
+      const { token, user: responseUser } = response.data;
+
+      // Kullanıcı bilgilerini kaydet
+      await setToken(token);
+      await setUser(responseUser);
+
+      notifyWebsiteAuth({
+        token,
+        user,
+      });
+
+      return { success: true };
     } catch (error) {
-      console.error("Registration error:", error);
-      return { success: false, message: "Network error" };
+      return handleError(error, "Registration");
     }
   }
 
   /**
    * Çıkış yapar ve misafir token'a geri döner
    */
-  async logout(): Promise<{ success: boolean }> {
+  async logout(): Promise<{
+    success: boolean;
+    message?: string;
+    status?: number;
+  }> {
     try {
       // Yeni misafir token oluştur
       const response = await apiBridge.createGuestToken();
 
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-
-        // Misafir token'ı kaydet
-        await setToken(token);
-        await setUser(user);
-
-        // Website'e yeni token'ı bildir
-        notifyWebsiteAuth({
-          token,
-          user,
-        });
-
-        return { success: true };
+      if (!response.success || !response.data) {
+        throw Object.assign(
+          new Error(response.message || "Failed to create guest token"),
+          {
+            status: response.status,
+          }
+        );
       }
 
-      return { success: false };
+      const { token, user } = response.data;
+
+      // Misafir token'ı kaydet
+      await setToken(token);
+      await setUser(user);
+
+      // Website'e yeni token'ı bildir
+      notifyWebsiteAuth({
+        token,
+        user,
+      });
+
+      return { success: true };
     } catch (error) {
-      console.error("Logout error:", error);
-      return { success: false };
+      return handleError(error, "Logout");
     }
   }
 

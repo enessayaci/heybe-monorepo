@@ -19,10 +19,14 @@ class ContentApiBridge {
     params: unknown[] = []
   ): Promise<ApiResponse<T>> {
     try {
-      const response: ApiResponse<any> = (await sendMessage("apiCall", {
-        method,
-        params: params as any,
-      })) as unknown as ApiResponse<any>;
+      const response: ApiResponse<any> = (await sendMessage(
+        "apiCall",
+        {
+          method,
+          params: params as any,
+        },
+        "background"
+      )) as unknown as ApiResponse<any>;
 
       // 401 hatası durumunda token'ı sil ve callback çağır
       if (response.status === 401) {

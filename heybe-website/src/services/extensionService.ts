@@ -12,13 +12,13 @@ export interface StorageData {
 
 export interface ExtensionMessage {
   action: string;
-  data?: any;
+  data?: unknown;
   timestamp?: number;
 }
 
 export interface ExtensionResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
@@ -49,18 +49,21 @@ export const sendMessageToExtension = async (
   const { action, data } = message;
   try {
     switch (action) {
-      case "GET_STORAGE_DATA":
+      case "GET_STORAGE_DATA": {
         const storageData = await messenger.sendMessage("getStorageData");
         return { success: true, data: storageData };
-      case "SAVE_STORAGE_DATA":
+      }
+      case "SAVE_STORAGE_DATA": {
         const saveSuccess = await messenger.sendMessage(
           "saveStorageData",
-          data
+          data as StorageData
         );
         return { success: saveSuccess };
-      case "CLEAR_STORAGE":
+      }
+      case "CLEAR_STORAGE": {
         const clearSuccess = await messenger.sendMessage("clearStorage");
         return { success: clearSuccess };
+      }
       default:
         return { success: false, error: "Unknown action" };
     }

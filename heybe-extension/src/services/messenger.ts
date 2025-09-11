@@ -1,5 +1,6 @@
 import {
   allowWindowMessaging,
+  onMessage,
   sendMessage,
 } from "webext-bridge/content-script";
 import { defineCustomEventMessaging } from "@webext-core/messaging/page";
@@ -47,23 +48,23 @@ class Messenger {
     messenger.onMessage("saveStorageData", async (data): Promise<boolean> => {
       try {
         // Forward to background script
-        const response = await sendMessage(
-          "saveStorageData",
-          { ...data.data } as unknown as Record<string, any>,
-          "background"
-        );
-        // await storage.setItems([
-        //   {
-        //     key: "local:token",
-        //     value: data.data.token,
-        //   },
-        //   {
-        //     key: "local:user",
-        //     value: data.data.user,
-        //   },
-        // ]);
+        // const response = await sendMessage(
+        //   "saveStorageData",
+        //   { ...data.data } as unknown as Record<string, any>,
+        //   "background"
+        // );
+        await storage.setItems([
+          {
+            key: "local:token",
+            value: data.data.token,
+          },
+          {
+            key: "local:user",
+            value: data.data.user,
+          },
+        ]);
 
-        return (response as boolean) === true;
+        return true;
       } catch (error) {
         console.error(`❌ [Content Script] Error on saveStorageData:`, error);
         return false;
@@ -75,15 +76,15 @@ class Messenger {
       async (): Promise<StorageData | null> => {
         try {
           // Forward to background script
-          const response = await sendMessage(
-            "getStorageData",
-            {},
-            "background"
-          );
-          // const response = await storage.getItems([
-          //   "local:token",
-          //   "local:user",
-          // ]);
+          // const response = await sendMessage(
+          //   "getStorageData",
+          //   {},
+          //   "background"
+          // );
+          const response = await storage.getItems([
+            "local:token",
+            "local:user",
+          ]);
           console.log("getStorageData response:", response);
 
           const isEmpty =
@@ -121,12 +122,12 @@ class Messenger {
     messenger.onMessage("clearStorage", async (): Promise<boolean> => {
       try {
         // Forward to background script
-        const response = await sendMessage("clearStorage", {}, "background");
-        // storage.removeItems(["local:token", "local:user"]);
-        return (response as boolean) === true;
+        // const response = await sendMessage("clearStorage", {}, "background");
+        await storage.removeItems(["local:token", "local:user"]);
+        return true;
       } catch (error) {
         console.error(
-          `❌ [Content Script] Error forwarding clearStorage message:`,
+          `❌ [Content Script] Error on clearStorage message:`,
           error
         );
         return false;
@@ -136,9 +137,9 @@ class Messenger {
     messenger.onMessage("ping", async (): Promise<boolean> => {
       try {
         // Forward to background script
-        const response = await sendMessage("ping", {}, "background");
+        // const response = await sendMessage("ping", {}, "background");
 
-        return (response as boolean) === true;
+        return true;
       } catch (error) {
         console.error(
           `❌ [Content Script] Error forwarding ping message:`,
@@ -148,28 +149,66 @@ class Messenger {
       }
     });
 
-    messenger.onMessage("unauthorized", ({ data }) => {});
+    onMessage("HEYBE_AUTH_UPDATED", ({ data }) => {
+      console.log("HEYBE_AUTH_UPDATED received in content script, data:", data);
 
-    // Notify webpage that extension is loaded
-    setTimeout(() => {
-      messenger.sendMessage("HEYBE_EXTENSION_LOADED", true).catch((error) => {
-        console.warn(
-          `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
-          error
-        );
+      messenger
+        .sendMessage(
+          "HEYBE_AUTH_UPDATED",
+          JSON.parse(JSON.stringify(data)) as StorageData
+        )
+        .catch((error) => {
+          console.warn(
+            `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
+            error
+          );
+        });
+    });
+
+    onMessage("HEYBE_AUTH_UPDATED", ({ data }) => {
+      console.log("HEYBE_AUTH_UPDATED received in content script, data:", data);
+
+      messenger
+        .sendMessage(
+          "HEYBE_AUTH_UPDATED",
+          JSON.parse(JSON.stringify(data)) as StorageData
+        )
+        .catch((error) => {
+          console.warn(
+            `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
+            error
+          );
+        });
+    });
+
+    // Sends HEYBE_EXTENSION_LOADED messages with staggered intervals
+    const notifyExtensionLoaded = () => {
+      const intervals = [0, 100, 200, 300, 400, 400, 400, 400, 400, 400]; // 10 events
+
+      intervals.forEach((interval) => {
+        setTimeout(() => {
+          messenger.sendMessage("HEYBE_EXTENSION_LOADED", true).catch(() => {
+            // Sessizce yoksay, hata loglama
+          });
+        }, interval);
       });
-    }, 500);
+    };
+
+    // Call the function to send notifications
+    notifyExtensionLoaded();
   }
 
-  public notifyWebsiteAuth(data: StorageData) {
+  public async notifyWebsiteAuth(data: StorageData) {
     console.log("Sending HEYBE_AUTH_UPDATED to website!");
 
-    messenger.sendMessage("HEYBE_AUTH_UPDATED", data).catch((error) => {
-      console.warn(
-        `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
-        error
-      );
-    });
+    sendMessage("HEYBE_AUTH_UPDATED", JSON.stringify(data), "background").catch(
+      (error) => {
+        console.warn(
+          `⚠️ [Content Script] Error sending HEYBE_AUTH_UPDATED to background:`,
+          error
+        );
+      }
+    );
   }
 }
 

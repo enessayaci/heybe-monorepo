@@ -17,15 +17,12 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 }) => {
   const [state, setState] = useState<ButtonState>("idle");
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isProductPage, setIsProductPage] = useState(false);
   const [authError, setAuthError] = useState<string>("");
   const [productError, setProductError] = useState<string>("");
 
   useEffect(() => {
     apiBridge.setUnauthorizedCallback((errorMessage?: string) => {
-      setIsAuthenticated(false);
       setAuthError(errorMessage || t("authError"));
       setShowAuthModal(true);
     });
@@ -37,7 +34,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       const isProduct = detectProductPage();
       console.log("first isProduct: ", isProduct);
 
-      setIsProductPage(isProduct);
       setState(isProduct ? "idle" : "hidden");
 
       if (!isProduct && checkCount < 5) {
@@ -47,7 +43,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           checkCount++;
           const isProductRetry = detectProductPage();
           console.log("interval isProduct: ", isProductRetry);
-          setIsProductPage(isProductRetry);
           setState(isProductRetry ? "idle" : "hidden");
           if (isProductRetry || checkCount >= 5) {
             clearInterval(checkInterval!);
@@ -83,18 +78,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       history.replaceState = originalReplaceState;
     };
   }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const isLoggedIn = await authService.isLoggedIn();
-      setIsAuthenticated(isLoggedIn);
-      return isLoggedIn;
-    } catch (error) {
-      console.error("Error checking login status:", error);
-      setIsAuthenticated(false);
-      return false;
-    }
-  };
 
   const detectProductPage = (): boolean => {
     const isHomePage = (): boolean => {
@@ -500,19 +483,21 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   };
 
   const handleAddToHeybe = async (skipAuth = false) => {
-    if (state === "loading") return;
-
-    if (!skipAuth) {
-      const isLoggedIn = await checkAuthStatus();
-      if (!isLoggedIn) {
-        setShowAuthModal(true);
-        return;
-      }
-    }
-
-    setState("loading");
     try {
-      if (!skipAuth && !isAuthenticated) {
+      if (state === "loading") return;
+
+      const isLoggedIn = await authService.isLoggedIn();
+
+      if (!skipAuth) {
+        if (!isLoggedIn) {
+          setShowAuthModal(true);
+          return;
+        }
+      }
+
+      setState("loading");
+
+      if (!skipAuth && !isLoggedIn) {
         await authService.ensureGuestToken();
       }
 
@@ -549,8 +534,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const handleAuthSuccess = async () => {
     setShowAuthModal(false);
     setAuthError("");
-    const isLoggedIn = await authService.isLoggedIn();
-    setIsAuthenticated(isLoggedIn);
     setTimeout(() => handleAddToHeybe(true), 500);
   };
 
@@ -558,7 +541,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     try {
       setAuthError("");
       await authService.ensureGuestToken();
-      setIsAuthenticated(true);
       setShowAuthModal(false);
       await handleAddToHeybe(true);
     } catch (error) {
