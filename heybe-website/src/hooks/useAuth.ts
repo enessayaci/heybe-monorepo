@@ -1,15 +1,14 @@
 import { useState, useCallback } from "react";
 import {
   login as loginApi,
+  loginWithTransfer as loginWithTransferApi,
   register as registerApi,
+  registerWithTransfer as registerWithTransferApi,
 } from "@/services/authService";
-import type {
-  LoginRequest,
-  RegisterRequest,
-  AuthResponse,
-} from "../types/api.types";
+import type { LoginRequest, RegisterRequest } from "../types/api.types";
 import {
   clearExtensionStorage,
+  getFromExtension,
   saveToExtension,
 } from "@/services/extensionService";
 import { useMainStoreBase } from "@/store/main";
@@ -34,7 +33,24 @@ export const useAuth = (): UseAuthReturn => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await loginApi(credentials);
+
+      const extensionData = await getFromExtension();
+
+      // Her zaman storage'dan kontrol et
+      const storedToken = extensionData?.token;
+      const storedUser = extensionData?.user;
+      const isGuest = storedUser?.is_guest;
+
+      let response;
+      // Eğer misafir token varsa transfer ile giriş yap
+      if (storedToken && storedUser && isGuest) {
+        setToken(storedToken);
+        setUser(storedUser);
+        response = await loginWithTransferApi(credentials);
+      } else {
+        // Normal giriş
+        response = await loginApi(credentials);
+      }
 
       if (response.success) {
         // Token'ı hem localStorage'a hem extension'a kaydet
@@ -61,7 +77,23 @@ export const useAuth = (): UseAuthReturn => {
     setError(null);
 
     try {
-      const response = await registerApi(credentials);
+      const extensionData = await getFromExtension();
+
+      // Her zaman storage'dan kontrol et
+      const storedToken = extensionData?.token;
+      const storedUser = extensionData?.user;
+      const isGuest = storedUser?.is_guest;
+
+      let response;
+      // Eğer misafir token varsa transfer ile giriş yap
+      if (storedToken && storedUser && isGuest) {
+        setToken(storedToken);
+        setUser(storedUser);
+        response = await registerWithTransferApi(credentials);
+      } else {
+        // Normal giriş
+        response = await registerApi(credentials);
+      }
 
       if (response.success) {
         // Token'ı hem localStorage'a hem extension'a kaydet

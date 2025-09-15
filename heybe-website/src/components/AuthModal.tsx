@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
 import {
