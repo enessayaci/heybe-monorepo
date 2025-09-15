@@ -34,29 +34,7 @@ export default defineBackground(() => {
     }
   }
 
-  browser.runtime.setUninstallURL("https://localhost:5173/uninstall");
-
-  // Uzantı yüklendiğinde otomatik mesaj gönder
-  (async () => {
-    try {
-      // https://localhost:5173 adresindeki tüm tab'leri bul
-      const tabs = await browser.tabs.query({ url: "http://localhost:5173/*" });
-
-      // Her bir tab'e HEYBE_EXTENSION_LOADED mesajını gönder
-      for (const tab of tabs) {
-        if (tab.id) {
-          await sendMessage(
-            "HEYBE_EXTENSION_LOADED",
-            { message: "Extension loaded successfully" },
-            `content-script@${tab.id}` // Hedef: belirli tab'in window context'i
-          );
-          console.log(`Mesaj gönderildi: Tab ID ${tab.id}`);
-        }
-      }
-    } catch (error) {
-      console.error("HEYBE_EXTENSION_LOADED mesajı gönderilirken hata:", error);
-    }
-  })();
+  browser.runtime.setUninstallURL("http://localhost:5173");
 
   // Currently not in use, content script access strage directly
   onMessage("saveStorageData", async ({ data }) => {

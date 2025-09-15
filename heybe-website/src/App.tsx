@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useTranslation, TranslationProvider } from "./i18n";
 import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { AuthModal } from "./components/AuthModal";
 import { ProductList, type ProductListRef } from "./components/ProductList";
-import { X, XIcon } from "lucide-react";
+import { X, XIcon, SirenIcon } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -29,7 +29,6 @@ function AppContent() {
   const isExtensionAvailable = useMainStoreBase(
     (state) => state.isExtensionAvailable
   );
-  const token = useMainStoreBase((state) => state.token);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isExtensionAlertDismissed, setIsExtensionAlertDismissed] =
@@ -62,10 +61,6 @@ function AppContent() {
 
   const handleOpenInstallModal = () => {
     setIsInstallModalOpen(true);
-  };
-
-  const handleCloseInstallModal = () => {
-    setIsInstallModalOpen(false);
   };
 
   const handleBrowserInstall = (browser: string) => {
@@ -121,40 +116,36 @@ function AppContent() {
           hasExtension={isExtensionAvailable}
         />
         <SidebarInset>
-          {/* Extension Alert - Eklenti yüklü değilse göster */}
-          {!isExtensionAvailable && !isExtensionAlertDismissed && (
-            <div className="p-4 border-b bg-amber-50">
-              <Alert className="border-amber-200 bg-amber-50">
-                <AlertDescription className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-amber-800">
-                      {t("extension.notInstalled") ||
-                        "Eklenti yüklü değil. Ürün eklemek için eklentiyi kurun."}
+          {/* Main content - Header kaldırıldı */}
+          <main className="flex-1 overflow-auto space-y-3">
+            {/* Extension Alert - Eklenti yüklü değilse göster */}
+
+            {!isExtensionAvailable && !isExtensionAlertDismissed && (
+              <section className="px-4 sm:px-6 lg:px-8">
+                <Alert className="flex items-center  bg-amber-50 border-amber-100">
+                  <AlertDescription className="flex items-center justify-between">
+                    <SirenIcon className="text-amber-500 me-2" size={28} />
+
+                    <span className="mt-auto text-amber-500">
+                      {t("extension.notInstalled")}
                     </span>
-                    <Button
-                      onClick={handleOpenInstallModal}
-                      size="sm"
-                      className="bg-amber-600 hover:bg-amber-700 text-white"
-                    >
+                  </AlertDescription>
+
+                  <div className="flex ms-auto space-x-4">
+                    <Button onClick={handleOpenInstallModal} variant="outline">
                       {t("extension.install")}
                     </Button>
+                    <Button
+                      onClick={handleDismissExtensionAlert}
+                      size="icon"
+                      className=" text-amber-500 hover:text-amber-600 bg-amber-100 hover:bg-amber-200 rounded-full"
+                    >
+                      <X />
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handleDismissExtensionAlert}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-amber-600 hover:text-amber-800 hover:bg-amber-100"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-
-          {/* Main content - Header kaldırıldı */}
-          <main className="flex-1 overflow-auto">
-            {/* Hero Section - KALDIRILDI */}
+                </Alert>
+              </section>
+            )}
 
             {/* Products Section */}
             <section ref={productsRef} className=" px-4 sm:px-6 lg:px-8">

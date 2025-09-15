@@ -28,14 +28,17 @@
     "guest": "Misafir Kullanıcı"
   },
   "products": {
+    "differentSites": "{{count}} farklı site",
+    "searchResultsFound": "{{count}} ürün bulundu",
+    "searchPlaceholder": "Site ismi ya da ürün ismi ile ara",
     "title": "Ürünler",
     "subtitle": "Takip ettiğiniz ürünleri görüntüleyin",
     "myProducts": "Ürünlerim",
     "addProduct": "Ürün Ekle",
     "productList": "Ürün Listesi",
     "productCount": "{{count}} ürün listelendi",
-    "noProducts": "Henüz ürün yok",
-    "noProductsDescription": "Ürünleriniz eklenti aracılığıyla otomatik olarak eklenecek",
+    "noProducts": "Henüz ürün yok !",
+    "noProductsDescription": "Ürünleriniz eklenti aracılığıyla \"Heybeye Ekle\" butonu ile ekleyebilirsiniz",
     "addFirstProduct": "İlk Ürününüzü Ekleyin",
     "viewProducts": "Ürünleri Görüntüle",
     "empty": {
@@ -46,7 +49,7 @@
     "deleteAllConfirmTitle": "Tüm ürünleri sil?",
     "deleteAllConfirmMessage": "Bu işlem geri alınamaz. Tüm ürünleriniz kalıcı olarak silinecek.",
     "deleteConfirm": {
-      "title": "Ürünü sil?",
+      "title": "Ürünü Sil",
       "description": "\"{{productName}}\" ürününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
     },
     "errors": {
@@ -55,12 +58,13 @@
       "deleteFailed": "Ürün silinirken hata oluştu",
       "deleteAllFailed": "Ürünler silinirken hata oluştu",
       "unexpectedError": "Beklenmeyen bir hata oluştu",
-      "loginRequired": "Ürünleri görüntülemek için giriş yapmanız gerekiyor"
+      "loginRequired": "Ürünleri görüntülemek için giriş yapmanız gerekiyor",
+      "loginRequiredDescription": "Giriş yapmak için tıklayınız"
     }
   },
   "extension": {
     "addToHeybe": "Heybe'ye Ekle",
-    "install": "Eklentiyi Yükle",
+    "install": "Eklentiyi Kur",
     "notInstalled": "Eklenti yüklü değil. Ürün eklemek için eklentiyi kurun."
   },
   "setup": {

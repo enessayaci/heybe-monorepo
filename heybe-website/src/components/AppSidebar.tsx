@@ -11,7 +11,6 @@ import {
   SidebarRail,
   useSidebar,
 } from "./ui/sidebar";
-import { Badge } from "./ui/badge";
 import { useTranslation } from "../i18n";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -37,7 +36,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useMainStoreBase } from "@/store/main";
-import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
 type AppSidebarProps = {
@@ -51,7 +49,6 @@ export function AppSidebar({
   onScrollToProducts,
   onOpenInstallModal,
   onOpenAuthModal,
-  hasExtension = false,
 }: AppSidebarProps) {
   const { t, language, changeLanguage } = useTranslation();
   const { logout } = useAuth();
@@ -99,7 +96,7 @@ export function AppSidebar({
           <Button
             onClick={toggleSidebar}
             variant="secondary"
-            className="absolute -right-4.5 top-0 size-7 text-neutral-400 z-50 rounded-full"
+            className="absolute right-0 top-0 size-7 text-neutral-400 z-50 rounded-full"
             aria-label="Toggle sidebar"
           >
             {open ? (

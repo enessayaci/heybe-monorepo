@@ -28,6 +28,9 @@
     "guest": "Guest User"
   },
   "products": {
+    "differentSites": "{{count}} different sites",
+    "searchResultsFound": "{{count}} results found",
+    "searchPlaceholder": "Search by product name or site name",
     "title": "Products",
     "subtitle": "View your tracked products",
     "myProducts": "My Products",
@@ -35,18 +38,18 @@
     "productList": "Product List",
     "productCount": "{{count}} products listed",
     "noProducts": "No products yet",
-    "noProductsDescription": "Your products will be automatically added via the extension",
+    "noProductsDescription": "You can add your products using the \"Add to Heybe\" button via the extension",
     "addFirstProduct": "Add Your First Product",
     "viewProducts": "View Products",
     "empty": {
-      "title": "No products yet",
+      "title": "No products yet !",
       "description": "Your products will be automatically added via the extension"
     },
     "deleteAll": "Delete All",
     "deleteAllConfirmTitle": "Delete all products?",
     "deleteAllConfirmMessage": "This action cannot be undone. All your products will be permanently deleted.",
     "deleteConfirm": {
-      "title": "Delete product?",
+      "title": "Delete Product",
       "description": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone."
     },
     "errors": {
@@ -55,7 +58,8 @@
       "deleteFailed": "Failed to delete product",
       "deleteAllFailed": "Failed to delete products",
       "unexpectedError": "An unexpected error occurred",
-      "loginRequired": "Login required to view products"
+      "loginRequired": "Login required to view products",
+      "loginRequiredDescription": "Click here to login"
     }
   },
   "extension": {

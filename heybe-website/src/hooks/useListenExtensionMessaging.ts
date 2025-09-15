@@ -12,6 +12,9 @@ export const useListenExtensionMessaging = () => {
   const setExtensionAvailable = useMainStoreBase(
     (state) => state.setExtensionAvailable
   );
+  const isExtensionAvailable = useMainStoreBase(
+    (state) => state.isExtensionAvailable
+  );
   const cleanupRef = useRef<() => void>(() => {});
 
   const initializeStorage = useCallback(async () => {
@@ -26,14 +29,14 @@ export const useListenExtensionMessaging = () => {
   useEffect(() => {
     console.log("📡 [Extension] Checking for extension availability...");
 
-    // Ping fonksiyonu: Zaman aşımı ile mesaj gönderir
+    // Ping fonksiyonu: 1 saniye timeout ile mesaj gönderir
     const pingExtension = () => {
       return Promise.race([
         messenger.sendMessage("ping"),
         new Promise((_, reject) =>
           setTimeout(
-            () => reject(new Error("Ping timeout after 2 seconds")),
-            2000
+            () => reject(new Error("Ping timeout after 1 second")),
+            1000
           )
         ),
       ]);
@@ -42,10 +45,15 @@ export const useListenExtensionMessaging = () => {
     // Uzantı kontrolünü yapan fonksiyon
     const checkExtensionAvailability = async () => {
       let attempts = 0;
-      const maxAttempts = 5;
+      const maxAttempts = 10;
       let intervalId: NodeJS.Timeout | null = null;
 
       const tryPing = async (): Promise<boolean> => {
+        // Eğer zaten yüklendiyse ping atmayı bırak
+        if (isExtensionAvailable) {
+          console.log("📡 [Extension] Already loaded, skipping ping");
+          return true;
+        }
         try {
           const response = await pingExtension();
           if (response) {
@@ -67,9 +75,9 @@ export const useListenExtensionMessaging = () => {
 
       // İlk deneme
       const success = await tryPing();
-      if (success) return () => {}; // Başarılıysa boş temizleme fonksiyonu
+      if (success) return () => {};
 
-      // Periyodik deneme
+      // 100ms aralıklarla 10 ek deneme
       intervalId = setInterval(async () => {
         attempts += 1;
         const success = await tryPing();
@@ -78,28 +86,17 @@ export const useListenExtensionMessaging = () => {
           clearInterval(intervalId!);
           if (!success) {
             console.log(
-              "📡 [Extension] No response after 5 attempts, extension not available"
+              "📡 [Extension] No response after 10 attempts, extension not available"
             );
             setExtensionAvailable(false);
           }
         }
-      }, 1000); // Her 1 saniyede bir dene
+      }, 100); // Her 100ms'de bir dene
 
       return () => {
         if (intervalId) clearInterval(intervalId);
       };
     };
-
-    const unsubscribeLoaded = messenger.onMessage(
-      "HEYBE_EXTENSION_LOADED",
-      async () => {
-        console.log("📡 [Extension] Extension loaded event received");
-        setExtensionAvailable(true);
-        initializeStorage();
-        unsubscribeLoaded(); // Dinleyiciyi hemen kaldır
-        return true;
-      }
-    );
 
     const unsubscribeAuthUpdated = messenger.onMessage(
       "HEYBE_AUTH_UPDATED",
@@ -121,10 +118,15 @@ export const useListenExtensionMessaging = () => {
     // Temizleme: Abonelikleri ve interval'i kaldır
     return () => {
       cleanupRef.current();
-      unsubscribeLoaded();
       unsubscribeAuthUpdated();
     };
-  }, [setExtensionAvailable, initializeStorage, setUser, setToken]);
+  }, [
+    setExtensionAvailable,
+    initializeStorage,
+    setUser,
+    setToken,
+    isExtensionAvailable,
+  ]);
 
   return null;
 };

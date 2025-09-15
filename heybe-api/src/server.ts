@@ -15,6 +15,7 @@ const port = process.env.PORT || 3000;
 const developmentUrls = [
   "http://localhost:5173",
   "chrome-extension://chgineallhlahnpbaoceclhjohpndhlo",
+  "safari-web-extension://1af61dc8-2b41-4175-95be-08411db2b2df",
 ];
 
 const corsOptions = {

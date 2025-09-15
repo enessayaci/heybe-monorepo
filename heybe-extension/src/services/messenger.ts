@@ -12,7 +12,6 @@ export interface ProtocolMap {
   getStorageData(): StorageData | null;
   saveStorageData(data: StorageData): boolean;
   clearStorage(): boolean;
-  HEYBE_EXTENSION_LOADED(value: boolean): void;
   HEYBE_AUTH_UPDATED(value: StorageData): void;
   unauthorized(errorMessage?: string): void;
 }
@@ -85,14 +84,12 @@ class Messenger {
             "local:token",
             "local:user",
           ]);
-          console.log("getStorageData response:", response);
 
           const isEmpty =
             response === null ||
             (typeof response === "object" &&
               Object.keys(response).length === 0) ||
             response === undefined;
-          console.log("isEmpty: ", isEmpty);
           if (isEmpty) {
             return null;
           }
@@ -106,7 +103,6 @@ class Messenger {
             }),
             {}
           );
-          console.log("getStorageData formatted:", formatted);
 
           return (formatted as StorageData) ?? null;
         } catch (error) {
@@ -159,43 +155,11 @@ class Messenger {
         )
         .catch((error) => {
           console.warn(
-            `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
+            `⚠️ [Content Script] Error sending HEYBE_AUTH_UPDATED:`,
             error
           );
         });
     });
-
-    onMessage("HEYBE_AUTH_UPDATED", ({ data }) => {
-      console.log("HEYBE_AUTH_UPDATED received in content script, data:", data);
-
-      messenger
-        .sendMessage(
-          "HEYBE_AUTH_UPDATED",
-          JSON.parse(JSON.stringify(data)) as StorageData
-        )
-        .catch((error) => {
-          console.warn(
-            `⚠️ [Content Script] Error sending HEYBE_EXTENSION_LOADED:`,
-            error
-          );
-        });
-    });
-
-    // Sends HEYBE_EXTENSION_LOADED messages with staggered intervals
-    const notifyExtensionLoaded = () => {
-      const intervals = [0, 100, 200, 300, 400, 400, 400, 400, 400, 400]; // 10 events
-
-      intervals.forEach((interval) => {
-        setTimeout(() => {
-          messenger.sendMessage("HEYBE_EXTENSION_LOADED", true).catch(() => {
-            // Sessizce yoksay, hata loglama
-          });
-        }, interval);
-      });
-    };
-
-    // Call the function to send notifications
-    notifyExtensionLoaded();
   }
 
   public async notifyWebsiteAuth(data: StorageData) {

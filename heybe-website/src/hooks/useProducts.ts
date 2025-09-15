@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   addProduct as addProductApi,
   getProducts as getProductsApi,
@@ -7,7 +7,7 @@ import {
   updateProduct as updateProductApi,
 } from "@/services/productService";
 import type { Product, AddProductRequest } from "../types/api.types";
-import { log } from "node:console";
+import { sleep } from "@/lib/utils";
 
 interface UseProductsReturn {
   products: Product[];
@@ -34,7 +34,11 @@ export const useProducts = (): UseProductsReturn => {
     setError(null);
 
     try {
-      const response = await getProductsApi();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, response] = await Promise.all([
+        sleep(500), // En az 250ms loader göster
+        getProductsApi(),
+      ]);
 
       if (response.success && response.data) {
         setProducts(response.data);
