@@ -1,57 +1,11 @@
-import { useMainStoreBase } from "@/store/main";
 import type {
   ApiResponse,
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  User,
 } from "../types/api.types";
 import { makeRequest } from "./apiBase";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-
-// export async function makeRequest<T>(
-//   endpoint: string,
-//   options: RequestInit = {}
-// ): Promise<ApiResponse<T>> {
-//   const url = `${API_BASE_URL}${endpoint}`;
-//   const headers = {
-//     "Content-Type": "application/json",
-//     ...options.headers,
-//   };
-
-//   // Token'ı async olarak al
-//   const token = useMainStoreBase.getState().token;
-//   if (token) {
-//     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-//   }
-
-//   try {
-//     const response = await fetch(url, {
-//       ...options,
-//       headers,
-//     });
-
-//     const data = await response.json();
-
-//     if(!response.ok || !data.success){
-//       throw new Error(data?.message);
-//     }
-
-//     return {
-//       success: response.ok,
-//       data: response.ok ? data : undefined,
-//       message: data.message || (response.ok ? "Success" : "An error occurred"),
-//       status: response.status,
-//     };
-//   } catch (error) {
-//     return {
-//       success: false,
-//       message: error instanceof Error ? error.message : "Network error",
-//       status: 0,
-//     };
-//   }
-// }
 
 export async function login(
   credentials: LoginRequest
@@ -66,6 +20,15 @@ export async function login(
   ); // Token eklenmez
 }
 
+export async function loginWithTransfer(
+  credentials: LoginRequest
+): Promise<ApiResponse<AuthResponse>> {
+  return makeRequest<AuthResponse>("/auth/login-with-transfer", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  }); // Token eklenmez
+}
+
 export async function register(
   userData: RegisterRequest
 ): Promise<ApiResponse<AuthResponse>> {
@@ -78,8 +41,17 @@ export async function register(
     false
   ); // Token eklenmez
 }
-export async function validateToken(): Promise<ApiResponse<{}>> {
-  return makeRequest<{}>(
+
+export async function registerWithTransfer(
+  userData: RegisterRequest
+): Promise<ApiResponse<AuthResponse>> {
+  return makeRequest<AuthResponse>("/auth/register-with-transfer", {
+    method: "POST",
+    body: JSON.stringify(userData),
+  }); // Token eklenmez
+}
+export async function validateToken(): Promise<ApiResponse<User>> {
+  return makeRequest<User>(
     "/auth/validate",
     {
       method: "GET",

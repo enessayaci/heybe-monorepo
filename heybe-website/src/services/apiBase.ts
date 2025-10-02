@@ -10,6 +10,7 @@ export async function makeRequest<T>(
   includeToken: boolean = true
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const headers: Record<string, any> = {
     "Content-Type": "application/json",
     ...options.headers,
@@ -34,6 +35,8 @@ export async function makeRequest<T>(
       data = await response.json();
     } catch (e) {
       // JSON parse edilemezse
+      console.log("Failed to parse JSON response. Falling back to text.", e);
+
       throw new Error(
         `HTTP error! Status: ${response.status} ${response.statusText}`
       );
@@ -58,6 +61,7 @@ export async function makeRequest<T>(
       success: false,
       data: undefined,
       message: error instanceof Error ? error.message : "Network error",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       status: error instanceof Error ? 0 : (error as any).status || 0,
     };
   }

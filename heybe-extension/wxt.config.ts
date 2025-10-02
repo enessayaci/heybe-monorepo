@@ -12,18 +12,11 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: ({ manifestVersion }) => ({
     default_locale: "en",
-    name: "__MSG_extensionName__",
+    name: "HEYBE",
     description: "__MSG_extensionDescription__",
     version: "1.0.0",
     permissions: ["storage", "tabs", "scripting"],
-    host_permissions: [
-      "http://localhost:5173/*",
-      "http://localhost:3000/*",
-      "https://heybe-monorepo.onrender.com/*",
-      "https://my-heybe.vercel.app/*",
-      "https://*/*",
-      "http://*/*",
-    ],
+    host_permissions: ["https://*/*", "http://*/*"],
   }),
   vite: () => ({
     resolve: {

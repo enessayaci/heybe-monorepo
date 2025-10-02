@@ -37,8 +37,8 @@
     "addProduct": "Ürün Ekle",
     "productList": "Ürün Listesi",
     "productCount": "{{count}} ürün listelendi",
-    "noProducts": "Henüz ürün yok !",
-    "noProductsDescription": "Ürünleriniz eklenti aracılığıyla \"Heybeye Ekle\" butonu ile ekleyebilirsiniz",
+    "noProducts": "Ürün Bulunamadı!",
+    "noProductsDescription": "Ürünlerinizi eklenti aracılığıyla \"Heybeye Ekle\" butonu ile ekleyebilirsiniz",
     "addFirstProduct": "İlk Ürününüzü Ekleyin",
     "viewProducts": "Ürünleri Görüntüle",
     "empty": {
@@ -51,6 +51,10 @@
     "deleteConfirm": {
       "title": "Ürünü Sil",
       "description": "\"{{productName}}\" ürününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+    },
+    "deleteAllConfirm": {
+      "title": "Tüm Ürünleri Sil",
+      "description": "Tüm ürünleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
     },
     "errors": {
       "title": "Hata Oluştu",

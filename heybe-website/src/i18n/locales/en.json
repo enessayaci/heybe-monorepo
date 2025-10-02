@@ -37,7 +37,7 @@
     "addProduct": "Add Product",
     "productList": "Product List",
     "productCount": "{{count}} products listed",
-    "noProducts": "No products yet",
+    "noProducts": "No products found!",
     "noProductsDescription": "You can add your products using the \"Add to Heybe\" button via the extension",
     "addFirstProduct": "Add Your First Product",
     "viewProducts": "View Products",
@@ -51,6 +51,10 @@
     "deleteConfirm": {
       "title": "Delete Product",
       "description": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone."
+    },
+    "deleteAllConfirm": {
+      "title": "Delete All Products",
+      "description": "Are you sure you want to delete all products? This action cannot be undone."
     },
     "errors": {
       "title": "Error Occurred",

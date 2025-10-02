@@ -27,6 +27,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { type Product } from "@/types/api.types";
+import { ProductItemsSkeleton } from "./ProductItemsSkeleton";
 
 interface ProductListProps {
   onAddProduct?: () => void;
@@ -60,6 +61,7 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
       null
     );
+    const [itemsSearching, setItemsSearching] = useState(false);
 
     // Minimal istatistikler
     const calculateStats = () => {
@@ -77,6 +79,7 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
 
     // Arama fonksiyonu - debounce ile
     const handleSearch = (value: string) => {
+      setItemsSearching(true);
       setSearchTerm(value);
 
       // Önceki timeout'u temizle
@@ -98,6 +101,8 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
           });
           setFilteredProducts(filtered);
         }
+
+        setItemsSearching(false);
       }, 500);
 
       setSearchTimeout(newTimeout);
@@ -121,7 +126,11 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
 
     function handleDeleteModalAction() {
       setIsDeleteModalOpen(false);
-      if (productToDelete) deleteProduct(productToDelete);
+      if (productToDelete) {
+        deleteProduct(productToDelete);
+      } else {
+        if (productNameToDelete === "all") deleteAllProducts();
+      }
       setProductToDelete(null);
       setProductNameToDelete(null);
     }
@@ -155,29 +164,7 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
             </div>
           </div>
 
-          <div className="grid gap-2">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-4 border border-accent rounded-md p-2"
-                style={{ opacity: `${1 - index / 10}` }}
-              >
-                <div className="shrink-0">
-                  <Skeleton className="h-12 w-12 rounded" />
-                </div>
-
-                <div className="space-y-2 flex-grow">
-                  <Skeleton className="h-4 w-96" />
-                  <Skeleton className="h-3 w-70" />
-                </div>
-
-                <div className="flex shrink-0 gap-2">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProductItemsSkeleton />
         </div>
       );
     }
@@ -250,49 +237,60 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
             </h1>
           </div>
 
-          {filteredProducts.length > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center gap-4">
-                {/* Arama Kutusu - Sol */}
-                <div className="min-w-80">
-                  <Input
-                    type="text"
-                    placeholder={t("products.searchPlaceholder")}
-                    value={searchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex space-x-4 items-center mt-auto">
-                  <p className="text-sm text-start text-gray-500 flex items-center">
-                    <span>
-                      {t("products.searchResultsFound", {
-                        count: stats.totalProducts,
-                      })}
-                    </span>
-                  </p>
-
-                  <span className="p-0.75 rounded-full bg-gray-500"></span>
-
-                  <p className="text-sm text-start text-gray-500 flex items-center">
-                    <span>
-                      {t("products.differentSites", {
-                        count: stats.uniqueSites,
-                      })}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex-shrink-0 ms-auto">
-                  <Button onClick={deleteAllProducts} variant="danger">
-                    {t("products.deleteAll")}
-                  </Button>
-                </div>
+          <div className="mb-3">
+            <div className="flex items-center gap-4">
+              {/* Arama Kutusu - Sol */}
+              <div className="min-w-80">
+                <Input
+                  type="text"
+                  placeholder={t("products.searchPlaceholder")}
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
               </div>
-            </div>
-          )}
 
-          {filteredProducts.length === 0 ? (
+              {filteredProducts.length > 0 && (
+                <>
+                  <div className="flex space-x-4 items-center mt-auto">
+                    <p className="text-sm text-start text-gray-500 flex items-center">
+                      <span>
+                        {t("products.searchResultsFound", {
+                          count: stats.totalProducts,
+                        })}
+                      </span>
+                    </p>
+
+                    <span className="p-0.75 rounded-full bg-gray-500"></span>
+
+                    <p className="text-sm text-start text-gray-500 flex items-center">
+                      <span>
+                        {t("products.differentSites", {
+                          count: stats.uniqueSites,
+                        })}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex-shrink-0 ms-auto">
+                    <Button
+                      onClick={() => {
+                        setProductToDelete(null);
+                        setProductNameToDelete("all");
+                        setIsDeleteModalOpen(true);
+                      }}
+                      variant="danger"
+                    >
+                      {t("products.deleteAll")}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {itemsSearching ? (
+            <ProductItemsSkeleton />
+          ) : filteredProducts.length === 0 ? (
             <div className="py-6 flex">
               <PackageOpenIcon className="" size={56}></PackageOpenIcon>
               <div className="ms-4">
@@ -385,11 +383,17 @@ export const ProductList = forwardRef<ProductListRef, ProductListProps>(
         >
           <DialogContent showCloseButton={false}>
             <DialogHeader>
-              <DialogTitle>{t("products.deleteConfirm.title")}</DialogTitle>
+              <DialogTitle>
+                {productNameToDelete === "all"
+                  ? t("products.deleteAllConfirm.title")
+                  : t("products.deleteConfirm.title")}
+              </DialogTitle>
               <DialogDescription>
-                {t("products.deleteConfirm.description", {
-                  productName: productNameToDelete,
-                })}
+                {productNameToDelete == "all"
+                  ? t("products.deleteAllConfirm.description")
+                  : t("products.deleteConfirm.description", {
+                      productName: productNameToDelete,
+                    })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

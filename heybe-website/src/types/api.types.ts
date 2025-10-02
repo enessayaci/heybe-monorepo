@@ -24,9 +24,6 @@ export interface AddProductRequest {
   // user_id backend'de token'dan alınıyor, request'e dahil edilmiyor
 }
 
-// Frontend'de kullanılacak interface (Product ile aynı)
-export interface FrontendProduct extends Product {}
-
 export interface User {
   id?: number;
   email: string;
