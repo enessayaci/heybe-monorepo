@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import trTranslations from "./locales/tr.json";
 import enTranslations from "./locales/en.json";
 
@@ -137,6 +137,7 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTranslation() {
   const context = useContext(TranslationContext);
   if (context === undefined) {
