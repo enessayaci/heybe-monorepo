@@ -1,4 +1,6 @@
+import path from "path";
 import { Pool } from "pg";
+import * as fs from "fs"; // Dosya sistemini okumak için 'fs' modülünü ekleyin
 
 // Debug için environment variable'ları kontrol et
 console.log("DB Environment Variables:");
@@ -28,13 +30,33 @@ export const pool = new Pool({
   // }
 });
 
+// KRİTİK: Dosya yolunu konteynerin içinde ayarlayın
+const SCHEMA_FILE_PATH = path.join(__dirname, "schema.sql");
+// Not: Konteynerin içindeki tam yola göre düzenlenmesi gerekebilir!
+
 export async function connectToDatabase() {
+  let client;
   try {
-    await pool.connect();
+    client = await pool.connect();
     console.log("✅ Veritabanına başarıyla bağlanıldı");
+
+    // 1. Dosya içeriğini oku
+    const schemaSQL = fs.readFileSync(SCHEMA_FILE_PATH, "utf8");
+
+    // 2. SQL komutlarını çalıştır
+    // IF NOT EXISTS kullandığınız sürece bu güvenlidir.
+    await client.query(schemaSQL);
+    console.log(
+      "✅ Veritabanı şeması (schema.sql) başarıyla senkronize edildi/oluşturuldu"
+    );
+
     return true;
   } catch (error) {
-    console.error("❌ Veritabanı bağlantı hatası:", error);
+    console.error("❌ Veritabanı bağlantı veya şema oluşturma hatası:", error);
     throw error;
+  } finally {
+    if (client) {
+      client.release(); // Bağlantıyı havuza geri bırak
+    }
   }
 }
