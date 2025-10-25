@@ -12,6 +12,9 @@ COPY . .
 
 RUN pnpm build
 
+RUN mkdir -p dist/database && \
+    cp src/database/schema.sql dist/database/
+    
 EXPOSE 3000
 
 CMD ["pnpm", "start"]
