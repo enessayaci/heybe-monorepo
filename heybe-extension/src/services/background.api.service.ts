@@ -8,7 +8,7 @@ import type {
 import { getToken } from "./storage.service";
 
 class ApiService {
-  private readonly baseUrl = "https://heybe-monorepo.onrender.com/api";
+  private readonly baseUrl = "http://46.196.40.72:8001/api";
 
   private async request<T>(
     endpoint: string,
