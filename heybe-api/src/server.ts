@@ -23,8 +23,11 @@ const corsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    // Geliştirme ortamında izin verilen URL'ler
-    if (!origin || developmentUrls.includes(origin)) {
+    // Geliştirme ortamında izin verilen URL'ler, şimdilik eklenti dışından da gelenleri kabul et
+    // if (!origin || developmentUrls.includes(origin)) {
+    //   return callback(null, true);
+    // }
+    if (!origin) {
       return callback(null, true);
     }
     // Üretim ortamında yalnızca HTTPS kaynaklara izin ver
