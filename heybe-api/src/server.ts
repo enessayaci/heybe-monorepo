@@ -18,27 +18,48 @@ const developmentUrls = [
   "safari-web-extension://1af61dc8-2b41-4175-95be-08411db2b2df",
 ];
 
+// const corsOptions = {
+//   origin: (
+//     origin: string | undefined,
+//     callback: (err: Error | null, allow?: boolean) => void
+//   ) => {
+//     // Geliştirme ortamında izin verilen URL'ler, şimdilik eklenti dışından da gelenleri kabul et
+//     // if (!origin || developmentUrls.includes(origin)) {
+//     //   return callback(null, true);
+//     // }
+//     if (!origin) {
+//       return callback(null, true);
+//     }
+//     // Üretim ortamında yalnızca HTTPS kaynaklara izin ver
+//     if (origin.startsWith("https://")) {
+//       return callback(null, true);
+//     }
+//     // Diğer tüm durumlar için hata fırlat
+//     callback(new Error(`Geçersiz kaynak: ${origin || "undefined"}`), false);
+//   },
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: [
+//     "Content-Type",
+//     "Authorization",
+//     "X-Requested-With",
+//     "Accept",
+//     "Origin",
+//   ],
+// };
+// Güvenli DEĞİL: Her yerden gelen isteklere izin verir (Sadece geliştirme için önerilir)
 const corsOptions = {
-  origin: (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) => {
-    // Geliştirme ortamında izin verilen URL'ler, şimdilik eklenti dışından da gelenleri kabul et
-    // if (!origin || developmentUrls.includes(origin)) {
-    //   return callback(null, true);
-    // }
-    if (!origin) {
-      return callback(null, true);
-    }
-    // Üretim ortamında yalnızca HTTPS kaynaklara izin ver
-    if (origin.startsWith("https://")) {
-      return callback(null, true);
-    }
-    // Diğer tüm durumlar için hata fırlat
-    callback(new Error(`Geçersiz kaynak: ${origin || "undefined"}`), false);
-  },
+  // '*' joker karakteri, Access-Control-Allow-Origin başlığını '*' yapar
+  origin: "*",
+
+  // Eğer kimlik doğrulama (cookie, session) kullanmıyorsanız bu 'false' olmalıdır.
+  // Geliştirme sırasında true bırakmak genellikle sorun çıkarmaz, ancak '*' ile birlikte önerilmez.
   credentials: true,
+
+  // API'nizin desteklediği tüm HTTP metodları
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
+  // İzin verilen HTTP başlıkları
   allowedHeaders: [
     "Content-Type",
     "Authorization",
@@ -68,10 +89,8 @@ app.get("/health", (req, res) => {
 connectToDatabase()
   .then(() => {
     app.listen(port, () => {
-      console.log(`🚀 Server ${port} portunda çalışıyor`);
-      console.log(`📊 Health check: http://localhost:${port}/health`);
-      console.log(`🔐 Auth API: http://localhost:${port}/api/auth`);
-      console.log(`📦 Product API: http://localhost:${port}/api/products`);
+      console.log(`🚀 Server çalışıyor`);
+      console.log(`📊 Health check: /health`);
     });
   })
   .catch((error) => {
