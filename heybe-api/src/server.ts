@@ -49,17 +49,21 @@ const developmentUrls = [
 // };
 // Güvenli DEĞİL: Her yerden gelen isteklere izin verir (Sadece geliştirme için önerilir)
 const corsOptions = {
-  // '*' joker karakteri, Access-Control-Allow-Origin başlığını '*' yapar
-  origin: "*",
+  // GÜVENLİK ZAFİYETİ: Bu ayar, 'credentials: true' ile birlikte
+  // '*' başlığını döndürmek için özel olarak yazılmıştır.
+  // YALNIZCA KISA SÜRELİ TEST İÇİN KULLANIN.
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    // Tüm isteklere koşulsuz izin ver
+    return callback(null, true);
+  },
 
-  // Eğer kimlik doğrulama (cookie, session) kullanmıyorsanız bu 'false' olmalıdır.
-  // Geliştirme sırasında true bırakmak genellikle sorun çıkarmaz, ancak '*' ile birlikte önerilmez.
+  // Çerezlerin ve Authorization başlıklarının geçmesini sağlar.
   credentials: true,
 
-  // API'nizin desteklediği tüm HTTP metodları
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-
-  // İzin verilen HTTP başlıkları
   allowedHeaders: [
     "Content-Type",
     "Authorization",
