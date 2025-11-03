@@ -151,7 +151,6 @@ function AppContent() {
             <section ref={productsRef} className=" px-4 sm:px-6 lg:px-8">
               <ProductList
                 ref={productListRef}
-                onAddProduct={() => console.log("Add product")}
                 onClickLogin={handleOpenAuthModal}
               />
             </section>
