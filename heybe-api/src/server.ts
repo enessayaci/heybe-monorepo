@@ -47,26 +47,14 @@ const developmentUrls = [
 //     "Origin",
 //   ],
 // };
+
 // GÜVENLİ DEĞİL: Bu ayar, 'credentials: true' ile birlikte çalışması için
-// gelen kaynağı (origin) yakalayıp geri yansıtır. Kısa süreli test için uygundur.
 const corsOptions = {
-  // Dinamik Origin Yapılandırması: Gelen Origin'i (kaynağı) yakala ve geri yansıt.
-  // Bu, '*' kullanmadan, '*'-benzeri bir etki yaratır ve 'credentials: true' ile uyumludur.
-  origin: (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) => {
-    // 1. Origin yoksa (Aynı kaynak veya Postman/cURL), izin ver.
-    if (!origin) {
-      return callback(null, true);
-    }
+  // TS hatası vermemesi ve her yere izin vermesi için 'true' kullanılır.
+  // 'true' değeri, gelen origin'i yansıtır ve bu 'credentials: true' ile uyumludur.
+  origin: true,
 
-    // 2. Gelen Origin değerini (örn: https://heybe-website.vercel.app) yakala
-    // ve sadece ona izin verildiğini söyle.
-    return callback(null, origin);
-  },
-
-  // CORS hatasını tetikleyen bu ayar artık dinamik Origin ile uyumludur.
+  // Credentials ayarını koruyoruz.
   credentials: true,
 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
