@@ -50,21 +50,9 @@ const developmentUrls = [
 
 // GÜVENLİ DEĞİL: Bu ayar, 'credentials: true' ile birlikte çalışması için
 const corsOptions = {
-  // TS hatası vermemesi ve her yere izin vermesi için 'true' kullanılır.
-  // 'true' değeri, gelen origin'i yansıtır ve bu 'credentials: true' ile uyumludur.
-  origin: true,
-
-  // Credentials ayarını koruyoruz.
-  credentials: true,
-
+  origin: "*", // Herkese açık
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-    "Origin",
-  ],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 // Express.js kullanımı
