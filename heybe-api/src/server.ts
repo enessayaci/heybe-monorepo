@@ -48,7 +48,7 @@ const developmentUrls = [
 //   ],
 // };
 
-// GÜVENLİ DEĞİL: Bu ayar, 'credentials: true' ile birlikte çalışması için
+// GÜVENLİ DEĞİL, bu ayar test amaçlı her yerden gelen isteklere yanıt vermesi için. Sadece heybe eklentisinden ve heybe.site domaininden gelen isteklere yanıt verecek şekilde düzenlenmeli
 const corsOptions = {
   origin: "*", // Herkese açık
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
